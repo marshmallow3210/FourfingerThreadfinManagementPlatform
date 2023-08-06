@@ -6,55 +6,56 @@
 
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css">
   <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/style.css') }}" />
-  <script type="text/javascript" src="{{ url_for('static', filename='js/script.js') }}"></script>
 
 </head>
 
 <body>
-  <div class="row">
-    <!-- sidebars -->
-    <div class="col-md-2" style="border-right: 2px solid LightSteelBlue;">
-      <div class="header d-flex flex-column flex-shrink-0 p-3">
-        <a href="/home" class="d-flex align-items-center mb-3 mb-md-0 me-md-auto sidebars text-decoration-none">
-          <!--<svg class="bi pe-none me-2" width="40" height="60"><use xlink:href="#bootstrap"/></svg>-->
-          <img src="https://github.com/marshmallow3210/FourfingerThreadfinManagementPlatform/blob/main/IMG_1676.png?raw=true" alt="一隻魚" width="160" height="50">
+  <div class="row box">
+    <!-- sidebar -->
+    <div id="sidebar" class="col-md-2 sidebar">
+      
+      <!-- logo -->
+      <div id="sidebar" class="logo d-flex flex-column flex-shrink-0 p-3">
+        <a href="/home">
+          <img src="https://github.com/marshmallow3210/FourfingerThreadfinManagementPlatform/blob/main/images/IMG_1676.png?raw=true" alt="一隻魚" width="200" height="56">
         </a>
       </div>
 
-      <div class="row">
-        <ul class="nav nav-pills flex-column mb-auto sidebars">
+      <!-- sidebar -->
+      <div id="sidebar" class="row">
+        <ul class="nav nav-pills flex-column mb-auto sidebar-item">
           <li class="nav-item">
-            <div class="nav-link active sidebars" style="background-color: #009999;">
+            <div class="nav-link active sidebar-item" style="background-color: #009999;">
               <svg class="bi pe-none me-2" width="16" height="16" ></svg>
               功能表
             </div>
           </li>
           <li class="nav-item">
-            <a href="/home" class="nav-link sidebars" aria-current="page">
+            <a href="/home" class="nav-link sidebar-item" aria-current="page">
               <svg class="bi pe-none me-2" width="16" height="16" ><use xlink:href="#home"/></svg>
               首頁
             </a>
           </li>
           <li>
-            <a href="/dispenser" class="nav-link sidebars">
+            <a href="/dispenser" class="nav-link sidebar-item">
               <svg class="bi pe-none me-2" width="16" height="16"><use xlink:href="#speedometer2"/></svg>
               投餌機配置
             </a>
           </li>
           <li>
-            <a href="/test" class="nav-link sidebars">
+            <a href="/test" class="nav-link sidebar-item">
               <svg class="bi pe-none me-2" width="16" height="16"><use xlink:href="#table"/></svg>
               測試餵食
             </a>
           </li>
           <li>
-            <a href="/show" class="nav-link sidebars">
+            <a href="/show" class="nav-link sidebar-item">
               <svg class="bi pe-none me-2" width="16" height="16"><use xlink:href="#grid"/></svg>
               養殖紀錄
             </a>
           </li>
           <li>
-            <a href="/feeding_logs" class="nav-link sidebars">
+            <a href="/query" class="nav-link sidebar-item">
               <svg class="bi pe-none me-2" width="16" height="16"><use xlink:href="#people-circle"/></svg>
               查詢
             </a>
@@ -63,15 +64,18 @@
       </div>
     </div>
 
-    <div class="col-md">        
+    <!--content-->
+    <div id="content" class="col-md-10 content">        
       <!--header-->
-      <div class="row">
+      <div id="content" class="row content">
         <header class="header d-flex flex-wrap align-items-center justify-content-right justify-content-lg-start">
           
           <div class="col-md-1">
-            <a href="/" class="d-flex align-items-center my-2 my-lg-0 me-lg-auto text-decoration-none">
-              <svg class="bi me-2" width="40" height="32" role="img" aria-label="Bootstrap"><use xlink:href="#bootstrap"></use></svg>
-            </a>
+            <button type="button" id="sidebar_button" class="sidebar_button btn btn-primary">按我</button>
+            <!--
+              <a href="/" class="d-flex align-items-center my-2 my-lg-0 me-lg-auto text-decoration-none">
+              </a>
+            -->
           </div>
 
           <div class="col-md">
@@ -117,101 +121,102 @@
           </div>
         </header>
       </div>
-
-        <!--content-->
-        <div class="row">
-          <div class="main">
-            <div class="row content">
-              <div class="col-xl-6 col-sm-6">
-                <h3>XXX養殖場</h3>
-                <h6>負責人：傅擇仁</h6>
-                <h6>聯絡電話：0987654321</h6>
-              </div>
-
-              <div class="col-xl-6 col-sm-6">
-                <h3>時間</h3>
-                <h6>日期：<span id="current_date"></span></h6>
-                <h6>時間：<span id="current_time"></span></h6>
-              </div>
-            </div>
-            
-            <hr>
-
-            <div class="content">
-              <table style="width:100%">
-                <tr>
-                  <th colspan="2">
-                    今日養殖紀錄
-                  </th>
-                </tr>
-                <tr>
-                  <td class="tablename">規格<br>(尾/公斤)</td>
-                  <td>100.0</td>
-                </tr>
-                <tr>
-                  <td>紀錄魚群總重<br>(公斤)</td>
-                  <td>300.0</td>
-                </tr>
-                <tr>
-                  <td>預估魚群總重<br>(公斤)</td>
-                  <td>300.0</td>
-                </tr>
-                <tr>
-                  <td>估算換肉率</td>
-                  <td>1.0</td>
-                </tr>
-                <tr>
-                  <td>死亡數量</td>
-                  <td>0</td>
-                </tr>
-              </table>
-
+       
+      <!--main-->
+      <div id="content" class="row ">
+        <div class="main">
+          <div class="row main">
+            <div class="col-xl-6 col-sm-6">
+              <h3>XXX養殖場</h3>
+              <h6>負責人：傅擇仁</h6>
+              <h6>聯絡電話：0987654321</h6>
             </div>
 
-            <hr>
-          
-            <div class="content">
-              <table style="width:100%">
-                <tr>
-                  <th colspan="2">
-                    養殖決策建議
-                  </th>
-                </tr>
-                <tr>
-                  <td class="tablename">水溫建議決策:</td>
-                  <td>/</td>
-                </tr>
-                <tr>
-                  <td>活存率建議:</td>
-                  <td>/</td>
-                </tr>
-                <tr>
-                  <td>肥滿度建議:</td>
-                  <td>/</td>
-                </tr>
-                <tr>
-                  <td>肥滿度建議:</td>
-                  <td>/</td>
-                </tr>
-              </table>
-
-            </div>
-          
-            <hr>
-          
-            <div>
-              <span>
-                
-              </span>
+            <div class="col-xl-6 col-sm-6">
+              <h3>時間</h3>
+              <h6>日期：<span id="current_date"></span></h6>
+              <h6>時間：<span id="current_time"></span></h6>
             </div>
           </div>
+          
+          <hr>
+
+          <div class="main">
+            <table style="width:100%">
+              <tr>
+                <th colspan="2">
+                  今日養殖紀錄
+                </th>
+              </tr>
+              <tr>
+                <td class="tablename">規格<br>(尾/公斤)</td>
+                <td>100.0</td>
+              </tr>
+              <tr>
+                <td>紀錄魚群總重<br>(公斤)</td>
+                <td>300.0</td>
+              </tr>
+              <tr>
+                <td>預估魚群總重<br>(公斤)</td>
+                <td>300.0</td>
+              </tr>
+              <tr>
+                <td>估算換肉率</td>
+                <td>1.0</td>
+              </tr>
+              <tr>
+                <td>死亡數量</td>
+                <td>0</td>
+              </tr>
+            </table>
+
+          </div>
+
+          <hr>
+        
+          <div class="main">
+            <table style="width:100%">
+              <tr>
+                <th colspan="2">
+                  養殖決策建議
+                </th>
+              </tr>
+              <tr>
+                <td class="tablename">水溫建議決策:</td>
+                <td>/</td>
+              </tr>
+              <tr>
+                <td>活存率建議:</td>
+                <td>/</td>
+              </tr>
+              <tr>
+                <td>肥滿度建議:</td>
+                <td>/</td>
+              </tr>
+              <tr>
+                <td>肥滿度建議:</td>
+                <td>/</td>
+              </tr>
+            </table>
+
+          </div>
+        
+          <hr>
+        
+          <div>
+            <span>
+              
+            </span>
+          </div>
         </div>
+      </div>
     </div>
   </div>
   
 </body>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"></script>
-  <script type="text/javascript" src="{{ url_for('static', filename='js/home.js') }}"></script>
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.4/jquery.min.js"></script>
+  <script type="text/javascript" src="{{ url_for('static', filename='js/script.js') }}"></script>
 
 </html>

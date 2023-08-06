@@ -12,50 +12,52 @@
 
 </head>
 <body>
-  <div class="row">
-    <!-- sidebars -->
-    <div class="col-md-2" style="border-right: 2px solid LightSteelBlue;">
-      <div class="header d-flex flex-column flex-shrink-0 p-3">
-        <a href="/home" class="d-flex align-items-center mb-3 mb-md-0 me-md-auto sidebars text-decoration-none">
-          <!--<svg class="bi pe-none me-2" width="40" height="60"><use xlink:href="#bootstrap"/></svg>-->
-          <img src="https://github.com/marshmallow3210/FourfingerThreadfinManagementPlatform/blob/main/IMG_1663.jpeg?raw=true" alt="一隻魚" width="160" height="50">
+  <div class="row box">
+    <!-- sidebar -->
+    <div id="sidebar" class="col-md-2 sidebar">
+      
+      <!-- logo -->
+      <div id="sidebar" class="logo d-flex flex-column flex-shrink-0 p-3">
+        <a href="/home">
+          <img src="https://github.com/marshmallow3210/FourfingerThreadfinManagementPlatform/blob/main/images/IMG_1676.png?raw=true" alt="一隻魚" width="200" height="56">
         </a>
       </div>
 
-      <div class="row">
-        <ul class="nav nav-pills flex-column mb-auto sidebars">
+      <!-- sidebar -->
+      <div id="sidebar" class="row">
+        <ul class="nav nav-pills flex-column mb-auto sidebar-item">
           <li class="nav-item">
-            <div class="nav-link active sidebars" style="background-color: #009999;">
+            <div class="nav-link active sidebar-item" style="background-color: #009999;">
               <svg class="bi pe-none me-2" width="16" height="16" ></svg>
               功能表
             </div>
           </li>
           <li class="nav-item">
-            <a href="/home" class="nav-link sidebars" aria-current="page">
+            <a href="/home" class="nav-link sidebar-item" aria-current="page">
               <svg class="bi pe-none me-2" width="16" height="16" ><use xlink:href="#home"/></svg>
               首頁
             </a>
           </li>
           <li>
-            <a href="/dispenser" class="nav-link sidebars">
+            <a href="/dispenser" class="nav-link sidebar-item">
               <svg class="bi pe-none me-2" width="16" height="16"><use xlink:href="#speedometer2"/></svg>
               投餌機配置
             </a>
           </li>
           <li>
-            <a href="/test" class="nav-link sidebars">
+            <a href="/test" class="nav-link sidebar-item">
               <svg class="bi pe-none me-2" width="16" height="16"><use xlink:href="#table"/></svg>
               測試餵食
             </a>
           </li>
           <li>
-            <a href="/show" class="nav-link sidebars">
+            <a href="/show" class="nav-link sidebar-item">
               <svg class="bi pe-none me-2" width="16" height="16"><use xlink:href="#grid"/></svg>
               養殖紀錄
             </a>
           </li>
           <li>
-            <a href="/query" class="nav-link sidebars">
+            <a href="/query" class="nav-link sidebar-item">
               <svg class="bi pe-none me-2" width="16" height="16"><use xlink:href="#people-circle"/></svg>
               查詢
             </a>
@@ -64,15 +66,18 @@
       </div>
     </div>
 
-    <div class="col-md">       
+    <!--content-->
+    <div id="content" class="col-md-10 content">        
       <!--header-->
-      <div class="row">
+      <div id="content" class="row content">
         <header class="header d-flex flex-wrap align-items-center justify-content-right justify-content-lg-start">
           
           <div class="col-md-1">
-            <a href="/" class="d-flex align-items-center my-2 my-lg-0 me-lg-auto text-decoration-none">
-              <svg class="bi me-2" width="40" height="32" role="img" aria-label="Bootstrap"><use xlink:href="#bootstrap"></use></svg>
-            </a>
+            <button type="button" id="sidebar_button" class="sidebar_button btn btn-primary">按我</button>
+            <!--
+              <a href="/" class="d-flex align-items-center my-2 my-lg-0 me-lg-auto text-decoration-none">
+              </a>
+            -->
           </div>
 
           <div class="col-md">
@@ -118,66 +123,67 @@
           </div>
         </header>
       </div>
+       
+      <!--main-->
+      <div class="row">
+        <div class="main">
+          
+          <h2>養殖紀錄</h2>
+          <div id="field_logs" class="field_logs"></div>
+          <hr>
 
-        <div class="row">
-          <div class="main">
-            
-            <h2>養殖紀錄</h2>
-            <div id="field_logs" class="field_logs"></div>
-            <hr>
+          <h2>投餌紀錄</h2>
+          <div id="feeding_logs" class="feeding_logs"></div>
+          <hr>
 
-            <h2>投餌紀錄</h2>
-            <div id="feeding_logs" class="feeding_logs"></div>
-            <hr>
-
-            <h2>查詢場域現況</h2>
-            <div>
-              <a><form action="{{ url_for("show")}}" method="post"></a>
-              <select id="field_ID" name="field_ID" class="selectpicker form-control">
-                <option disabled selected>請選擇場域</option>
-                <option id="all" name="all" value="0">all</option>
-                {% for id in fields_count %}
-                <option value={{ id[0] }}>{{ id[0] }}</option>
+          <h2>查詢場域現況</h2>
+          <div>
+            <a><form action="{{ url_for("show")}}" method="post"></a>
+            <select id="field_ID" name="field_ID" class="selectpicker form-control">
+              <option disabled selected>請選擇場域</option>
+              <option id="all" name="all" value="0">all</option>
+              {% for id in fields_count %}
+              <option value={{ id[0] }}>{{ id[0] }}</option>
+              {% endfor %}
+            </select>
+            <br>
+            <table id="fields_data" style="border:3px #cccccc solid;" cellpadding="10" border='1'>
+              <thead>
+                <!--
+                <tr>
+                  <th colspan="7">場域現況</th>
+                </tr>
+                -->
+                <tr>
+                  <td>場域編號</td>
+                  <td>規格(尾/公斤)</td>
+                  <td>紀錄魚群總重(公斤)</td>
+                  <td>預估魚群總重(公斤)</td>
+                  <td>換肉率</td>
+                  <td>死亡數量</td>
+                  <td>更新時間</td>
+                </tr>
+              </thead>
+              <tbody id="fields_tbody">
+                {% for data in fields_data %}
+                <tr>
+                  <td>{{data.0}}</td>
+                  <td>{{data.1}}</td>
+                  <td>{{data.2}}</td>
+                  <td>{{data.3}}</td>
+                  <td>{{data.4}}</td>
+                  <td>{{data.5}}</td>
+                  <td>{{data.6}}</td>
+                </tr>
                 {% endfor %}
-              </select>
-              <br>
-              <table id="fields_data" style="border:3px #cccccc solid;" cellpadding="10" border='1'>
-                <thead>
-                  <!--
-                  <tr>
-                    <th colspan="7">場域現況</th>
-                  </tr>
-                  -->
-                  <tr>
-                    <td>場域編號</td>
-                    <td>規格(尾/公斤)</td>
-                    <td>紀錄魚群總重(公斤)</td>
-                    <td>預估魚群總重(公斤)</td>
-                    <td>換肉率</td>
-                    <td>死亡數量</td>
-                    <td>更新時間</td>
-                  </tr>
-                </thead>
-                <tbody id="fields_tbody">
-                  {% for data in fields_data %}
-                  <tr>
-                    <td>{{data.0}}</td>
-                    <td>{{data.1}}</td>
-                    <td>{{data.2}}</td>
-                    <td>{{data.3}}</td>
-                    <td>{{data.4}}</td>
-                    <td>{{data.5}}</td>
-                    <td>{{data.6}}</td>
-                  </tr>
-                  {% endfor %}
-                </tbody>
-              </table>
-            </div>
-            <hr>
+              </tbody>
+            </table>
+          </div>
+          <hr>
 
-            <div>
-              <a href="/update">新增場域資料</a>
-            </div>
+          <div>
+            <a href="/update">新增場域資料</a>
+          </div>
               <br>
               <!--
               <table style="border:3px #cccccc solid;" cellpadding="10" border='1'>
@@ -669,238 +675,12 @@
 
 </script>
 
-<script> 
-  /*
-  window.onload = loadingPage;
-  
-  function getData(routes) {
-    console.log("getData routes:", routes);
-    $.ajax({
-    type: "GET",
-    dataType: "json",
-    url: "/db/" + routes,
-    async: false,
-    success: function (data) {
-        console.log("getData url:", this.url);
-        $("#fields_data").jsGrid("loadData", data);
-        $("#fields_data").jsGrid("refresh");
-        $("#fields_data").jsGrid("sort", "update_time", "desc");
-    },
-    });
-  }
-  
-  $("#fields_data").jsGrid({
-    height: "auto",
-    width: "100%",
-    sorting: true,
-    paging: true,
-    pageSize: 10,
-    pageButtonCount: 5,
-
-    inserting: true,
-    editing: true,
-    deleteConfirm: "確定刪除?",
-    noDataContent:
-        "<span class='unselectable' unselectable='on' style='white-space:nowrap; width:100%; text-align:center;'>　</span>" +
-        "<span style='position: fixed;'><span class='unselectable' unselectable='on' style='white-space:nowrap; width:100%; text-align:center;'> </span></span>" +
-        "<div style='width:3205px; height:0.1px;'></div>",
-
-    invalidNotify: function (args) {
-        console.log("args:",args);
-        for(i = 0;i < args.errors.length; i++) {
-            window.alert(args.errors[i].message);
-        }
-    },
-
-    onItemUpdated: function (args) {
-        console.log("onItemUpdated args:", args);
-
-        updateData(
-            "water_tianhe",
-            args.item._id,
-            args.item.Time,
-            args.item.Temperature_DO,
-            args.item.dissolveOxygen,
-            args.item.Temperature_ec,
-            args.item.conductivity,
-            args.item.Temperature_flow,
-            args.item.compA,
-            args.item.compB,
-            args.item.xAxisVelocity,
-            args.item.yAxisVelocity,
-            args.item.totalVelocity,
-            args.item.direction,
-            args.item.currentdirection,
-            args.item.northSouthCurrent,
-            args.item.eastWestCurrent,
-            args.item.powerVoltage
-        );
-
-        getData("water_tianhe");
-    },
-
-    controller: {
-        loadData: function(filter) {
-            let data = $.Deferred();
-            $.ajax({
-                type: "get",
-                async: false,
-                url: "http://127.0.0.1/show/",
-                dataType: "json",
-                success : function(data) {
-                  console.log("傳送成功" + JSON.stringify(data));
-                  var colCount = $("#fields_tbody tr").length;
-                  for (var i=0; i<colCount;i++){
-                    newFieldsData.deleteRow(0);
-                  }
-                  newFieldsData.insertRow(0);
-                  var dataArray = Object.values(data);
-                  var fields_data = dataArray[1];
-                  var r = fields_data.length;
-                  var c = fields_data[0].length;
-                  for (var i=0; i<r; i++){
-                    var newRow = newFieldsData.insertRow(i+1);
-                    for (var j=0; j<c; j++){
-                      var newCell = newFieldsData.rows[i+1].insertCell(j);
-                      newCell.innerHTML = fields_data[i][j];
-                    }
-                  }
-                },
-                success: (response) => {
-                    let fieldsJsonData = response;
-                    let everspringData = [];
-                    let tzoffset = (new Date()).getTimezoneOffset() * 60000;  //時區偏移(轉成millisecond)
-                    for (let i = fieldsJsonData.length - 1;i >= 0;i--) {
-                        let localeISOTime = (new Date(new Date(fieldsJsonData[i].Time) - tzoffset)).toISOString().slice(0, 19);
-                        let element = {
-                            _id: fieldsJsonData[i]._id,
-                            Time: localeISOTime,
-                            Temperature_DO: fieldsJsonData[i].Temperature_DO.toFixed(2),
-                            dissolveOxygen: fieldsJsonData[i].dissolveOxygen.toFixed(2),
-                            Temperature_ec: fieldsJsonData[i].Temperature_ec.toFixed(2),
-                            salinity: conductivityTransfer(fieldsJsonData[i].conductivity, fieldsJsonData[i].Temperature_flow).toFixed(2),
-                            Temperature_flow: fieldsJsonData[i].Temperature_flow.toFixed(2),
-                            compA: fieldsJsonData[i].compA.toFixed(2),
-                            compB: fieldsJsonData[i].compB.toFixed(2),
-                            xAxisVelocity: fieldsJsonData[i].xAxisVelocity.toFixed(2),
-                            yAxisVelocity: fieldsJsonData[i].yAxisVelocity.toFixed(2),
-                            totalVelocity: fieldsJsonData[i].totalVelocity.toFixed(2),
-                            direction: fieldsJsonData[i].direction.toFixed(2),
-                            currentdirection: fieldsJsonData[i].currentdirection.toFixed(2),
-                            northSouthCurrent: fieldsJsonData[i].northSouthCurrent.toFixed(2),
-                            eastWestCurrent: fieldsJsonData[i].eastWestCurrent.toFixed(2),
-                            powerVoltage: fieldsJsonData[i].powerVoltage.toFixed(2),
-                        };
-                        everspringData.push(element);
-                    }
-                    data.resolve(everspringData);
-                    $("#fields_data").jsGrid("sort", "update_time", "desc");
-                    $("#fields_data").jsGrid("option", "inserting", true);
-                },
-            });
-            return data.promise();
-        },
-    },
-
-    fields: [
-        {
-            name: "field_ID",
-            title: "場域編號",
-            type: "text",
-            width: 175,
-            align: "center",
-        },
-        {
-            name: "spec",
-            title: "規格(尾/公斤)",
-            type: "floatNumber",
-            width: 175,
-            align: "center",
-            cellRender: function (item, value) {
-                let tempHighThreshold = subData[0].tempHighThreshold;
-                let tempLowThreshold = subData[0].tempLowThreshold;
-                let threshold = $("#text_Temperature_DO").val();
-                if(item <= tempLowThreshold && tempLowThreshold != "") {
-                    return $("<td>")
-                        .addClass("jsgrid-cell jsgrid-align-center")
-                        .css("color", "red")
-                        .append(item);
-                }
-                else if(item >= tempHighThreshold && tempHighThreshold != "") {
-                    return $("<td>")
-                        .addClass("jsgrid-cell jsgrid-align-center")
-                        .css("color", "red")
-                        .append(item);
-                }
-                else if (item == threshold && threshold != "") {
-                    return $("<td>")
-                        .addClass("jsgrid-cell jsgrid-align-center")
-                        .css("color", "blue")
-                        .append(item);
-                }
-                return $("<td>")
-                    .addClass("jsgrid-cell jsgrid-align-center")
-                    .append(item);
-            },
-        },
-        {
-            name: "dissolveOxygen",
-            title: "溶氧(mg/L)",
-            type: "floatNumber",
-            width: 175,
-            align: "center"
-        },
-        {
-            name: "Temperature_ec",
-            title: "導電率感測器水溫(°C)",
-            type: "floatNumber",
-            width: 175,
-            align: "center",
-        },
-        {
-            name: "salinity",
-            title: "鹽度(ppt)",
-            type: "floatNumber",
-            width: 175,
-            align: "center",
-        },
-        {
-            name: "Temperature_flow",
-            title: "流速計水溫(°C)",
-            type: "floatNumber",
-            width: 175,
-            align: "center",
-        },
-        {
-            name: "totalVelocity",
-            title: "海流流速",
-            type: "floatNumber",
-            width: 175,
-            align: "center"
-        },
-        { type: "control", width: 80, headerTemplate: function () { return; } }
-    ]
-  });
-
-  function loadingPage() {
-    $.ajax({
-        type: "get",
-        async: false,
-        url: "http://127.0.0.1/show/",
-        dataType: "json",
-        success: (response) => {
-            subData = response;
-            console.log("subData: ", subData);
-        },
-    });
-
-    $("#fields_data").jsGrid("option", "inserting", true);
-
-    $("#fields_data").jsGrid("loadData");
-  }
-*/
-</script>
 </body>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.4/jquery.min.js"></script>
+  <script type="text/javascript" src="{{ url_for('static', filename='js/script.js') }}"></script>
+
 </html>
 
 

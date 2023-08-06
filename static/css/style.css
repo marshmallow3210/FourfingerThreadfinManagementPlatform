@@ -1,5 +1,6 @@
 body, html {
     height: 100%;
+    width: 100%;
     margin: 0;
     padding: 0;
     background-color: #ccf2f2;
@@ -12,33 +13,6 @@ body, html {
 
 div{
     font-weight: bold;
-}
-
-header {
-    background-color: #009999; 
-    color: #ccf2f2;
-    height: 60px;
-    text-align: right;
-    /*
-    padding: 0px;
-    text-align: center;
-    font-size: 35px;
-    */
-}
-
-.sidebars {
-    height: 100%;
-    background-color: #ccf2f2;
-    color: #003366;
-    font-weight: bold;
-    /*
-    border-right: 2px solid LightSteelBlue;
-    */
-}
-
-.header {
-    height: 60px;
-    color: #ccf2f2;
 }
 
 .center {
@@ -72,10 +46,6 @@ h6 {
     padding: 60px;
 }
 
-.content{
-    padding: 15px;
-}
-
 table {
     border-spacing: 30px;
     width: 100%;
@@ -98,38 +68,59 @@ select{
     width: 100px;
 }
 
-/* 自定義側邊欄和內容區域的高度 */
-.sidebar, #content {
-    height: 100vh;
+/* whole page */
+.box {
+    display: flex;
+    height: 100%;
 }
 
-/* 側邊欄的樣式 */
+/* sidebar */
 .sidebar {
-    background-color: #f0f0f0;
-    padding-top: 20px;
+    flex: 0 1 240px;
+    background-color: #ccf2f2;
+    border-right: 2px solid LightSteelBlue;
+    transition: width 0.3s ease; /* 添加過渡效果 */
 }
 
-/* 內容區域的樣式 */
-#content {
-    padding: 20px;
-}
-
-/* 自定義側邊欄收縮時的寬度 */
+/* sidebar收縮後的樣式 */
 .sidebar.collapsed {
-    width: 60px;
-}
-
-/* 側邊欄中的選項樣式（這只是一個示例，可以自行調整） */
-.sidebar ul {
-    list-style: none;
+    flex: 0 0 0;
+    width: 0; /* 將寬度設定為 0，隱藏側邊欄 */
+    margin: 0;
     padding: 0;
 }
 
-.sidebar ul li {
-    padding: 8px;
+/* sidebar hidden btn */
+.hidden {
+    opacity: 0;
+    transition: width 0.3s ease; /* 添加過渡效果 */
+    pointer-events: none; /* 隱藏時不接受點擊事件 */
 }
 
-/* 收縮時的側邊欄中的選項樣式 */
-.sidebar.collapsed ul li {
-    text-align: center;
+.logo {
+    height: 64px;
+    color: #ccf2f2;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.sidebar-item {
+    height: 100%;
+    background-color: #ccf2f2;
+    color: #003366;
+    font-weight: bold;
+    padding-left: 20px;
+}
+
+/* content(header+main) */
+.content {
+    flex: 1; /* Content佔滿剩餘空間 */
+}
+
+header {
+    background-color: #009999; 
+    color: #ccf2f2;
+    height: 64px;
+    text-align: right;
 }
