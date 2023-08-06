@@ -1,0 +1,32 @@
+<head>
+  <title>新增場域資料</title>
+</head>
+<body> 
+  <form action="{{ url_for("update")}}" method="post">
+  <!--
+    <select name="field_ID" class="selectpicker form-control">
+    <option disabled selected>請選擇場域</option>
+    <option>新增場域</option>
+    {% for id in fields_count %}
+    <option>{{id[0]}}</option>
+    {% endfor %}
+  </select>
+  <br>
+-->
+  <label for="field_ID">場域編號: </label>
+  <input type="text" id="field_ID" name="field_ID"  placeholder="必填" required></a>
+  <br>
+  <label for="avg_weights">魚隻均重: </label>
+  <input type="text" id="avg_weights" name="avg_weights" placeholder="重量(公克)">
+  <br>
+  <label for="feed_conversion">換肉率: </label>
+  <input type="text" id="feed_conversion" name="feed_conversion"></a>
+  <br>
+  <label for="counts">魚隻數量: </label>
+  <input type="text" id="counts" name="counts" placeholder="數量">
+  <br>
+  <label for="dead_counts">死亡數量: </label>
+  <input tyep="text" id="dead_counts" name="dead_counts" placeholder="數量">
+  <br>
+  <button type="submit">送出</button>
+</body>

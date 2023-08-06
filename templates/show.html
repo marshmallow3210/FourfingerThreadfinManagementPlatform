@@ -1,0 +1,906 @@
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Show</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css">
+  <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/style.css') }}" />
+  
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+  <link type="text/css" rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jsgrid/1.5.3/jsgrid.min.css" />
+  <link type="text/css" rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jsgrid/1.5.3/jsgrid-theme.min.css" />
+  <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jsgrid/1.5.3/jsgrid.min.js"></script>
+
+</head>
+<body>
+  <div class="row">
+    <!-- sidebars -->
+    <div class="col-md-2" style="border-right: 2px solid LightSteelBlue;">
+      <div class="header d-flex flex-column flex-shrink-0 p-3">
+        <a href="/home" class="d-flex align-items-center mb-3 mb-md-0 me-md-auto sidebars text-decoration-none">
+          <!--<svg class="bi pe-none me-2" width="40" height="60"><use xlink:href="#bootstrap"/></svg>-->
+          <img src="https://github.com/marshmallow3210/FourfingerThreadfinManagementPlatform/blob/main/IMG_1663.jpeg?raw=true" alt="一隻魚" width="160" height="50">
+        </a>
+      </div>
+
+      <div class="row">
+        <ul class="nav nav-pills flex-column mb-auto sidebars">
+          <li class="nav-item">
+            <div class="nav-link active sidebars" style="background-color: #009999;">
+              <svg class="bi pe-none me-2" width="16" height="16" ></svg>
+              功能表
+            </div>
+          </li>
+          <li class="nav-item">
+            <a href="/home" class="nav-link sidebars" aria-current="page">
+              <svg class="bi pe-none me-2" width="16" height="16" ><use xlink:href="#home"/></svg>
+              首頁
+            </a>
+          </li>
+          <li>
+            <a href="/dispenser" class="nav-link sidebars">
+              <svg class="bi pe-none me-2" width="16" height="16"><use xlink:href="#speedometer2"/></svg>
+              投餌機配置
+            </a>
+          </li>
+          <li>
+            <a href="/test" class="nav-link sidebars">
+              <svg class="bi pe-none me-2" width="16" height="16"><use xlink:href="#table"/></svg>
+              測試餵食
+            </a>
+          </li>
+          <li>
+            <a href="/show" class="nav-link sidebars">
+              <svg class="bi pe-none me-2" width="16" height="16"><use xlink:href="#grid"/></svg>
+              養殖紀錄
+            </a>
+          </li>
+          <li>
+            <a href="/query" class="nav-link sidebars">
+              <svg class="bi pe-none me-2" width="16" height="16"><use xlink:href="#people-circle"/></svg>
+              查詢
+            </a>
+          </li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="col-md">       
+      <!--header-->
+      <div class="row">
+        <header class="header d-flex flex-wrap align-items-center justify-content-right justify-content-lg-start">
+          
+          <div class="col-md-1">
+            <a href="/" class="d-flex align-items-center my-2 my-lg-0 me-lg-auto text-decoration-none">
+              <svg class="bi me-2" width="40" height="32" role="img" aria-label="Bootstrap"><use xlink:href="#bootstrap"></use></svg>
+            </a>
+          </div>
+
+          <div class="col-md">
+            <p class="center">
+              <h3 class="center">
+                午仔魚養殖管理平台
+              </h3>
+            </p>
+          </div>
+
+          <div class="col-md-2 center">
+            <ul class="nav col-12 col-lg-auto my-2 justify-content-center my-md-0">
+              <li class="center">
+                <a href="" class="nav-link aside" data-bs-toggle="dropdown">
+                  <img src="https://github.com/marshmallow3210/FourfingerThreadfinManagementPlatform/blob/main/IMG_1663.png?raw=true" alt="通知" width="32" height="32" class="rounded-circle me-0">
+                  <!--通知-->
+                </a>
+                <ul class="dropdown-menu text-small shadow ">
+                  <li class="list-group-item d-flex justify-content-between align-items-start">
+                    <div class="ms-2 me-auto">
+                      <div class="fw-bold">通知1</div>
+                      通知1內容
+                    </div>
+                    <span class="badge bg-primary rounded-pill">12</span>
+                  </li>
+                  <li><hr class="dropdown-divider"></li>
+                  <li><a class="dropdown-item" href="/">通知2</a></li>
+                </ul>
+              </li>
+              <li class="center">
+                <a href="" class="nav-link aside dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                  <!--<svg class="bi d-block mx-auto mb-1" width="24" height="24"><use xlink:href="#speedometer2"></use></svg>-->
+                  <img src="https://github.com/marshmallow3210/FourfingerThreadfinManagementPlatform/blob/main/IMG_1661.png?raw=true" alt="用戶" width="32" height="32" class="rounded-circle me-0">
+                  <!--用戶-->
+                </a>
+                <ul class="dropdown-menu text-small shadow">
+                  <li><a class="dropdown-item" href="">帳號設定</a></li>
+                  <li><hr class="dropdown-divider"></li>
+                  <li><a class="dropdown-item" href="/logout">登出</a></li>
+                </ul>
+              </li>
+            </ul>
+          </div>
+        </header>
+      </div>
+
+        <div class="row">
+          <div class="main">
+            
+            <h2>養殖紀錄</h2>
+            <div id="field_logs" class="field_logs"></div>
+            <hr>
+
+            <h2>投餌紀錄</h2>
+            <div id="feeding_logs" class="feeding_logs"></div>
+            <hr>
+
+            <h2>查詢場域現況</h2>
+            <div>
+              <a><form action="{{ url_for("show")}}" method="post"></a>
+              <select id="field_ID" name="field_ID" class="selectpicker form-control">
+                <option disabled selected>請選擇場域</option>
+                <option id="all" name="all" value="0">all</option>
+                {% for id in fields_count %}
+                <option value={{ id[0] }}>{{ id[0] }}</option>
+                {% endfor %}
+              </select>
+              <br>
+              <table id="fields_data" style="border:3px #cccccc solid;" cellpadding="10" border='1'>
+                <thead>
+                  <!--
+                  <tr>
+                    <th colspan="7">場域現況</th>
+                  </tr>
+                  -->
+                  <tr>
+                    <td>場域編號</td>
+                    <td>規格(尾/公斤)</td>
+                    <td>紀錄魚群總重(公斤)</td>
+                    <td>預估魚群總重(公斤)</td>
+                    <td>換肉率</td>
+                    <td>死亡數量</td>
+                    <td>更新時間</td>
+                  </tr>
+                </thead>
+                <tbody id="fields_tbody">
+                  {% for data in fields_data %}
+                  <tr>
+                    <td>{{data.0}}</td>
+                    <td>{{data.1}}</td>
+                    <td>{{data.2}}</td>
+                    <td>{{data.3}}</td>
+                    <td>{{data.4}}</td>
+                    <td>{{data.5}}</td>
+                    <td>{{data.6}}</td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+            <hr>
+
+            <div>
+              <a href="/update">新增場域資料</a>
+            </div>
+              <br>
+              <!--
+              <table style="border:3px #cccccc solid;" cellpadding="10" border='1'>
+                <thead>
+                  <tr>
+                    <th colspan="4">換肉率紀錄</th>
+                  </tr>
+                </thead>
+                <tr>
+                  <td>池號</td>
+                  <td>換肉率(公克/公克)</td>
+                  <td>區間(始)</td>
+                  <td>區間(終)</td>
+                </tr>
+                  {% for data in feed_conversion %}
+                <tr>
+                  <td>{{data.0}}</td>
+                  <td>{{data.1}}</td>
+                  <td>{{data.2}}</td>
+                  <td>{{data.3}}</td>
+                </tr>
+                {% endfor %}
+              </table>
+              <br>
+              -->
+            <br>
+          </div>
+        </div>
+    </div>
+  </div>
+<!--
+<div>
+  <table style="border:3px #cccccc solid;" cellpadding="10" border='1'>
+    <thead>
+      <tr>
+        <th colspan="9">投餌紀錄</th>
+      </tr>
+      <tr>
+        <td>場域編號</td>
+        <td>投餌機編號</td>
+        <td>投餌時間</td>
+        <td>耗時(分鐘)</td>
+        <td>投餌料號</td>
+        <td>投餌量(公克)</td>
+      </tr>
+    </thead>
+    {% for value in data %}
+    <tr>
+      <td>{{value.0}}</td>
+      <td>{{value.1}}</td>
+      <td>{{value.2}}</td>
+      <td>{{value.3}}</td>
+      <td>{{value.4}}</td>
+      <td>{{value.5}}</td>
+    </tr>
+    {% endfor %}
+  </table> 
+</div> 
+
+<h1>Custom View</h1>
+-->
+
+<!-- fields filter -->
+<script type="text/javascript">
+  fields_data=[]
+  $(document).ready(function(){
+    $('#field_ID').change(
+    function(){
+      var selected = document.getElementById("field_ID").value;
+      var newFieldsData = document.getElementById("fields_tbody");
+      console.log("field_ID="+selected);
+      var data = {
+        "field_ID": selected,
+        "fields_data": fields_data
+      }
+      console.log("data="+JSON.stringify(data));
+      $.ajax({
+        url : 'http://127.0.0.1/show/',
+        type : 'POST', 
+        data : JSON.stringify(data),
+        contentType : 'application/json; charset=utf-8', // 要送到server的資料型態
+        dataType : 'json', // 預期從server接收的資料型態
+        success : function(data) {
+          console.log("傳送成功" + JSON.stringify(data));
+          var colCount = $("#fields_tbody tr").length;
+          for (var i=0; i<colCount;i++){
+            newFieldsData.deleteRow(0);
+          }
+          newFieldsData.insertRow(0);
+          var dataArray = Object.values(data);
+          var fields_data = dataArray[1];
+          var r = fields_data.length;
+          var c = fields_data[0].length;
+          for (var i=0; i<r; i++){
+            var newRow = newFieldsData.insertRow(i+1);
+            for (var j=0; j<c; j++){
+              var newCell = newFieldsData.rows[i+1].insertCell(j);
+              newCell.innerHTML = fields_data[i][j];
+            }
+          }
+        },
+        error: function (xhr, type){
+          console.log("傳送失敗" + xhr + type);
+        }
+      });
+    })
+  })
+</script>
+
+<script>
+  var dataset = [
+      { 
+        "場域編號": "1",
+        "規格<br>(尾/公斤)": 100.0,
+        "紀錄魚群總重<br>(公斤)": 300.0, 
+        "預估魚群總重<br>(公斤)": 300.0, 
+        "換肉率": 0.0, 
+        "死亡數量": 0, 
+        "更新時間": "2023-03-01 12:30:00" 
+      },
+      { 
+        "場域編號": "1",
+        "規格<br>(尾/公斤)": 50.0,
+        "紀錄魚群總重<br>(公斤)": 600.0, 
+        "預估魚群總重<br>(公斤)": 600.0, 
+        "換肉率": 2.0,
+        "死亡數量": 100,
+        "更新時間": "2023-04-01 12:30:00" 
+      },
+      { 
+        "場域編號": "2",
+        "規格<br>(尾/公斤)": 120.0,
+        "紀錄魚群總重<br>(公斤)": 300.0, 
+        "預估魚群總重<br>(公斤)": 300.0, 
+        "換肉率": 0.0, 
+        "死亡數量": 0, 
+        "更新時間": "2023-03-01 12:30:00" 
+      },
+      { 
+        "場域編號": "2",
+        "規格<br>(尾/公斤)": 100.0,
+        "紀錄魚群總重<br>(公斤)": 400.0, 
+        "預估魚群總重<br>(公斤)": 400.0, 
+        "換肉率": 1.5, 
+        "死亡數量": 100, 
+        "更新時間": "2023-03-10 12:30:00" 
+      },
+      { 
+        "場域編號": "2",
+        "規格<br>(尾/公斤)": 100.0,
+        "紀錄魚群總重<br>(公斤)": 600.0, 
+        "預估魚群總重<br>(公斤)": 600.0, 
+        "換肉率": 1.1, 
+        "死亡數量": 100, 
+        "更新時間": "2023-04-01 12:30:00" 
+      }
+  ];
+
+  var feeding_logs_dataset = [
+      { "場域編號": "1",
+        "投餌機編號": "1",
+        "投餌時間": "2023-04-01 13:00:00", 
+        "耗時(分鐘)": 30.0, 
+        "投餌料號": "test", 
+        "投餌量(公克)": 100000 
+      },
+      { "場域編號": "1",
+        "投餌機編號": "2",
+        "投餌時間": "2023-04-02 13:00:00", 
+        "耗時(分鐘)": 30.0, 
+        "投餌料號": "test", 
+        "投餌量(公克)": 100000 
+      },
+      { "場域編號": "1",
+        "投餌機編號": "1",
+        "投餌時間": "2023-04-03 13:00:00", 
+        "耗時(分鐘)": 30.0, 
+        "投餌料號": "test", 
+        "投餌量(公克)": 100000 
+      },
+      { "場域編號": "1",
+        "投餌機編號": "1",
+        "投餌時間": "2023-04-04 13:00:00", 
+        "耗時(分鐘)": 30.0, 
+        "投餌料號": "test", 
+        "投餌量(公克)": 100000 
+      },
+      { "場域編號": "1",
+        "投餌機編號": "1",
+        "投餌時間": "2023-04-05 13:00:00", 
+        "耗時(分鐘)": 30.0, 
+        "投餌料號": "test", 
+        "投餌量(公克)": 100000 
+      },
+      { "場域編號": "1",
+        "投餌機編號": "2",
+        "投餌時間": "2023-04-06 13:00:00", 
+        "耗時(分鐘)": 30.0, 
+        "投餌料號": "test", 
+        "投餌量(公克)": 100000 
+      }
+  ];
+
+  /*
+  $("#jsGrid").jsGrid({
+      width: "80%",
+      height: "400px",
+      
+      inserting: true,
+      editing: true,
+      sorting: true,
+      paging: true,
+      autoload: true,
+      data: dataset,
+      /*
+      controller: {
+          loadData: function() {
+              var d = $.Deferred();
+              $.ajax({
+                url : '/api/database/',
+                type : 'GET', 
+                dataType : 'json', // 預期從server接收的資料型態
+                success : function(response) {
+                  console.log("傳送成功" + JSON.stringify(response));
+                  d.resolve(response);
+                },
+                error: function (xhr, type){
+                  console.log("傳送失敗" + xhr + type);
+                }
+              });
+              return d.promise();
+          },
+      },
+
+      fields: [
+          { name: "場域編號", 
+            type: "text", 
+            width: 40, 
+            validate: "required" 
+          },
+          { name: "規格<br>(尾/公斤)",
+            type: "number",
+            width: 40 
+          },
+          { name: "紀錄魚群總重<br>(公斤)",
+            type: "number",
+            width: 40 
+          },
+          { name: "預估魚群總重<br>(公斤)", 
+            type: "number", 
+            width: 40 
+          },
+          { name: "換肉率", 
+            type: "number", 
+            width: 30 
+          },
+          { name: "死亡數量", 
+            type: "number", 
+            width: 30 
+          },
+          { name: "更新時間", 
+            type: "text", 
+            width: 60,
+            sorting: true
+          },
+          { type: "control", 
+            width: 20 
+          }
+      ]
+
+  });
+
+  */
+
+  // field logs
+  $("#field_logs").jsGrid({
+      width: "100%",
+      height: "400px",
+
+      inserting: true,
+      editing: true,
+      sorting: false,
+      paging: false,
+      autoload: true,
+      controller: {
+          loadData: function() {
+              var d = $.Deferred();
+              $.ajax({
+                  url: "/api/database",
+                  dataType: "json",
+                  type: "GET"
+              }).done(function(response) {
+                  d.resolve(response);
+              });
+
+              return d.promise();
+          },
+          updateItem: function(item) {
+              var d = $.Deferred();
+              console.log(item);
+              $.ajax({
+                  url: "/api/database",
+                  data: JSON.stringify(item),
+                  type: "PUT",
+                  dataType: "json",
+                  contentType: "application/json",
+              }).done(function(response) {
+                  d.resolve(response);
+              });
+              return d.promise();
+          },
+          deleteItem: function(item) {
+              var d = $.Deferred();
+              $.ajax({
+                  url: "/api/database",
+                  data: item,
+                  type: "DELETE",
+              }).done(function(response) {
+                  d.resolve(response);
+              });
+              return d.promise();
+          },
+          insertItem: function(item) {
+              var d = $.Deferred();
+              $.ajax({
+                  url: "/api/database",
+                  data: JSON.stringify(item),
+                  dataType: "json",
+                  contentType: "application/json",
+                  type: "POST",
+              }).done(function(response) {
+                  d.resolve(response);
+              });
+              return d.promise();
+          },
+
+
+        },
+
+        fields: [
+            { 
+              name: "場域編號", 
+              type: "text", 
+              width: 40, 
+              validate: "required" 
+            },
+            { 
+              name: "規格<br>(尾/公斤)",
+              type: "number",
+              width: 40 
+            },
+            { name: "紀錄魚群總重<br>(公斤)",
+              type: "number",
+              width: 40 
+            },
+            { 
+              name: "預估魚群總重<br>(公斤)", 
+              type: "number", 
+              width: 40 
+            },
+            { 
+              name: "換肉率", 
+              type: "number", 
+              width: 30 
+            },
+            { 
+              name: "死亡數量", 
+              type: "number", 
+              width: 30 
+            },
+            { 
+              name: "更新時間", 
+              type: "text", 
+              width: 60,
+              sorting: true
+            },
+            { 
+              type: "control", 
+              width: 20 
+            }
+        ]
+  });
+
+  
+  // feeding logs
+  $("#feeding_logs").jsGrid({
+    width: "100%",
+    height: "400px",
+
+    inserting: true,
+    editing: true,
+    sorting: false,
+    paging: false,
+    autoload: true,
+    controller: {
+        loadData: function() {
+            var d = $.Deferred();
+            $.ajax({
+                url: "/api/feedingdatabase",
+                dataType: "json",
+                type: "GET"
+            }).done(function(response) {
+                d.resolve(response);
+            });
+
+            return d.promise();
+        },
+        updateItem: function(item) {
+            var d = $.Deferred();
+            console.log(item);
+            $.ajax({
+                url: "/api/feedingdatabase",
+                data: JSON.stringify(item),
+                type: "PUT",
+                dataType: "json",
+                contentType: "application/json",
+            }).done(function(response) {
+                d.resolve(response);
+            });
+            return d.promise();
+        },
+        deleteItem: function(item) {
+            var d = $.Deferred();
+            $.ajax({
+                url: "/api/feedingdatabase",
+                data: item,
+                type: "DELETE",
+            }).done(function(response) {
+                d.resolve(response);
+            });
+            return d.promise();
+        },
+        insertItem: function(item) {
+            var d = $.Deferred();
+            $.ajax({
+                url: "/api/feedingdatabase",
+                data: JSON.stringify(item),
+                dataType: "json",
+                contentType: "application/json",
+                type: "POST",
+            }).done(function(response) {
+                d.resolve(response);
+            });
+            return d.promise();
+        },
+
+
+      },
+      fields: [
+          { 
+            name: "場域編號", 
+            type: "text", 
+            width: 40, 
+            validate: "required" 
+          },
+          { 
+            name: "投餌機編號",
+            type: "text", 
+            width: 40 
+          },
+          { 
+            name: "投餌時間", 
+            type: "text", 
+            width: 60,
+            sorting: true
+          },
+          { name: "耗時(分鐘)",
+            type: "number",
+            width: 30 
+          },
+          { 
+            name: "投餌料號", 
+            type: "text", 
+            width: 40 
+          },
+          { 
+            name: "投餌量(公克)", 
+            type: "number", 
+            width: 30 
+          },
+          { 
+            type: "control", 
+            width: 20 
+          }
+      ]
+
+
+  });
+
+</script>
+
+<script> 
+  /*
+  window.onload = loadingPage;
+  
+  function getData(routes) {
+    console.log("getData routes:", routes);
+    $.ajax({
+    type: "GET",
+    dataType: "json",
+    url: "/db/" + routes,
+    async: false,
+    success: function (data) {
+        console.log("getData url:", this.url);
+        $("#fields_data").jsGrid("loadData", data);
+        $("#fields_data").jsGrid("refresh");
+        $("#fields_data").jsGrid("sort", "update_time", "desc");
+    },
+    });
+  }
+  
+  $("#fields_data").jsGrid({
+    height: "auto",
+    width: "100%",
+    sorting: true,
+    paging: true,
+    pageSize: 10,
+    pageButtonCount: 5,
+
+    inserting: true,
+    editing: true,
+    deleteConfirm: "確定刪除?",
+    noDataContent:
+        "<span class='unselectable' unselectable='on' style='white-space:nowrap; width:100%; text-align:center;'>　</span>" +
+        "<span style='position: fixed;'><span class='unselectable' unselectable='on' style='white-space:nowrap; width:100%; text-align:center;'> </span></span>" +
+        "<div style='width:3205px; height:0.1px;'></div>",
+
+    invalidNotify: function (args) {
+        console.log("args:",args);
+        for(i = 0;i < args.errors.length; i++) {
+            window.alert(args.errors[i].message);
+        }
+    },
+
+    onItemUpdated: function (args) {
+        console.log("onItemUpdated args:", args);
+
+        updateData(
+            "water_tianhe",
+            args.item._id,
+            args.item.Time,
+            args.item.Temperature_DO,
+            args.item.dissolveOxygen,
+            args.item.Temperature_ec,
+            args.item.conductivity,
+            args.item.Temperature_flow,
+            args.item.compA,
+            args.item.compB,
+            args.item.xAxisVelocity,
+            args.item.yAxisVelocity,
+            args.item.totalVelocity,
+            args.item.direction,
+            args.item.currentdirection,
+            args.item.northSouthCurrent,
+            args.item.eastWestCurrent,
+            args.item.powerVoltage
+        );
+
+        getData("water_tianhe");
+    },
+
+    controller: {
+        loadData: function(filter) {
+            let data = $.Deferred();
+            $.ajax({
+                type: "get",
+                async: false,
+                url: "http://127.0.0.1/show/",
+                dataType: "json",
+                success : function(data) {
+                  console.log("傳送成功" + JSON.stringify(data));
+                  var colCount = $("#fields_tbody tr").length;
+                  for (var i=0; i<colCount;i++){
+                    newFieldsData.deleteRow(0);
+                  }
+                  newFieldsData.insertRow(0);
+                  var dataArray = Object.values(data);
+                  var fields_data = dataArray[1];
+                  var r = fields_data.length;
+                  var c = fields_data[0].length;
+                  for (var i=0; i<r; i++){
+                    var newRow = newFieldsData.insertRow(i+1);
+                    for (var j=0; j<c; j++){
+                      var newCell = newFieldsData.rows[i+1].insertCell(j);
+                      newCell.innerHTML = fields_data[i][j];
+                    }
+                  }
+                },
+                success: (response) => {
+                    let fieldsJsonData = response;
+                    let everspringData = [];
+                    let tzoffset = (new Date()).getTimezoneOffset() * 60000;  //時區偏移(轉成millisecond)
+                    for (let i = fieldsJsonData.length - 1;i >= 0;i--) {
+                        let localeISOTime = (new Date(new Date(fieldsJsonData[i].Time) - tzoffset)).toISOString().slice(0, 19);
+                        let element = {
+                            _id: fieldsJsonData[i]._id,
+                            Time: localeISOTime,
+                            Temperature_DO: fieldsJsonData[i].Temperature_DO.toFixed(2),
+                            dissolveOxygen: fieldsJsonData[i].dissolveOxygen.toFixed(2),
+                            Temperature_ec: fieldsJsonData[i].Temperature_ec.toFixed(2),
+                            salinity: conductivityTransfer(fieldsJsonData[i].conductivity, fieldsJsonData[i].Temperature_flow).toFixed(2),
+                            Temperature_flow: fieldsJsonData[i].Temperature_flow.toFixed(2),
+                            compA: fieldsJsonData[i].compA.toFixed(2),
+                            compB: fieldsJsonData[i].compB.toFixed(2),
+                            xAxisVelocity: fieldsJsonData[i].xAxisVelocity.toFixed(2),
+                            yAxisVelocity: fieldsJsonData[i].yAxisVelocity.toFixed(2),
+                            totalVelocity: fieldsJsonData[i].totalVelocity.toFixed(2),
+                            direction: fieldsJsonData[i].direction.toFixed(2),
+                            currentdirection: fieldsJsonData[i].currentdirection.toFixed(2),
+                            northSouthCurrent: fieldsJsonData[i].northSouthCurrent.toFixed(2),
+                            eastWestCurrent: fieldsJsonData[i].eastWestCurrent.toFixed(2),
+                            powerVoltage: fieldsJsonData[i].powerVoltage.toFixed(2),
+                        };
+                        everspringData.push(element);
+                    }
+                    data.resolve(everspringData);
+                    $("#fields_data").jsGrid("sort", "update_time", "desc");
+                    $("#fields_data").jsGrid("option", "inserting", true);
+                },
+            });
+            return data.promise();
+        },
+    },
+
+    fields: [
+        {
+            name: "field_ID",
+            title: "場域編號",
+            type: "text",
+            width: 175,
+            align: "center",
+        },
+        {
+            name: "spec",
+            title: "規格(尾/公斤)",
+            type: "floatNumber",
+            width: 175,
+            align: "center",
+            cellRender: function (item, value) {
+                let tempHighThreshold = subData[0].tempHighThreshold;
+                let tempLowThreshold = subData[0].tempLowThreshold;
+                let threshold = $("#text_Temperature_DO").val();
+                if(item <= tempLowThreshold && tempLowThreshold != "") {
+                    return $("<td>")
+                        .addClass("jsgrid-cell jsgrid-align-center")
+                        .css("color", "red")
+                        .append(item);
+                }
+                else if(item >= tempHighThreshold && tempHighThreshold != "") {
+                    return $("<td>")
+                        .addClass("jsgrid-cell jsgrid-align-center")
+                        .css("color", "red")
+                        .append(item);
+                }
+                else if (item == threshold && threshold != "") {
+                    return $("<td>")
+                        .addClass("jsgrid-cell jsgrid-align-center")
+                        .css("color", "blue")
+                        .append(item);
+                }
+                return $("<td>")
+                    .addClass("jsgrid-cell jsgrid-align-center")
+                    .append(item);
+            },
+        },
+        {
+            name: "dissolveOxygen",
+            title: "溶氧(mg/L)",
+            type: "floatNumber",
+            width: 175,
+            align: "center"
+        },
+        {
+            name: "Temperature_ec",
+            title: "導電率感測器水溫(°C)",
+            type: "floatNumber",
+            width: 175,
+            align: "center",
+        },
+        {
+            name: "salinity",
+            title: "鹽度(ppt)",
+            type: "floatNumber",
+            width: 175,
+            align: "center",
+        },
+        {
+            name: "Temperature_flow",
+            title: "流速計水溫(°C)",
+            type: "floatNumber",
+            width: 175,
+            align: "center",
+        },
+        {
+            name: "totalVelocity",
+            title: "海流流速",
+            type: "floatNumber",
+            width: 175,
+            align: "center"
+        },
+        { type: "control", width: 80, headerTemplate: function () { return; } }
+    ]
+  });
+
+  function loadingPage() {
+    $.ajax({
+        type: "get",
+        async: false,
+        url: "http://127.0.0.1/show/",
+        dataType: "json",
+        success: (response) => {
+            subData = response;
+            console.log("subData: ", subData);
+        },
+    });
+
+    $("#fields_data").jsGrid("option", "inserting", true);
+
+    $("#fields_data").jsGrid("loadData");
+  }
+*/
+</script>
+</body>
+</html>
+
+

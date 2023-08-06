@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Home</title>
+
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css">
+  <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/style.css') }}" />
+  <script type="text/javascript" src="{{ url_for('static', filename='js/script.js') }}"></script>
+
+</head>
+
+<body>
+  <div class="row">
+    <!-- sidebars -->
+    <div class="col-md-2" style="border-right: 2px solid LightSteelBlue;">
+      <div class="header d-flex flex-column flex-shrink-0 p-3">
+        <a href="/home" class="d-flex align-items-center mb-3 mb-md-0 me-md-auto sidebars text-decoration-none">
+          <!--<svg class="bi pe-none me-2" width="40" height="60"><use xlink:href="#bootstrap"/></svg>-->
+          <img src="https://github.com/marshmallow3210/FourfingerThreadfinManagementPlatform/blob/main/IMG_1663.jpeg?raw=true" alt="一隻魚" width="160" height="50">
+        </a>
+      </div>
+
+      <div class="row">
+        <ul class="nav nav-pills flex-column mb-auto sidebars">
+          <li class="nav-item">
+            <div class="nav-link active sidebars" style="background-color: #009999;">
+              <svg class="bi pe-none me-2" width="16" height="16" ></svg>
+              功能表
+            </div>
+          </li>
+          <li class="nav-item">
+            <a href="/home" class="nav-link sidebars" aria-current="page">
+              <svg class="bi pe-none me-2" width="16" height="16" ><use xlink:href="#home"/></svg>
+              首頁
+            </a>
+          </li>
+          <li>
+            <a href="/dispenser" class="nav-link sidebars">
+              <svg class="bi pe-none me-2" width="16" height="16"><use xlink:href="#speedometer2"/></svg>
+              投餌機配置
+            </a>
+          </li>
+          <li>
+            <a href="/test" class="nav-link sidebars">
+              <svg class="bi pe-none me-2" width="16" height="16"><use xlink:href="#table"/></svg>
+              測試餵食
+            </a>
+          </li>
+          <li>
+            <a href="/show" class="nav-link sidebars">
+              <svg class="bi pe-none me-2" width="16" height="16"><use xlink:href="#grid"/></svg>
+              養殖紀錄
+            </a>
+          </li>
+          <li>
+            <a href="/feeding_logs" class="nav-link sidebars">
+              <svg class="bi pe-none me-2" width="16" height="16"><use xlink:href="#people-circle"/></svg>
+              查詢
+            </a>
+          </li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="col-md">        
+      <!--header-->
+      <div class="row">
+        <header class="header d-flex flex-wrap align-items-center justify-content-right justify-content-lg-start">
+          
+          <div class="col-md-1">
+            <a href="/" class="d-flex align-items-center my-2 my-lg-0 me-lg-auto text-decoration-none">
+              <svg class="bi me-2" width="40" height="32" role="img" aria-label="Bootstrap"><use xlink:href="#bootstrap"></use></svg>
+            </a>
+          </div>
+
+          <div class="col-md">
+            <p class="center">
+              <h3 class="center">
+                午仔魚養殖管理平台
+              </h3>
+            </p>
+          </div>
+
+          <div class="col-md-2 center">
+            <ul class="nav col-12 col-lg-auto my-2 justify-content-center my-md-0">
+              <li class="center">
+                <a href="" class="nav-link aside" data-bs-toggle="dropdown">
+                  <img src="https://github.com/marshmallow3210/FourfingerThreadfinManagementPlatform/blob/main/IMG_1663.png?raw=true" alt="通知" width="32" height="32" class="rounded-circle me-0">
+                  <!--通知-->
+                </a>
+                <ul class="dropdown-menu text-small shadow ">
+                  <li class="list-group-item d-flex justify-content-between align-items-start">
+                    <div class="ms-2 me-auto">
+                      <div class="fw-bold">通知1</div>
+                      通知1內容
+                    </div>
+                    <span class="badge bg-primary rounded-pill">12</span>
+                  </li>
+                  <li><hr class="dropdown-divider"></li>
+                  <li><a class="dropdown-item" href="/">通知2</a></li>
+                </ul>
+              </li>
+              <li class="center">
+                <a href="" class="nav-link aside dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                  <!--<svg class="bi d-block mx-auto mb-1" width="24" height="24"><use xlink:href="#speedometer2"></use></svg>-->
+                  <img src="https://github.com/marshmallow3210/FourfingerThreadfinManagementPlatform/blob/main/IMG_1661.png?raw=true" alt="用戶" width="32" height="32" class="rounded-circle me-0">
+                  <!--用戶-->
+                </a>
+                <ul class="dropdown-menu text-small shadow">
+                  <li><a class="dropdown-item" href="">帳號設定</a></li>
+                  <li><hr class="dropdown-divider"></li>
+                  <li><a class="dropdown-item" href="/logout">登出</a></li>
+                </ul>
+              </li>
+            </ul>
+          </div>
+        </header>
+      </div>
+
+        <!--content-->
+        <div class="row">
+          <div class="main">
+            <div class="row content">
+              <div class="col-xl-6 col-sm-6">
+                <h3>XXX養殖場</h3>
+                <h6>負責人：傅擇仁</h6>
+                <h6>聯絡電話：0987654321</h6>
+              </div>
+
+              <div class="col-xl-6 col-sm-6">
+                <h3>時間</h3>
+                <h6>日期：<span id="current_date"></span></h6>
+                <h6>時間：<span id="current_time"></span></h6>
+              </div>
+            </div>
+            
+            <hr>
+
+            <div class="content">
+              <table style="width:100%">
+                <tr>
+                  <th colspan="2">
+                    今日養殖紀錄
+                  </th>
+                </tr>
+                <tr>
+                  <td class="tablename">規格<br>(尾/公斤)</td>
+                  <td>100.0</td>
+                </tr>
+                <tr>
+                  <td>紀錄魚群總重<br>(公斤)</td>
+                  <td>300.0</td>
+                </tr>
+                <tr>
+                  <td>預估魚群總重<br>(公斤)</td>
+                  <td>300.0</td>
+                </tr>
+                <tr>
+                  <td>估算換肉率</td>
+                  <td>1.0</td>
+                </tr>
+                <tr>
+                  <td>死亡數量</td>
+                  <td>0</td>
+                </tr>
+              </table>
+
+            </div>
+
+            <hr>
+          
+            <div class="content">
+              <table style="width:100%">
+                <tr>
+                  <th colspan="2">
+                    養殖決策建議
+                  </th>
+                </tr>
+                <tr>
+                  <td class="tablename">水溫建議決策:</td>
+                  <td>/</td>
+                </tr>
+                <tr>
+                  <td>活存率建議:</td>
+                  <td>/</td>
+                </tr>
+                <tr>
+                  <td>肥滿度建議:</td>
+                  <td>/</td>
+                </tr>
+                <tr>
+                  <td>肥滿度建議:</td>
+                  <td>/</td>
+                </tr>
+              </table>
+
+            </div>
+          
+            <hr>
+          
+            <div>
+              <span>
+                
+              </span>
+            </div>
+          </div>
+        </div>
+    </div>
+  </div>
+  
+</body>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"></script>
+  <script type="text/javascript" src="{{ url_for('static', filename='js/home.js') }}"></script>
+
+</html>
