@@ -10,17 +10,26 @@
 </head>
 
 <body>
-    <div class="login-container">
-        <h2>Login</h2>
-        <form method="post">
-            <label for="username">Username</label>
-            <input type="text" id="username" name="username" required>
+    <div class="row main-page center">
+        <div class="row main">
+            <h2>Login</h2>
+        </div>
+        
+        <div class="row main">
+            <form method="post">
+                <div class="mb-3 col-md-4">
+                    <label for="username">Username</label>
+                    <input type="text" id="username" name="username" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1" required>
+                </div>
 
-            <label for="password">Password</label>
-            <input type="password" id="password" name="password" required>
+                <div class="mb-3 col-md-4">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" name="password" class="form-control" placeholder="Password" aria-label="Password" aria-describedby="basic-addon1" required>
+                </div>
 
-            <button type="submit">Login</button>
-        </form>
+                <button type="submit" class="btn btn-outline-secondary">Login</button>
+            </form>
+        </div>
     </div>
 </body>
 </html>

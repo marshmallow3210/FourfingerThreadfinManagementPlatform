@@ -42,10 +42,6 @@ h6 {
     font-weight: bold;
 }
 
-.main{
-    padding: 60px;
-}
-
 table {
     border-spacing: 30px;
     width: 100%;
@@ -79,7 +75,7 @@ select{
     flex: 0 1 240px;
     background-color: #ccf2f2;
     border-right: 2px solid LightSteelBlue;
-    transition: width 0.3s ease; /* 添加過渡效果 */
+    transition: width 0.1s ease; /* 添加過渡效果 */
 }
 
 /* sidebar收縮後的樣式 */
@@ -93,7 +89,7 @@ select{
 /* sidebar hidden btn */
 .hidden {
     opacity: 0;
-    transition: width 0.3s ease; /* 添加過渡效果 */
+    transition: width 0.2s ease; /* 添加過渡效果 */
     pointer-events: none; /* 隱藏時不接受點擊事件 */
 }
 
@@ -111,6 +107,7 @@ select{
     color: #003366;
     font-weight: bold;
     padding-left: 20px;
+    transition: width 0.2s ease; /* 添加過渡效果 */
 }
 
 /* content(header+main) */
@@ -118,9 +115,50 @@ select{
     flex: 1; /* Content佔滿剩餘空間 */
 }
 
+.indented-list li {
+    margin-left: 20px; /* 調整縮排的數值 */
+ }
+  
 header {
     background-color: #009999; 
     color: #ccf2f2;
     height: 64px;
     text-align: right;
+}
+
+.sidebar-btn {
+    background-color: #009999; 
+    color: #ccf2f2;
+    text-align: left;
+    align-items: left;
+    padding: 10px;
+}
+
+.main-page {
+    padding: 60px;
+}
+
+.main{
+    padding: 40px;
+}
+
+span {
+    width: 24px;
+    height: 24px;
+    margin-left: 5px;
+}
+
+.input-title {
+    background-color: #ccf2f2; 
+    color: #003366;
+    border: 1px #ccf2f2;
+    font-weight: bold;
+    padding-left: 0%;
+}
+
+.select-title {
+    background-color: #ccf2f2; 
+    color: #003366;
+    border: 1px solid #003366;
+    font-weight: bold;
 }

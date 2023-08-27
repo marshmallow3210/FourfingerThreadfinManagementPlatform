@@ -15,14 +15,14 @@ setInterval(displayDateTime, 1000);
 
 // 點擊按鈕收縮或展開sidebar
 $(document).ready(function() {
-    $("#sidebar_button").click(function() {
-        $("#sidebar-item").toggleClass("show-element"); // 切換 .show-element 類別
+    $("#sidebar-btn").click(function() {
+        $("#sidebar-item").toggleClass("collapsed"); 
         $("#sidebar").toggleClass("collapsed");
     });
 });
 
 // 獲取按鈕和要控制的 div 元素
-var toggleButton = document.getElementById("sidebar_button");
+var toggleButton = document.getElementById("sidebar-btn");
 var sidebarDiv = document.getElementById("sidebar");
 
 // 添加點擊事件監聽器
