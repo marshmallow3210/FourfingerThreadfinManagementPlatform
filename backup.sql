@@ -40,57 +40,59 @@ INSERT INTO `dispenser` VALUES (1,1),(2,1);
 UNLOCK TABLES;
 
 --
--- Table structure for table `feed_conversion`
+-- Table structure for table `fcr`
+-- `fcr`: 換肉率
 --
 
-DROP TABLE IF EXISTS `feed_conversion`;
+DROP TABLE IF EXISTS `fcr`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `feed_conversion` (
+CREATE TABLE `fcr` (
   `field_ID` int(11) DEFAULT NULL,
-  `feed_conversion` float DEFAULT NULL,
+  `fcr` float DEFAULT NULL,
   `start_time` datetime DEFAULT NULL,
   `end_time` datetime DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Dumping data for table `feed_conversion`
+-- Dumping data for table `fcr`
 --
 
-LOCK TABLES `feed_conversion` WRITE;
-/*!40000 ALTER TABLE `feed_conversion` DISABLE KEYS */;
-INSERT INTO `feed_conversion` VALUES (1,2,'2023-03-12 11:13:42','2023-03-12 11:15:48');
-/*!40000 ALTER TABLE `feed_conversion` ENABLE KEYS */;
+LOCK TABLES `fcr` WRITE;
+/*!40000 ALTER TABLE `fcr` DISABLE KEYS */;
+INSERT INTO `fcr` VALUES (1,2,'2023-03-12 11:13:42','2023-03-12 11:15:48');
+/*!40000 ALTER TABLE `fcr` ENABLE KEYS */;
 UNLOCK TABLES;
 
 --
--- Table structure for table `feeding_fields`
+-- Table structure for table `field_logs`
 --
 
-DROP TABLE IF EXISTS `feeding_fields`;
+DROP TABLE IF EXISTS `field_logs`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `feeding_fields` (
+CREATE TABLE `field_logs` (
   `field_ID` int(11) NOT NULL,
-  `spec` int(11) DEFAULT NULL,
-  `weights` float DEFAULT NULL,
+  `spec` float DEFAULT NULL,
+  `record_weights` float DEFAULT NULL,
   `estimated_weights` float DEFAULT NULL,
-  `feed_conversion` float DEFAULT NULL,
+  `fcr` float DEFAULT NULL,
   `dead_counts` int(11) DEFAULT NULL,
   `update_time` datetime DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 /* `spec`: 尾/公斤 */
 --
--- Dumping data for table `feeding_fields`
+-- Dumping data for table `field_logs`
 --
 
-LOCK TABLES `feeding_fields` WRITE;
-/*!40000 ALTER TABLE `feeding_fields` DISABLE KEYS */;
-INSERT INTO `feeding_fields` VALUES (1,100,300,300,0,0,'2023-03-01 12:30:00'),(1,50,600,600,2,100,'2023-04-01 12:30:00');
-INSERT INTO `feeding_fields` VALUES (2,120,300,300,0,0,'2023-03-01 12:30:00'),(2,90,400,400,2,100,'2023-03-10 12:30:00'),(2,60,600,600,2,100,'2023-04-01 12:30:00');
-/*!40000 ALTER TABLE `feeding_fields` ENABLE KEYS */;
+LOCK TABLES `field_logs` WRITE;
+/*!40000 ALTER TABLE `field_logs` DISABLE KEYS */;
+INSERT INTO `field_logs` VALUES (1,100.0,300.0,300.0,0.0,0,'2023-03-01 12:30:00'),(1,50.0,600.0,600.0,1.5,100,'2023-04-01 12:30:00');
+INSERT INTO `field_logs` VALUES (2,120.0,300.0,300.0,0.0,0,'2023-03-02 12:00:00'),(2,90.0,400.0,400.0,2.0,100,'2023-03-10 12:20:00'),(2,60.0,600.0,600.0,2.0,100,'2023-04-01 12:40:00');
+INSERT INTO `field_logs` VALUES (3,145.0,500.0,500.0,0.0,0,'2023-03-03 12:45:00'),(3,98.0,850.0,900.0,1.2,100,'2023-04-04 12:00:00');
+/*!40000 ALTER TABLE `field_logs` ENABLE KEYS */;
 UNLOCK TABLES;
 
 --
