@@ -10,12 +10,12 @@ from sklearn.preprocessing import PolynomialFeatures
 from sklearn.neighbors import KNeighborsRegressor
 
 app=Flask(__name__)
-app.secret_key = 'marsh12mallow14'  # 替換為隨機的密鑰，用於安全性目的
+app.secret_key = '66386638'  # 替換為隨機的密鑰，用於安全性目的
 
-connection = pymysql.connect(host='127.0.0.1',
+connection = pymysql.connect(host='34.81.183.159',
                              port=3306,
-                             user='root',
-                             password='marsh12mallow14',
+                             user='lab403',
+                             password='66386638',
                              autocommit=True)
 
 users = {
@@ -87,11 +87,11 @@ def preidict_date(weight):
     
     return y_pred
     
-@app.route('/dispenser/', methods=["GET", "POST"])
+@app.route('/fishDB/templates/dispenser.html', methods=["GET", "POST"])
 def dispenser():
     global connection
     cursor = connection.cursor()
-    sql = "use ai_fish;"
+    sql = "use fishDB;"
     cursor.execute(sql)
 
     if request.method == "POST":
@@ -120,15 +120,15 @@ def dispenser():
                 data[-1].append(temp[1])
     except:
         data=[]
-    page = render_template('dispenser.html', fields_count=fields_count, data=data, data_len=len(data))
+    page = render_template('/fishDB/templates/dispenser.html', fields_count=fields_count, data=data, data_len=len(data))
 
     return page
 
-@app.route('/test/', methods=["GET", "POST"])
+@app.route('/fishDB/templates/test.html', methods=["GET", "POST"])
 def test():
     global connection
     cursor = connection.cursor()
-    sql = "use ai_fish;"
+    sql = "use fishDB;"
     cursor.execute(sql)
 
     if request.method == "POST":
@@ -140,17 +140,17 @@ def test():
         print(field_ID, dispenser_ID, used)
         sql = 'insert into feeding_logs(dispenser_ID, use_time, food_ID, used, field_ID) values({}, {}, "{}", {}, {})'.format(dispenser_ID, use_time, food_ID, used, field_ID)
         cursor.execute(sql)
-        return redirect(url_for("test"))
+        return redirect(url_for("/fishDB/templates/test.html"))
 
 
     sql = "select field_ID from field_logs;"
     cursor.execute(sql)
     fields_count = cursor.fetchall()
-    page = render_template('test.html', fields_count=fields_count)
+    page = render_template('/fishDB/templates/test.html', fields_count=fields_count)
 
     return page
 
-@app.route('/login', methods=['GET', 'POST'])
+@app.route('/fishDB/templates/login.html', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
         username = request.form['username']
@@ -161,48 +161,37 @@ def login():
             # 登入成功，將用戶名存入 session
             session['username'] = username
             print('yes')
-            return redirect(url_for('home'))
+            # return redirect(url_for('/fishDB/templates/home.html'))
+            return render_template('/fishDB/templates/home.html')
         else:
             error = 'Invalid username or password. Please try again.'
-            return render_template('login.html', error=error)
+            return render_template('/fishDB/templates/login.html', error=error)
 
-    return render_template('login.html')
+    return render_template('/fishDB/templates/login.html')
 
-@app.route('/logout')
+@app.route('/fishDB/templates/logout.html')
 def logout():
     # 清除用戶名的 session 資料
     session.pop('username', None)
-    return redirect(url_for('login'))
+    return redirect(url_for('/fishDB/templates/login.html'))
+    # return render_template('/fishDB/templates/login.html')
 
-@app.route('/home')
+@app.route('/fishDB/templates/home.html')
 def home():
+    name = "John"
     # 檢查用戶是否登入，未登入則返回登入頁面
     if 'username' in session:
-        return render_template('home.html', username=session['username'])
+        return render_template('/fishDB/templates/home.html', username=session['username'], name=name)
     else:
-        return redirect(url_for('login'))
-    # home = render_template('home.html')
+        return render_template('/fishDB/templates/login.html')
+    # home = render_template('/fishDB/templates/home.html')
     # return home
 
-# @app.route('/api/database', methods=['GET',])
-# def getdata():
-#     global connection
-#     cursor = connection.cursor()
-#     sql = 'use ai_fish;'
-#     cursor.execute(sql)
-    
-#     sql = "select * from field_logs;"
-#     cursor.execute(sql)
-#     fields_data = list(cursor.fetchall()) 
-#     fields_data = utc8(fields_data, 6)
-#     print(fields_data)
-#     return jsonify(fields_data)
-
-@app.route('/show/', methods=["GET", "POST"])
+@app.route('/fishDB/templates/show.html', methods=["GET", "POST"])
 def show():
     global connection
     cursor = connection.cursor()
-    sql = 'use ai_fish;'
+    sql = 'use fishDB;'
     cursor.execute(sql)
     
     sql = "select ff.field_ID, d.dispenser_ID, fl.feeding_time, fl.use_time, fl.food_ID, fl.used from field_logs as ff inner join dispenser as d inner join feeding_logs as fl where ff.field_ID=d.field_ID and d.dispenser_ID=fl.dispenser_ID order by fl.feeding_time desc;"
@@ -259,14 +248,14 @@ def show():
         fields_count = []
         [fields_count.append(x) for x in fields_count_list if x not in fields_count]
         
-    page = render_template('show.html', fields_count=fields_count,fields_data=fields_data, data=data, fcr=fcr)
+    page = render_template('/fishDB/templates/show.html', fields_count=fields_count,fields_data=fields_data, data=1, fcr=fcr)
     return page   
     
-@app.route('/update/', methods=["GET", "POST"])
+@app.route('/fishDB/templates/update.html', methods=["GET", "POST"])
 def update():
     global connection
     cursor = connection.cursor()
-    sql = "use ai_fish;"
+    sql = "use fishDB;"
     cursor.execute(sql)
 
     if request.method == "POST":   
@@ -322,24 +311,24 @@ def update():
         sql = 'insert into field_logs (field_ID, avg_weights, estimated_avg_weights, fcr, counts, dead_counts, update_time) values({}, {}, {}, {}, {}, {}, "{}");'.format(field_ID, avg_weights, estimated_avg_weights, fcr, counts, dead_counts, datetime.datetime.now())
         cursor.execute(sql)
                 
-        return redirect(url_for("show"))
+        return redirect(url_for("/fishDB/templates/show.html"))
 
     sql = "select field_ID from field_logs;"
     cursor.execute(sql)
     fields_count = cursor.fetchall()
-    page = render_template('update.html', fields_count=fields_count)
+    page = render_template('/fishDB/templates/update.html', fields_count=fields_count)
     return page
 
-@app.route('/query/', methods=["GET", "POST"])
+@app.route('/fishDB/templates/query.html', methods=["GET", "POST"])
 def query():
-    query = render_template('query.html')
+    query = render_template('/fishDB/templates/query.html')
     return query
 
-@app.route('/query_result/', methods=["GET", "POST"])
+@app.route('/fishDB/templates/query_result.html', methods=["GET", "POST"])
 def query_result():
     global connection
     cursor = connection.cursor()
-    sql = "use ai_fish;"
+    sql = "use fishDB;"
     cursor.execute(sql)
     
     if request.method == "POST":
@@ -423,7 +412,7 @@ def query_result():
         # print("目標飼料量(公克):", target_feed, "\n已用飼料量(公克):", total_used, "\n每日飼料量(公克):", daily_feed, "\n預估天數(天):", estimated_days)
 
         estimated_fcr = round(total_used/(estimated_weights-first_weights), 2)
-    query_result = render_template('query_result.html', age=int(age), estimated_date=estimated_date, estimated_weights=estimated_weights, estimated_fcr=estimated_fcr, total_used=total_used, first_weights=first_weights)
+    query_result = render_template('/fishDB/templates/query_result.html', age=int(age), estimated_date=estimated_date, estimated_weights=estimated_weights, estimated_fcr=estimated_fcr, total_used=total_used, first_weights=first_weights)
     # target_feed=target_feed, total_used=total_used, estimated_days=estimated_days, fcr=fcr, target_weight=target_weight, avg_weights=avg_weights, counts=counts, dead_counts=dead_counts, estimated_feed=estimated_feed, daily_feed=daily_feed)
     return query_result
 
@@ -435,11 +424,9 @@ def write_data(data):
     json.dump(data, open('field_logs.json', 'w', encoding="utf-8"), indent=6, sort_keys=True)
     return
 
-
 @app.route('/api/database', methods=['GET',])
 def getdata():
     return jsonify(load_data())
-
 
 @app.route('/api/database', methods=['PUT',])
 def updatedata():
@@ -449,7 +436,6 @@ def updatedata():
             data[i].update(request.json)
     write_data(data)
     return jsonify(request.json)
-
 
 @app.route('/api/database', methods=['POST',])
 def insertdata():
@@ -469,9 +455,9 @@ def deletedata():
     return jsonify(success=True)
 
 
-@app.route('/feeding_logs/', methods=["GET", "POST"])
+@app.route('/fishDB/templates/feeding_logs.html', methods=["GET", "POST"])
 def feeding_logs():
-    page = render_template('feeding_logs.html')
+    page = render_template('/fishDB/templates/feeding_logs.html')
     return page   
 
 # get feeding data
@@ -482,11 +468,9 @@ def write_feeding_data(data):
     json.dump(data, open('feeding_logs.json', 'w', encoding="utf-8"), indent=6, sort_keys=True)
     return
 
-
 @app.route('/api/feedingdatabase', methods=['GET',])
 def get_feeding_data():
     return jsonify(load_feeding_data())
-
 
 @app.route('/api/feedingdatabase', methods=['PUT',])
 def update_feeding_data():
@@ -496,7 +480,6 @@ def update_feeding_data():
             data[i].update(request.json)
     write_feeding_data(data)
     return jsonify(request.json)
-
 
 @app.route('/api/feedingdatabase', methods=['POST',])
 def insert_feeding_data():
@@ -518,4 +501,4 @@ def delete_feeding_data():
 if __name__ == '__main__':
     app.config['TEMPLATES_AUTO_RELOAD'] = True
     app.jinja_env.auto_reload = True
-    app.run(host='0.0.0.0',port=80)
+    app.run(host='127.0.0.1',port=8080)
