@@ -29,6 +29,8 @@ users = {
     'admin': 'admin'
 }
 
+databaseName = "ai_fish"
+
 def utc8(utc, p):
     for i in range(0, len(utc)):
         if utc[i][p] != None:
@@ -97,7 +99,7 @@ def preidict_date(weight):
 def dispenser():
     global connection
     cursor = connection.cursor()
-    sql = "use ai_fish;"
+    sql = "use " + databaseName + ";"
     cursor.execute(sql)
 
     if request.method == "POST":
@@ -134,7 +136,7 @@ def dispenser():
 def test():
     global connection
     cursor = connection.cursor()
-    sql = "use ai_fish;"
+    sql = "use " + databaseName + ";"
     cursor.execute(sql)
 
     if request.method == "POST":
@@ -195,7 +197,7 @@ def home():
 def show():
     global connection
     cursor = connection.cursor()
-    sql = 'use ai_fish;'
+    sql = "use " + databaseName + ";"
     cursor.execute(sql)
     
     sql = "select ff.field_ID, d.dispenser_ID, fl.feeding_time, fl.use_time, fl.food_ID, fl.used from field_logs as ff inner join dispenser as d inner join feeding_logs as fl where ff.field_ID=d.field_ID and d.dispenser_ID=fl.dispenser_ID order by fl.feeding_time desc;"
@@ -259,7 +261,7 @@ def show():
 def update():
     global connection
     cursor = connection.cursor()
-    sql = "use ai_fish;"
+    sql = "use " + databaseName + ";"
     cursor.execute(sql)
 
     if request.method == "POST":   
@@ -332,7 +334,7 @@ def query():
 def query_result():
     global connection
     cursor = connection.cursor()
-    sql = "use ai_fish;"
+    sql = "use " + databaseName + ";"
     cursor.execute(sql)
     
     if request.method == "POST":
