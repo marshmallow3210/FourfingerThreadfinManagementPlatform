@@ -193,8 +193,8 @@ def home():
     # home = render_template('home.html')
     # return home
 
-@app.route('/show', methods=["GET", "POST"])
-def show():
+@app.route('/feeding_logs', methods=["GET", "POST"])
+def feeding_logs():
     global connection
     cursor = connection.cursor()
     sql = "use " + databaseName + ";"
@@ -254,7 +254,71 @@ def show():
         fields_count = []
         [fields_count.append(x) for x in fields_count_list if x not in fields_count]
         
-    page = render_template('show.html', fields_count=fields_count,fields_data=fields_data, data=data, fcr=fcr)
+    page = render_template('feeding_logs.html', fields_count=fields_count,fields_data=fields_data, data=data, fcr=fcr)
+    return page   
+  
+@app.route('/field_logs', methods=["GET", "POST"])
+def field_logs():
+    global connection
+    cursor = connection.cursor()
+    sql = "use " + databaseName + ";"
+    cursor.execute(sql)
+    
+    sql = "select ff.field_ID, d.dispenser_ID, fl.feeding_time, fl.use_time, fl.food_ID, fl.used from field_logs as ff inner join dispenser as d inner join feeding_logs as fl where ff.field_ID=d.field_ID and d.dispenser_ID=fl.dispenser_ID order by fl.feeding_time desc;"
+    cursor.execute(sql)
+    data = list(cursor.fetchall())
+    data = utc8(data, 2)
+    
+    sql = "select * from fcr order by end_time desc;"
+    cursor.execute(sql)
+    fcr = list(cursor.fetchall())
+    fcr = utc8(fcr, 2)
+    fcr = utc8(fcr, 3)
+    
+    if request.method == "POST":
+        json_data = request.get_json("data")
+        field_ID = int(json_data["field_ID"])
+        print("receive POST", field_ID)
+        if field_ID == 0:
+            sql = "select * from field_logs;"
+            cursor.execute(sql)
+            fields_data = list(cursor.fetchall()) 
+            fields_data = utc8(fields_data, 6)
+            
+            sql = "select field_ID from field_logs;"
+            cursor.execute(sql)
+            fields_count = cursor.fetchall()
+            
+        else:
+            sql = "select * from field_logs where field_ID=" + str(field_ID) +";"
+            cursor.execute(sql)
+            fields_data = list(cursor.fetchall()) 
+            fields_data = utc8(fields_data, 6)
+            
+            sql = "select field_ID from field_logs where field_ID=" + str(field_ID) +";"
+            cursor.execute(sql)
+            fields_count = cursor.fetchall()
+            
+        # print('POST fields_count', fields_count, 'fields_count', fields_data)
+        data = {
+            "fields_count": fields_count,
+            "fields_data": fields_data
+        }
+        return data
+    
+    else:
+        sql= "select * from field_logs"
+        cursor.execute(sql)
+        fields_data = list(cursor.fetchall()) 
+        fields_data = utc8(fields_data, 6)
+        
+        sql = "select field_ID from field_logs;"
+        cursor.execute(sql)
+        fields_count_list = cursor.fetchall()
+        fields_count = []
+        [fields_count.append(x) for x in fields_count_list if x not in fields_count]
+        
+    page = render_template('field_logs.html', fields_count=fields_count,fields_data=fields_data, data=data, fcr=fcr)
     return page   
     
 @app.route('/update', methods=["GET", "POST"])
@@ -459,11 +523,6 @@ def deletedata():
             out.append(data[i])
     write_data(out)
     return jsonify(success=True)
-
-@app.route('/feeding_logs', methods=["GET", "POST"])
-def feeding_logs():
-    page = render_template('feeding_logs.html')
-    return page   
 
 # get feeding data
 def load_feeding_data():
