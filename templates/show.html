@@ -194,11 +194,9 @@
             <br>
             <table id="fields_data" style="border:3px #cccccc solid;" cellpadding="10" border='1'>
               <thead>
-                <!--
                 <tr>
-                  <th colspan="7">場域現況</th>
+                  <th colspan="9">養殖紀錄</th>
                 </tr>
-                -->
                 <tr>
                   <td>場域編號</td>
                   <td>規格(尾/公斤)</td>
@@ -224,6 +222,34 @@
               </tbody>
             </table>
           </div>
+          
+<div>
+  <table style="border:3px #cccccc solid;" cellpadding="10" border='1'>
+    <thead>
+      <tr>
+        <th colspan="9">投餌紀錄</th>
+      </tr>
+      <tr>
+        <td>場域編號</td>
+        <td>投餌機編號</td>
+        <td>投餌時間</td>
+        <td>耗時(分鐘)</td>
+        <td>投餌料號</td>
+        <td>投餌量(公克)</td>
+      </tr>
+    </thead>
+    {% for value in data %}
+    <tr>
+      <td>{{value.0}}</td>
+      <td>{{value.1}}</td>
+      <td>{{value.2}}</td>
+      <td>{{value.3}}</td>
+      <td>{{value.4}}</td>
+      <td>{{value.5}}</td>
+    </tr>
+    {% endfor %}
+  </table> 
+</div> 
           <hr>
 
           <div>
@@ -259,37 +285,9 @@
         </div>
     </div>
   </div>
-<!--
-<div>
-  <table style="border:3px #cccccc solid;" cellpadding="10" border='1'>
-    <thead>
-      <tr>
-        <th colspan="9">投餌紀錄</th>
-      </tr>
-      <tr>
-        <td>場域編號</td>
-        <td>投餌機編號</td>
-        <td>投餌時間</td>
-        <td>耗時(分鐘)</td>
-        <td>投餌料號</td>
-        <td>投餌量(公克)</td>
-      </tr>
-    </thead>
-    {% for value in data %}
-    <tr>
-      <td>{{value.0}}</td>
-      <td>{{value.1}}</td>
-      <td>{{value.2}}</td>
-      <td>{{value.3}}</td>
-      <td>{{value.4}}</td>
-      <td>{{value.5}}</td>
-    </tr>
-    {% endfor %}
-  </table> 
-</div> 
 
-<h1>Custom View</h1>
--->
+
+
 
 <!-- fields filter -->
 <script type="text/javascript">
@@ -510,8 +508,8 @@
 
       inserting: true,
       editing: true,
-      sorting: false,
-      paging: false,
+      sorting: true,
+      paging: true,
       autoload: true,
       controller: {
           loadData: function() {
@@ -592,7 +590,10 @@
             { 
               name: "換肉率", 
               type: "number", 
-              width: 30 
+              width: 30, 
+              itemTemplate: function(value) {
+                return value.toFixed(2);
+            },
             },
             { 
               name: "死亡數量", 

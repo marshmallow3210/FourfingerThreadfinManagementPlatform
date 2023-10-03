@@ -10,13 +10,19 @@ from sklearn.preprocessing import PolynomialFeatures
 from sklearn.neighbors import KNeighborsRegressor
 
 app=Flask(__name__)
-app.secret_key = 'marsh12mallow14'  # 替換為隨機的密鑰，用於安全性目的
+app.secret_key = '66386638'  # 替換為隨機的密鑰，用於安全性目的
 
 connection = pymysql.connect(host='127.0.0.1',
                              port=3306,
                              user='root',
                              password='marsh12mallow14',
                              autocommit=True)
+
+# connection = pymysql.connect(host='34.81.183.159',
+#                              port=3306,
+#                              user='lab403',
+#                              password='66386638',
+#                              autocommit=True)
 
 users = {
     'oakley': 'letmein',
@@ -32,8 +38,8 @@ def utc8(utc, p):
     return utc
 
 def preidict_weights(age):
-    '''
     # 鱸魚
+    '''
     days= 210 # 0 to 210 days
     step = 30 # interval 30 days
     phase = days//step + 1 # phase = 8
@@ -87,7 +93,7 @@ def preidict_date(weight):
     
     return y_pred
     
-@app.route('/dispenser/', methods=["GET", "POST"])
+@app.route('/dispenser', methods=["GET", "POST"])
 def dispenser():
     global connection
     cursor = connection.cursor()
@@ -124,7 +130,7 @@ def dispenser():
 
     return page
 
-@app.route('/test/', methods=["GET", "POST"])
+@app.route('/test', methods=["GET", "POST"])
 def test():
     global connection
     cursor = connection.cursor()
@@ -176,29 +182,16 @@ def logout():
 
 @app.route('/home')
 def home():
+    usr='jim'
     # 檢查用戶是否登入，未登入則返回登入頁面
     if 'username' in session:
-        return render_template('home.html', username=session['username'])
+        return render_template('home.html', username=session['username'], usr=usr)
     else:
         return redirect(url_for('login'))
     # home = render_template('home.html')
     # return home
 
-# @app.route('/api/database', methods=['GET',])
-# def getdata():
-#     global connection
-#     cursor = connection.cursor()
-#     sql = 'use ai_fish;'
-#     cursor.execute(sql)
-    
-#     sql = "select * from field_logs;"
-#     cursor.execute(sql)
-#     fields_data = list(cursor.fetchall()) 
-#     fields_data = utc8(fields_data, 6)
-#     print(fields_data)
-#     return jsonify(fields_data)
-
-@app.route('/show/', methods=["GET", "POST"])
+@app.route('/show', methods=["GET", "POST"])
 def show():
     global connection
     cursor = connection.cursor()
@@ -262,7 +255,7 @@ def show():
     page = render_template('show.html', fields_count=fields_count,fields_data=fields_data, data=data, fcr=fcr)
     return page   
     
-@app.route('/update/', methods=["GET", "POST"])
+@app.route('/update', methods=["GET", "POST"])
 def update():
     global connection
     cursor = connection.cursor()
@@ -330,12 +323,12 @@ def update():
     page = render_template('update.html', fields_count=fields_count)
     return page
 
-@app.route('/query/', methods=["GET", "POST"])
+@app.route('/query', methods=["GET", "POST"])
 def query():
     query = render_template('query.html')
     return query
 
-@app.route('/query_result/', methods=["GET", "POST"])
+@app.route('/query_result', methods=["GET", "POST"])
 def query_result():
     global connection
     cursor = connection.cursor()
@@ -435,11 +428,9 @@ def write_data(data):
     json.dump(data, open('field_logs.json', 'w', encoding="utf-8"), indent=6, sort_keys=True)
     return
 
-
 @app.route('/api/database', methods=['GET',])
 def getdata():
     return jsonify(load_data())
-
 
 @app.route('/api/database', methods=['PUT',])
 def updatedata():
@@ -449,7 +440,6 @@ def updatedata():
             data[i].update(request.json)
     write_data(data)
     return jsonify(request.json)
-
 
 @app.route('/api/database', methods=['POST',])
 def insertdata():
@@ -468,8 +458,7 @@ def deletedata():
     write_data(out)
     return jsonify(success=True)
 
-
-@app.route('/feeding_logs/', methods=["GET", "POST"])
+@app.route('/feeding_logs', methods=["GET", "POST"])
 def feeding_logs():
     page = render_template('feeding_logs.html')
     return page   
@@ -482,11 +471,9 @@ def write_feeding_data(data):
     json.dump(data, open('feeding_logs.json', 'w', encoding="utf-8"), indent=6, sort_keys=True)
     return
 
-
 @app.route('/api/feedingdatabase', methods=['GET',])
 def get_feeding_data():
     return jsonify(load_feeding_data())
-
 
 @app.route('/api/feedingdatabase', methods=['PUT',])
 def update_feeding_data():
@@ -496,7 +483,6 @@ def update_feeding_data():
             data[i].update(request.json)
     write_feeding_data(data)
     return jsonify(request.json)
-
 
 @app.route('/api/feedingdatabase', methods=['POST',])
 def insert_feeding_data():
@@ -518,4 +504,5 @@ def delete_feeding_data():
 if __name__ == '__main__':
     app.config['TEMPLATES_AUTO_RELOAD'] = True
     app.jinja_env.auto_reload = True
-    app.run(host='0.0.0.0',port=80)
+    app.run(debug=True) # in development server
+    # app.run(debug=False) # in production server
