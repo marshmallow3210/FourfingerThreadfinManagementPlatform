@@ -1,5 +1,6 @@
 import json
 from flask import Flask, jsonify, render_template, request, redirect, url_for, session
+from flask_cors import CORS
 import pymysql
 import datetime
 from datetime import timezone, timedelta
@@ -10,6 +11,7 @@ from sklearn.preprocessing import PolynomialFeatures
 from sklearn.neighbors import KNeighborsRegressor
 
 app=Flask(__name__)
+CORS(app)  # 允許所有來源的跨來源請求
 app.secret_key = '66386638'  # 替換為隨機的密鑰，用於安全性目的
 
 connection = pymysql.connect(host='127.0.0.1',
@@ -259,6 +261,7 @@ def feeding_logs():
   
 @app.route('/field_logs', methods=["GET", "POST"])
 def field_logs():
+    print(request.method)
     global connection
     cursor = connection.cursor()
     sql = "use " + databaseName + ";"
