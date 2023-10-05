@@ -175,28 +175,130 @@
           </select>
           <br>
           -->
-          <label for="field_ID">場域編號: </label>
-          <input type="text" id="field_ID" name="field_ID"  placeholder="必填" required></a>
-          <br>
-          <label for="avg_weights">魚隻均重: </label>
-          <input type="text" id="avg_weights" name="avg_weights" placeholder="重量(公克)">
-          <br>
-          <label for="feed_conversion">換肉率: </label>
-          <input type="text" id="feed_conversion" name="feed_conversion"></a>
-          <br>
-          <label for="counts">魚隻數量: </label>
-          <input type="text" id="counts" name="counts" placeholder="數量">
-          <br>
-          <label for="dead_counts">死亡數量: </label>
-          <input tyep="text" id="dead_counts" name="dead_counts" placeholder="數量">
-          <br>
-          <button type="submit">送出</button>
+          
+          <h2>新增養殖紀錄</h2>
+          <div class="col-lg-3">
+            <select class="form-select mb-3" id="chooseTime">
+                <option disabled selected value="">選擇時間</option>
+                <option class="dropdown-item" value="opt1">進貨時</option>
+                <option class="dropdown-item" value="opt2">養殖時</option>
+                <option class="dropdown-item" value="opt3">收貨時</option>
+            </select>
+            
+            <!-- options and btn -->
+            <div>
+              <br id="field_ID_br">
+              <label id="field_ID_label" style="display:none;">場域編號:
+                <input class="input-group-text" type="text" id="field_ID" name="field_ID" style="display:none;">
+              </label>
+              <br>
+              <label id="spec_label" style="display:none;">規格:
+                <input class="input-group-text" type="number" id="spec" name="spec" style="display:none;" min="0">
+                <span>尾/公斤</span>
+              </label>
+              <br>
+              <label id="record_weights_label" style="display:none;">魚隻總重: 
+                <input class="input-group-text" type="number" id="record_weights" name="record_weights" style="display:none;" min="0">
+                <span>公斤</span>
+              </label>
+              <br>
+              <label id="dead_counts_label" style="display:none;">死亡數量: 
+                <input class="input-group-text" type="number" id="dead_counts" name="dead_counts" style="display:none;" min="0">
+                <span>隻</span>
+              </label>
+              <br>
+              <label id="update_time_label" style="display:none;">更新時間:
+                <input class="input-group-text" type="datetime-local" id="update_time" name="update_time" style="display:none;">
+              </label>
+              <br>
+              
+              <button id="send_logs" class="btn btn-outline-secondary" type="submit" style="display:none;">送出</button>
+              
+            </div>
+            
+          </div>
         </div>
       </div>
     </div>
 
   </div>
 </body>
+
+<script>
+  document.getElementById('chooseTime').addEventListener('change', function() {
+      var selectedOption = this.value;
+
+      var field_ID = document.getElementById('field_ID');
+      var spec = document.getElementById('spec');
+      var record_weights = document.getElementById('record_weights');
+      var dead_counts = document.getElementById('dead_counts');
+      var update_time = document.getElementById('update_time');
+      var field_ID_label = document.getElementById('field_ID_label');
+      var spec_label = document.getElementById('spec_label');
+      var record_weights_label = document.getElementById('record_weights_label');
+      var dead_counts_label = document.getElementById('dead_counts_label');
+      var update_time_label = document.getElementById('update_time_label');
+      var send_logs = document.getElementById('send_logs');
+      var field_ID_br = document.getElementById('field_ID_br');
+      
+      send_logs.style.display = 'block';
+
+      if (selectedOption === 'opt1') {
+        field_ID_br.style.display = 'block';
+        field_ID_label.style.display = 'block';
+        field_ID.style.display = 'block';
+        field_ID.required = true;
+        spec_label.style.display = 'block';
+        spec.style.display = 'block';
+        spec.required = true;
+        record_weights_label.style.display = 'block';
+        record_weights.style.display = 'block';
+        record_weights.required = true;
+        dead_counts_label.style.display = 'block';
+        dead_counts.style.display = 'block';
+        dead_counts.required = true;
+        update_time_label.style.display = 'block';
+        update_time.style.display = 'block';
+        update_time.required = true;
+      }
+      else if (selectedOption === 'opt2') {
+        field_ID_br.style.display = 'none';
+        field_ID_label.style.display = 'none';
+        field_ID.style.display = 'none';
+        field_ID.required = false;
+        spec_label.style.display = 'none';
+        spec.style.display = 'none';
+        spec.required = false;
+        record_weights_label.style.display = 'block';
+        record_weights.style.display = 'block';
+        record_weights.required = true;
+        dead_counts_label.style.display = 'block';
+        dead_counts.style.display = 'block';
+        dead_counts.required = true;
+        update_time_label.style.display = 'block';
+        update_time.style.display = 'block';
+        update_time.required = true;
+      }
+      else if (selectedOption === 'opt3') {
+        field_ID_br.style.display = 'none';
+        field_ID_label.style.display = 'none';
+        field_ID.style.display = 'none';
+        field_ID.required = false;
+        spec_label.style.display = 'block';
+        spec.style.display = 'block';
+        spec.required = true;
+        record_weights_label.style.display = 'block';
+        record_weights.style.display = 'block';
+        record_weights.required = true;
+        dead_counts_label.style.display = 'block';
+        dead_counts.style.display = 'block';
+        dead_counts.required = true;
+        update_time_label.style.display = 'block';
+        update_time.style.display = 'block';
+        update_time.required = true;
+      }
+  });
+</script>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.4/jquery.min.js"></script>

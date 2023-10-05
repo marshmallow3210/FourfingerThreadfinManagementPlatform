@@ -162,3 +162,8 @@ span {
     border: 1px solid #003366;
     font-weight: bold;
 }
+
+.input-group-text{
+    background-color: #ffffff; 
+    border: 1px solid #003366;
+}
