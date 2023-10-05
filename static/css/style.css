@@ -167,3 +167,16 @@ span {
     background-color: #ffffff; 
     border: 1px solid #003366;
 }
+
+/* 在小屏幕時，讓側邊欄堆疊在主內容上方 */
+@media screen and (max-width: 768px) {
+    .box {
+      flex-direction: column; /* 主內容和側邊欄堆疊在一起 */
+    }
+    .sidebar {
+      order: 1;
+    }
+    .content {
+      order: 2; 
+    }
+  }
