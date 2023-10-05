@@ -75,7 +75,7 @@
                 <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z"/>
               </svg>
               
-              <span>查詢</span>
+              <span>估算查詢</span>
             </a>
           </li>
           <li>
@@ -191,20 +191,24 @@
               <label id="field_ID_label" style="display:none;">場域編號:
                 <input class="input-group-text" type="text" id="field_ID" name="field_ID" style="display:none;">
               </label>
-              <br>
+              <br id="food_ID_br">
+              <label id="food_ID_label" style="display:none;">投餌料號:
+                <input class="input-group-text" type="text" id="food_ID" name="food_ID" style="display:none;">
+              </label>
+              <br id="spec_br">
               <label id="spec_label" style="display:none;">規格:
                 <input class="input-group-text" type="number" id="spec" name="spec" style="display:none;" min="0">
-                <span>尾/公斤</span>
+                (尾/公斤)
               </label>
               <br>
               <label id="record_weights_label" style="display:none;">魚隻總重: 
                 <input class="input-group-text" type="number" id="record_weights" name="record_weights" style="display:none;" min="0">
-                <span>公斤</span>
+                (公斤)
               </label>
               <br>
               <label id="dead_counts_label" style="display:none;">死亡數量: 
                 <input class="input-group-text" type="number" id="dead_counts" name="dead_counts" style="display:none;" min="0">
-                <span>隻</span>
+                (隻)
               </label>
               <br>
               <label id="update_time_label" style="display:none;">更新時間:
@@ -225,10 +229,12 @@
 </body>
 
 <script>
+  // update.html
   document.getElementById('chooseTime').addEventListener('change', function() {
       var selectedOption = this.value;
 
       var field_ID = document.getElementById('field_ID');
+      var food_ID = document.getElementById('food_ID');
       var spec = document.getElementById('spec');
       var record_weights = document.getElementById('record_weights');
       var dead_counts = document.getElementById('dead_counts');
@@ -240,6 +246,7 @@
       var update_time_label = document.getElementById('update_time_label');
       var send_logs = document.getElementById('send_logs');
       var field_ID_br = document.getElementById('field_ID_br');
+      var spec_br = document.getElementById('spec_br');
       
       send_logs.style.display = 'block';
 
@@ -248,6 +255,11 @@
         field_ID_label.style.display = 'block';
         field_ID.style.display = 'block';
         field_ID.required = true;
+        food_ID_br.style.display = 'block';
+        food_ID_label.style.display = 'block';
+        food_ID.style.display = 'block';
+        food_ID.required = true;
+        spec_br.style.display = 'block';
         spec_label.style.display = 'block';
         spec.style.display = 'block';
         spec.required = true;
@@ -266,6 +278,11 @@
         field_ID_label.style.display = 'none';
         field_ID.style.display = 'none';
         field_ID.required = false;
+        food_ID_br.style.display = 'block';
+        food_ID_label.style.display = 'block';
+        food_ID.style.display = 'block';
+        food_ID.required = true;
+        spec_br.style.display = 'none';
         spec_label.style.display = 'none';
         spec.style.display = 'none';
         spec.required = false;
@@ -284,6 +301,11 @@
         field_ID_label.style.display = 'none';
         field_ID.style.display = 'none';
         field_ID.required = false;
+        food_ID_br.style.display = 'none';
+        food_ID_label.style.display = 'none';
+        food_ID.style.display = 'none';
+        food_ID.required = false;
+        spec_br.style.display = 'block';
         spec_label.style.display = 'block';
         spec.style.display = 'block';
         spec.required = true;
