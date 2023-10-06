@@ -175,22 +175,22 @@
           -->
           
           <div>
-            <a href="/update" class="btn" style="border: 1px solid #003366;">新增場域資料</a>
+            <a href="/update" class="btn">新增場域資料</a>
           </div>
 
           <hr>
 
           <div>
             <a><form action="{{ url_for("field_logs")}}" method="post"></a>
-            <select id="field_ID" name="field_ID" class="selectpicker form-control">
+            <select id="pool_ID" name="pool_ID" class="selectpicker form-control">
               <option disabled selected>請選擇欲查看場域</option>
               <option id="all" name="all" value="0">all</option>
-              {% for id in fields_count %}
+              {% for id in pool_count %}
               <option value={{ id[0] }}>{{ id[0] }}</option>
               {% endfor %}
             </select>
             <br>
-            <table id="fields_data" style="border:3px #cccccc solid;" cellpadding="10" border='1'>
+            <table id="pool_data" style="border:3px #cccccc solid;" cellpadding="10" border='1'>
               <thead>
                 <!--
                 <tr>
@@ -198,7 +198,7 @@
                 </tr>
                 -->
                 <tr>
-                  <td>場域編號</td>
+                  <td>魚池編號</td>
                   <td>規格(尾/公斤)</td>
                   <td>紀錄魚群總重(公斤)</td>
                   <td>預估魚群總重(公斤)</td>
@@ -207,8 +207,8 @@
                   <td>紀錄更新時間</td>
                 </tr>
               </thead>
-              <tbody id="fields_tbody">
-                {% for data in fields_data %}
+              <tbody id="pool_tbody">
+                {% for data in pool_data %}
                 <tr>
                   <td>{{data.0}}</td>
                   <td>{{data.1}}</td>

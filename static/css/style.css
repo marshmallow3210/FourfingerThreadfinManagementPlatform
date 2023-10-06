@@ -168,6 +168,12 @@ span {
     border: 1px solid #003366;
 }
 
+.btn {
+    background-color: #009999; 
+    color: #ccf2f2; 
+    border: 1px solid #009999; 
+}
+
 /* 在小屏幕時，讓側邊欄堆疊在主內容上方 */
 @media screen and (max-width: 768px) {
     .box {

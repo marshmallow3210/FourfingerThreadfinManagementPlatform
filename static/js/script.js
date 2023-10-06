@@ -40,16 +40,16 @@ toggleButton.addEventListener("click", function() {
 
 //
 // field_logs.html
-fields_data = []
+pool_data = []
 $(document).ready(function(){
-$('#field_ID').change(
+$('#pool_ID').change(
 function(){
-    var selected = document.getElementById("field_ID").value;
-    var newFieldsData = document.getElementById("fields_tbody");
-    // console.log("field_ID =" + selected);
+    var selected = document.getElementById("pool_ID").value;
+    var newPoolData = document.getElementById("pool_tbody");
+    // console.log("pool_ID =" + selected);
     var data = {
-    "field_ID": selected,
-    "fields_data": fields_data
+    "pool_ID": selected,
+    "pool_data": pool_data
     }
     // console.log("data = " + JSON.stringify(data));
     $.ajax({
@@ -60,25 +60,25 @@ function(){
     dataType : 'json', // 預期從server接收的資料型態
     success : function(data) {
         // console.log("傳送成功" + JSON.stringify(data));
-        var colCount = $("#fields_tbody tr").length;
+        var colCount = $("#pool_tbody tr").length;
         for (var i = 0; i < colCount; i++){
-        newFieldsData.deleteRow(0);
+            newPoolData.deleteRow(0);
         }
-        newFieldsData.insertRow(0);
+        newPoolData.insertRow(0);
         var dataArray = Object.values(data);
-        var fields_data = dataArray[1];
-        var r = fields_data.length;
-        var c = fields_data[0].length;
+        var pool_data = dataArray[1];
+        var r = pool_data.length;
+        var c = pool_data[0].length;
         for (var i = 0; i < r; i++){
-        var newRow = newFieldsData.insertRow(i+1);
+        var newRow = newPoolData.insertRow(i+1);
         for (var j = 0; j < c; j++){
-            var newCell = newFieldsData.rows[i+1].insertCell(j);
-            newCell.innerHTML = fields_data[i][j];
+            var newCell = newPoolData.rows[i+1].insertCell(j);
+            newCell.innerHTML = pool_data[i][j];
         }
         }
     },
     error: function (xhr, type){
-        // console.log("傳送失敗" + xhr + type);
+        console.log("傳送失敗" + xhr + type);
     }
     });
 })
@@ -87,7 +87,7 @@ function(){
 // jsgrid table
 var dataset = [
     { 
-    "場域編號": "1",
+    "魚池編號": "1",
     "規格<br>(尾/公斤)": 100.0,
     "紀錄魚群總重<br>(公斤)": 300.0, 
     "預估魚群總重<br>(公斤)": 300.0, 
@@ -96,7 +96,7 @@ var dataset = [
     "更新時間": "2023-03-01 12:30:00" 
     },
     { 
-    "場域編號": "1",
+    "魚池編號": "1",
     "規格<br>(尾/公斤)": 50.0,
     "紀錄魚群總重<br>(公斤)": 600.0, 
     "預估魚群總重<br>(公斤)": 600.0, 
@@ -105,7 +105,7 @@ var dataset = [
     "更新時間": "2023-04-01 12:30:00" 
     },
     { 
-    "場域編號": "2",
+    "魚池編號": "2",
     "規格<br>(尾/公斤)": 120.0,
     "紀錄魚群總重<br>(公斤)": 300.0, 
     "預估魚群總重<br>(公斤)": 300.0, 
@@ -114,7 +114,7 @@ var dataset = [
     "更新時間": "2023-03-01 12:30:00" 
     },
     { 
-    "場域編號": "2",
+    "魚池編號": "2",
     "規格<br>(尾/公斤)": 100.0,
     "紀錄魚群總重<br>(公斤)": 400.0, 
     "預估魚群總重<br>(公斤)": 400.0, 
@@ -123,7 +123,7 @@ var dataset = [
     "更新時間": "2023-03-10 12:30:00" 
     },
     { 
-    "場域編號": "2",
+    "場域編魚池編號號": "2",
     "規格<br>(尾/公斤)": 100.0,
     "紀錄魚群總重<br>(公斤)": 600.0, 
     "預估魚群總重<br>(公斤)": 600.0, 
@@ -134,42 +134,42 @@ var dataset = [
 ];
 
 var feeding_logs_dataset = [
-    { "場域編號": "1",
+    { "魚池編號": "1",
     "投餌機編號": "1",
     "投餌時間": "2023-04-01 13:00:00", 
     "耗時(分鐘)": 30.0, 
     "投餌料號": "test", 
     "投餌量(公克)": 100000 
     },
-    { "場域編號": "1",
+    { "魚池編號": "1",
     "投餌機編號": "2",
     "投餌時間": "2023-04-02 13:00:00", 
     "耗時(分鐘)": 30.0, 
     "投餌料號": "test", 
     "投餌量(公克)": 100000 
     },
-    { "場域編號": "1",
+    { "魚池編號": "1",
     "投餌機編號": "1",
     "投餌時間": "2023-04-03 13:00:00", 
     "耗時(分鐘)": 30.0, 
     "投餌料號": "test", 
     "投餌量(公克)": 100000 
     },
-    { "場域編號": "1",
+    { "魚池編號": "1",
     "投餌機編號": "1",
     "投餌時間": "2023-04-04 13:00:00", 
     "耗時(分鐘)": 30.0, 
     "投餌料號": "test", 
     "投餌量(公克)": 100000 
     },
-    { "場域編號": "1",
+    { "魚池編號": "1",
     "投餌機編號": "1",
     "投餌時間": "2023-04-05 13:00:00", 
     "耗時(分鐘)": 30.0, 
     "投餌料號": "test", 
     "投餌量(公克)": 100000 
     },
-    { "場域編號": "1",
+    { "魚池編號": "1",
     "投餌機編號": "2",
     "投餌時間": "2023-04-06 13:00:00", 
     "耗時(分鐘)": 30.0, 

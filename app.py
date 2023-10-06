@@ -14,6 +14,8 @@ app=Flask(__name__)
 CORS(app)  # 允許所有來源的跨來源請求
 app.secret_key = '66386638'  # 替換為隨機的密鑰，用於安全性目的
 
+databaseName = "fishDB"
+
 connection = pymysql.connect(host='127.0.0.1',
                              port=3306,
                              user='root',
@@ -30,8 +32,6 @@ users = {
     'oakley': 'letmein',
     'admin': 'admin'
 }
-
-databaseName = "ai_fish"
 
 def utc8(utc, p):
     for i in range(0, len(utc)):
@@ -106,17 +106,17 @@ def dispenser():
 
     if request.method == "POST":
         try:
-            field_ID = int(request.form.get("field_ID"))
-            sql = "insert into dispenser(field_ID) value({})".format(field_ID)
+            pool_ID = int(request.form.get("pool_ID"))
+            sql = "insert into dispenser(pool_ID) value({})".format(pool_ID)
             cursor.execute(sql)
         except:
             sql = "truncate dispenser;"
             cursor.execute(sql)
 
-    sql = "select field_ID from field_logs;"
+    sql = "select pool_ID from field_logs;"
     cursor.execute(sql)
-    fields_count = cursor.fetchall()
-    sql = "select ff.field_ID, d.dispenser_ID from field_logs as ff inner join dispenser as d where ff.field_ID=d.field_ID order by field_ID, dispenser_ID;"
+    pool_count = cursor.fetchall()
+    sql = "select ff.pool_ID, d.dispenser_ID from field_logs as ff inner join dispenser as d where ff.pool_ID=d.pool_ID order by pool_ID, dispenser_ID;"
     cursor.execute(sql)
     dispenser_count = cursor.fetchall()
     try:
@@ -130,7 +130,7 @@ def dispenser():
                 data[-1].append(temp[1])
     except:
         data=[]
-    page = render_template('dispenser.html', fields_count=fields_count, data=data, data_len=len(data))
+    page = render_template('dispenser.html', pool_count=pool_count, data=data, data_len=len(data))
 
     return page
 
@@ -142,21 +142,21 @@ def test():
     cursor.execute(sql)
 
     if request.method == "POST":
-        field_ID = int(request.form.get("field_ID"))
+        pool_ID = int(request.form.get("pool_ID"))
         use_time = int(request.form.get("use_time"))
         dispenser_ID = int(request.form.get("dispenser_ID"))
         food_ID = request.form.get("food_ID")
         used = float(request.form.get("used"))
-        print(field_ID, dispenser_ID, used)
-        sql = 'insert into feeding_logs(dispenser_ID, use_time, food_ID, used, field_ID) values({}, {}, "{}", {}, {})'.format(dispenser_ID, use_time, food_ID, used, field_ID)
+        print(pool_ID, dispenser_ID, used)
+        sql = 'insert into feeding_logs(dispenser_ID, use_time, food_ID, used, pool_ID) values({}, {}, "{}", {}, {})'.format(dispenser_ID, use_time, food_ID, used, pool_ID)
         cursor.execute(sql)
         return redirect(url_for("test"))
 
 
-    sql = "select field_ID from field_logs;"
+    sql = "select pool_ID from field_logs;"
     cursor.execute(sql)
-    fields_count = cursor.fetchall()
-    page = render_template('test.html', fields_count=fields_count)
+    pool_count = cursor.fetchall()
+    page = render_template('test.html', pool_count=pool_count)
 
     return page
 
@@ -202,61 +202,12 @@ def feeding_logs():
     sql = "use " + databaseName + ";"
     cursor.execute(sql)
     
-    sql = "select ff.field_ID, d.dispenser_ID, fl.feeding_time, fl.use_time, fl.food_ID, fl.used from field_logs as ff inner join dispenser as d inner join feeding_logs as fl where ff.field_ID=d.field_ID and d.dispenser_ID=fl.dispenser_ID order by fl.feeding_time desc;"
+    sql = "select weight, laser, time, date from ESP32"
     cursor.execute(sql)
     data = list(cursor.fetchall())
-    data = utc8(data, 2)
-    
-    sql = "select * from fcr order by end_time desc;"
-    cursor.execute(sql)
-    fcr = list(cursor.fetchall())
-    fcr = utc8(fcr, 2)
-    fcr = utc8(fcr, 3)
-    
-    if request.method == "POST":
-        json_data = request.get_json("data")
-        field_ID = int(json_data["field_ID"])
-        print("receive POST", field_ID)
-        if field_ID == 0:
-            sql = "select * from field_logs;"
-            cursor.execute(sql)
-            fields_data = list(cursor.fetchall()) 
-            fields_data = utc8(fields_data, 6)
-            
-            sql = "select field_ID from field_logs;"
-            cursor.execute(sql)
-            fields_count = cursor.fetchall()
-            
-        else:
-            sql = "select * from field_logs where field_ID=" + str(field_ID) +";"
-            cursor.execute(sql)
-            fields_data = list(cursor.fetchall()) 
-            fields_data = utc8(fields_data, 6)
-            
-            sql = "select field_ID from field_logs where field_ID=" + str(field_ID) +";"
-            cursor.execute(sql)
-            fields_count = cursor.fetchall()
-            
-        # print('POST fields_count', fields_count, 'fields_count', fields_data)
-        data = {
-            "fields_count": fields_count,
-            "fields_data": fields_data
-        }
-        return data
-    
-    else:
-        sql= "select * from field_logs"
-        cursor.execute(sql)
-        fields_data = list(cursor.fetchall()) 
-        fields_data = utc8(fields_data, 6)
-        
-        sql = "select field_ID from field_logs;"
-        cursor.execute(sql)
-        fields_count_list = cursor.fetchall()
-        fields_count = []
-        [fields_count.append(x) for x in fields_count_list if x not in fields_count]
-        
-    page = render_template('feeding_logs.html', fields_count=fields_count,fields_data=fields_data, data=data, fcr=fcr)
+    print(data)
+   
+    page = render_template('feeding_logs.html', data=data)
     return page   
   
 @app.route('/field_logs', methods=["GET", "POST"])
@@ -267,61 +218,67 @@ def field_logs():
     sql = "use " + databaseName + ";"
     cursor.execute(sql)
     
-    sql = "select ff.field_ID, d.dispenser_ID, fl.feeding_time, fl.use_time, fl.food_ID, fl.used from field_logs as ff inner join dispenser as d inner join feeding_logs as fl where ff.field_ID=d.field_ID and d.dispenser_ID=fl.dispenser_ID order by fl.feeding_time desc;"
+    # sql = "select ff.pool_ID, d.dispenser_ID, fl.feeding_time, fl.use_time, fl.food_ID, fl.used from field_logs as ff inner join dispenser as d inner join feeding_logs as fl where ff.pool_ID=d.pool_ID and d.dispenser_ID=fl.dispenser_ID order by fl.feeding_time desc;"
+    # cursor.execute(sql)
+    # data = list(cursor.fetchall())
+    # data = utc8(data, 2)
+
+    sql = "select * from field_logs;"
     cursor.execute(sql)
     data = list(cursor.fetchall())
-    data = utc8(data, 2)
+    data = utc8(data, 6)
     
-    sql = "select * from fcr order by end_time desc;"
-    cursor.execute(sql)
-    fcr = list(cursor.fetchall())
-    fcr = utc8(fcr, 2)
-    fcr = utc8(fcr, 3)
+    # sql = "select fcr from field_logs;"
+    # cursor.execute(sql)
+    # fcr = list(cursor.fetchall())
+    # print(fcr)
+    # fcr = utc8(fcr, 2)
+    # fcr = utc8(fcr, 3)
     
     if request.method == "POST":
         json_data = request.get_json("data")
-        field_ID = int(json_data["field_ID"])
-        print("receive POST", field_ID)
-        if field_ID == 0:
+        pool_ID = int(json_data["pool_ID"])
+        print("receive POST", pool_ID)
+        if pool_ID == 0:
             sql = "select * from field_logs;"
             cursor.execute(sql)
-            fields_data = list(cursor.fetchall()) 
-            fields_data = utc8(fields_data, 6)
+            pool_data = list(cursor.fetchall()) 
+            pool_data = utc8(pool_data, 6)
             
-            sql = "select field_ID from field_logs;"
+            sql = "select pool_ID from field_logs;"
             cursor.execute(sql)
-            fields_count = cursor.fetchall()
+            pool_count = cursor.fetchall()
             
         else:
-            sql = "select * from field_logs where field_ID=" + str(field_ID) +";"
+            sql = "select * from field_logs where pool_ID=" + str(pool_ID) +";"
             cursor.execute(sql)
-            fields_data = list(cursor.fetchall()) 
-            fields_data = utc8(fields_data, 6)
+            pool_data = list(cursor.fetchall()) 
+            pool_data = utc8(pool_data, 6)
             
-            sql = "select field_ID from field_logs where field_ID=" + str(field_ID) +";"
+            sql = "select pool_ID from field_logs where pool_ID=" + str(pool_ID) +";"
             cursor.execute(sql)
-            fields_count = cursor.fetchall()
+            pool_count = cursor.fetchall()
             
-        # print('POST fields_count', fields_count, 'fields_count', fields_data)
+        # print('POST pool_count', pool_count, 'pool_count', pool_data)
         data = {
-            "fields_count": fields_count,
-            "fields_data": fields_data
+            "pool_count": pool_count,
+            "pool_data": pool_data
         }
         return data
     
     else:
         sql= "select * from field_logs"
         cursor.execute(sql)
-        fields_data = list(cursor.fetchall()) 
-        fields_data = utc8(fields_data, 6)
+        pool_data = list(cursor.fetchall()) 
+        pool_data = utc8(pool_data, 6)
         
-        sql = "select field_ID from field_logs;"
+        sql = "select pool_ID from field_logs;"
         cursor.execute(sql)
-        fields_count_list = cursor.fetchall()
-        fields_count = []
-        [fields_count.append(x) for x in fields_count_list if x not in fields_count]
+        pool_count_list = cursor.fetchall()
+        pool_count = []
+        [pool_count.append(x) for x in pool_count_list if x not in pool_count]
         
-    page = render_template('field_logs.html', fields_count=fields_count,fields_data=fields_data, data=data, fcr=fcr)
+    page = render_template('field_logs.html', pool_count=pool_count,pool_data=pool_data, data=data)#, fcr=fcr)
     return page   
     
 @app.route('/update', methods=["GET", "POST"])
@@ -332,10 +289,10 @@ def update():
     cursor.execute(sql)
 
     if request.method == "POST":   
-        field_ID = int(request.form.get("field_ID"))
+        pool_ID = int(request.form.get("pool_ID"))
         
         if request.form["fcr"] == "":
-            sql = "select fcr from field_logs where field_ID = "+str(field_ID)+" order by update_time desc;"
+            sql = "select fcr from field_logs where pool_ID = "+str(pool_ID)+" order by update_time desc;"
             cursor.execute(sql)
             fcr = cursor.fetchone()
             fcr = fcr[0]
@@ -343,7 +300,7 @@ def update():
             fcr=float(request.form["fcr"])
             
         if request.form["counts"] == "":
-            sql = "select counts from field_logs where field_ID = "+str(field_ID)+" order by update_time desc;"
+            sql = "select counts from field_logs where pool_ID = "+str(pool_ID)+" order by update_time desc;"
             cursor.execute(sql)
             counts = cursor.fetchone()
             counts = counts[0]
@@ -356,7 +313,7 @@ def update():
             dead_counts=int(request.form["dead_counts"])
         
         if request.form["avg_weights"] == "":
-            sql = "select * from field_logs where field_ID = "+str(field_ID)+" order by update_time desc;"
+            sql = "select * from field_logs where pool_ID = "+str(pool_ID)+" order by update_time desc;"
             cursor.execute(sql)
             fields_data = cursor.fetchone()
             avg_weights = "NULL" or None 
@@ -365,7 +322,7 @@ def update():
             counts = fields_data[4]
             update_time = fields_data[6]
             cursor.execute(sql)
-            sql = "select feeding_time, used from feeding_logs where field_ID = "+str(field_ID)+" order by feeding_time desc;"
+            sql = "select feeding_time, used from feeding_logs where pool_ID = "+str(pool_ID)+" order by feeding_time desc;"
             cursor.execute(sql)
             feeding_logs = list(cursor.fetchall())
             total_used = 0
@@ -381,15 +338,15 @@ def update():
             avg_weights=float(request.form["avg_weights"])
             estimated_avg_weights=avg_weights
             
-        sql = 'insert into field_logs (field_ID, avg_weights, estimated_avg_weights, fcr, counts, dead_counts, update_time) values({}, {}, {}, {}, {}, {}, "{}");'.format(field_ID, avg_weights, estimated_avg_weights, fcr, counts, dead_counts, datetime.datetime.now())
+        sql = 'insert into field_logs (pool_ID, avg_weights, estimated_avg_weights, fcr, counts, dead_counts, update_time) values({}, {}, {}, {}, {}, {}, "{}");'.format(pool_ID, avg_weights, estimated_avg_weights, fcr, counts, dead_counts, datetime.datetime.now())
         cursor.execute(sql)
                 
         return redirect(url_for("show"))
 
-    sql = "select field_ID from field_logs;"
+    sql = "select pool_ID from field_logs;"
     cursor.execute(sql)
-    fields_count = cursor.fetchall()
-    page = render_template('update.html', fields_count=fields_count)
+    pool_count = cursor.fetchall()
+    page = render_template('update.html', pool_count=pool_count)
     return page
 
 @app.route('/query', methods=["GET", "POST"])
@@ -405,11 +362,11 @@ def query_result():
     cursor.execute(sql)
     
     if request.method == "POST":
-        field_ID = int(request.form["field_ID"])
+        pool_ID = int(request.form["pool_ID"])
         query_time = datetime.datetime.now()
         # target_weight = float(request.form["target_weight"])
         # daily_feed = float(request.form["daily_feed"])
-        sql = "select update_time from field_logs where field_ID = "+str(field_ID)+" order by update_time asc;"
+        sql = "select update_time from field_logs where pool_ID = "+str(pool_ID)+" order by update_time asc;"
         cursor.execute(sql)
         first_time = cursor.fetchone()
         first_time = first_time[0]
@@ -418,12 +375,12 @@ def query_result():
         print("兩個日期相差了"+ age +"天")
         estimated_weights = preidict_weights(age)
         
-        sql = "select spec from field_logs where field_ID = "+str(field_ID)+" order by update_time asc;"
+        sql = "select spec from field_logs where pool_ID = "+str(pool_ID)+" order by update_time asc;"
         cursor.execute(sql)
         first_spec = cursor.fetchone()
         first_spec = first_spec[0]
         print(first_spec)
-        sql = "select record_weights from field_logs where field_ID = "+str(field_ID)+" order by update_time asc;"
+        sql = "select record_weights from field_logs where pool_ID = "+str(pool_ID)+" order by update_time asc;"
         cursor.execute(sql)
         first_weights = cursor.fetchone()
         first_weights = first_weights[0]
@@ -436,7 +393,7 @@ def query_result():
         
         '''
         if request.form["avg_weights"] == '':
-            sql = "select avg_weights from field_logs where field_ID = "+str(field_ID)+";"
+            sql = "select avg_weights from field_logs where pool_ID = "+str(pool_ID)+";"
             cursor.execute(sql)
             avg_weights = cursor.fetchone()
             avg_weights = avg_weights[0]
@@ -444,7 +401,7 @@ def query_result():
             avg_weights=float(request.form["avg_weights"])
         
         if request.form["fcr"] == '':
-            sql = "select fcr from fcr where field_ID = "+str(field_ID)+" order by end_time desc;"
+            sql = "select fcr from fcr where pool_ID = "+str(pool_ID)+" order by end_time desc;"
             cursor.execute(sql)           
             fcr = cursor.fetchone()
             fcr = fcr[0]
@@ -452,7 +409,7 @@ def query_result():
             fcr=float(request.form["fcr"])
             
         if request.form["counts"] == '':
-            sql = "select counts from field_logs where field_ID = "+str(field_ID)+";"
+            sql = "select counts from field_logs where pool_ID = "+str(pool_ID)+";"
             cursor.execute(sql)
             counts = cursor.fetchone()
             counts = counts[0]
@@ -460,7 +417,7 @@ def query_result():
             counts=int(request.form["counts"])
             
         if request.form["dead_counts"] == '':
-            sql = "select dead_counts from field_logs where field_ID ="+str(field_ID)+";"
+            sql = "select dead_counts from field_logs where pool_ID ="+str(pool_ID)+";"
             cursor.execute(sql)
             dead_counts = cursor.fetchone()
             dead_counts = dead_counts[0]
@@ -469,7 +426,7 @@ def query_result():
         
         '''
         
-        sql = "select used from feeding_logs where field_ID = "+str(field_ID)+";"
+        sql = "select used from feeding_logs where pool_ID = "+str(pool_ID)+";"
         cursor.execute(sql)
         used = list(cursor.fetchall())
         total_used = 0
