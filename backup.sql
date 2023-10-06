@@ -73,7 +73,7 @@ DROP TABLE IF EXISTS `field_logs`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `field_logs` (
-  `field_ID` int(11) NOT NULL,
+  `pool_ID` int(11) NOT NULL,
   `spec` float DEFAULT NULL,
   `record_weights` float DEFAULT NULL,
   `estimated_weights` float DEFAULT NULL,
@@ -96,6 +96,69 @@ INSERT INTO `field_logs` VALUES (3,145.0,500.0,500.0,0.0,0,'2023-03-03 12:45:00'
 UNLOCK TABLES;
 
 --
+-- Table structure for table `ESP32`
+--
+DROP TABLE IF EXISTS `ESP32`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `ESP32` (
+  `dispenser_ID` int(11) NOT NULL default '1',
+  `weight` float(10,2) DEFAULT NULL,
+  `laser` float(10,2) DEFAULT NULL,
+  `blower_state` varchar(255) DEFAULT NULL,
+  `angle_state` varchar(255) DEFAULT NULL,
+  `speed_level` varchar(255) DEFAULT NULL,
+  `system_mode` varchar(255) DEFAULT NULL,
+  `time` time DEFAULT NULL,
+  `date` date DEFAULT NULL
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+/* `spec`: 尾/公斤 */
+/*
+ALTER TABLE `ESP32`
+ADD COLUMN `dispenser_ID` int(11) NOT NULL DEFAULT '1';
+*/
+--
+-- Dumping data for table `ESP32`
+--
+
+LOCK TABLES `ESP32` WRITE;
+/*!40000 ALTER TABLE `ESP32` DISABLE KEYS */;
+INSERT INTO `ESP32` VALUES (22.46,0.00,'off','0','600','0','15:46:35','2023-10-05');
+INSERT INTO `ESP32` VALUES (23.16,0.00,'off','0','600','0','15:46:40','2023-10-05');
+INSERT INTO `ESP32` VALUES (23.27,0.00,'off','0','600','0','15:46:45','2023-10-05');
+INSERT INTO `ESP32` VALUES (23.56,0.00,'off','0','600','0','15:46:50','2023-10-05');
+INSERT INTO `ESP32` VALUES (23.57,0.00,'off','0','600','0','15:46:55','2023-10-05');
+
+INSERT INTO `ESP32` VALUES (23.45,0.00,'off','0','600','0','15:47:00','2023-10-05');
+INSERT INTO `ESP32` VALUES (23.52,0.00,'off','0','600','0','15:47:05','2023-10-05');
+INSERT INTO `ESP32` VALUES (23.54,0.00,'off','0','600','0','15:47:10','2023-10-05');
+INSERT INTO `ESP32` VALUES (24.98,0.00,'off','0','600','0','15:47:15','2023-10-05');
+INSERT INTO `ESP32` VALUES (25.12,0.00,'off','0','600','0','15:47:20','2023-10-05');
+INSERT INTO `ESP32` VALUES (26.32,0.00,'off','0','600','0','15:47:25','2023-10-05');
+INSERT INTO `ESP32` VALUES (23.99,0.00,'off','0','600','0','15:47:30','2023-10-05');
+INSERT INTO `ESP32` VALUES (24.18,0.00,'off','0','600','0','15:47:35','2023-10-05');
+INSERT INTO `ESP32` VALUES (22.72,0.00,'off','0','600','0','15:47:40','2023-10-05');
+INSERT INTO `ESP32` VALUES (22.52,0.00,'off','0','600','0','15:47:45','2023-10-05');
+INSERT INTO `ESP32` VALUES (22.50,0.00,'off','0','600','0','15:47:50','2023-10-05');
+INSERT INTO `ESP32` VALUES (22.68,0.00,'off','0','600','0','15:47:55','2023-10-05');
+
+INSERT INTO `ESP32` VALUES (22.57,0.00,'off','0','600','0','15:48:00','2023-10-05');
+INSERT INTO `ESP32` VALUES (22.56,0.00,'off','0','600','0','15:48:05','2023-10-05');
+INSERT INTO `ESP32` VALUES (22.57,0.00,'off','0','600','0','15:48:10','2023-10-05');
+INSERT INTO `ESP32` VALUES (22.57,0.00,'off','0','600','0','15:48:15','2023-10-05');
+INSERT INTO `ESP32` VALUES (22.56,0.00,'off','0','600','0','15:48:20','2023-10-05');
+INSERT INTO `ESP32` VALUES (22.56,0.00,'off','0','600','0','15:48:25','2023-10-05');
+INSERT INTO `ESP32` VALUES (22.69,0.00,'off','0','600','0','15:48:30','2023-10-05');
+INSERT INTO `ESP32` VALUES (22.66,0.00,'off','0','600','0','15:48:35','2023-10-05');
+INSERT INTO `ESP32` VALUES (22.73,0.00,'off','0','600','0','15:48:40','2023-10-05');
+INSERT INTO `ESP32` VALUES (22.53,0.00,'off','0','600','0','15:48:45','2023-10-05');
+INSERT INTO `ESP32` VALUES (22.65,0.00,'off','0','600','0','15:48:50','2023-10-05');
+INSERT INTO `ESP32` VALUES (22.71,0.00,'off','0','600','0','15:48:55','2023-10-05');
+/*!40000 ALTER TABLE `ESP32` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
 -- Table structure for table `feeding_logs`
 --
 
@@ -103,12 +166,12 @@ DROP TABLE IF EXISTS `feeding_logs`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `feeding_logs` (
-  `dispenser_ID` int(11) DEFAULT NULL,
-  `feeding_time` datetime DEFAULT current_timestamp(),
+  `pool_ID` int(11) DEFAULT NULL,
+  `dispenser_ID` int(11) NOT NULL default '1',
+  `start_time` datetime DEFAULT current_timestamp(),
   `use_time` float DEFAULT NULL,
   `food_ID` char(50) DEFAULT NULL,
-  `used` float DEFAULT NULL,
-  `field_ID` int(11) DEFAULT NULL
+  `feeding_amount` float DEFAULT NULL,
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 

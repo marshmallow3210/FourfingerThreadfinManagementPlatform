@@ -289,8 +289,17 @@ def update():
     cursor.execute(sql)
 
     if request.method == "POST":   
-        pool_ID = int(request.form.get("pool_ID"))
+        pool_ID = request.form.get("pool_ID")
+        food_ID = request.form.get("food_ID")
+        spec = float(request.form.get("spec"))
+        record_weights = float(request.form.get("record_weights"))
+        dead_counts = int(request.form.get("dead_counts"))
+        update_time = request.form.get("update_time")
+        # update_time = utc8(update_time, 0)
+
+        print(f"pool_ID: {pool_ID}, food_ID: {food_ID}, spec: {spec}, record_weights: {record_weights}, dead_counts: {dead_counts}, update_time: {update_time}")
         
+        '''
         if request.form["fcr"] == "":
             sql = "select fcr from field_logs where pool_ID = "+str(pool_ID)+" order by update_time desc;"
             cursor.execute(sql)
@@ -340,8 +349,8 @@ def update():
             
         sql = 'insert into field_logs (pool_ID, avg_weights, estimated_avg_weights, fcr, counts, dead_counts, update_time) values({}, {}, {}, {}, {}, {}, "{}");'.format(pool_ID, avg_weights, estimated_avg_weights, fcr, counts, dead_counts, datetime.datetime.now())
         cursor.execute(sql)
-                
-        return redirect(url_for("show"))
+        '''       
+        return redirect(url_for("field_logs"))
 
     sql = "select pool_ID from field_logs;"
     cursor.execute(sql)
