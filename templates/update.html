@@ -188,7 +188,7 @@
             <!-- options and btn -->
             <div>
               <br id="pool_ID_br">
-              <label id="pool_ID_label" style="display:none;">場域編號:
+              <label id="pool_ID_label" style="display:none;">魚池編號:
                 <input class="input-group-text" type="text" id="pool_ID" name="pool_ID" style="display:none;">
               </label>
               <br id="food_ID_br">
@@ -218,9 +218,9 @@
               <br>
               -->
               <input type="hidden" id="update_time" name="update_time">
+              <input type="hidden" id="opt" name="opt">
 
               <button id="send_logs" class="btn btn-outline-secondary" type="submit" style="display:none;">送出</button>
-              
             </div>
             
           </div>
@@ -254,6 +254,7 @@
       send_logs.style.display = 'block';
 
       if (selectedOption === 'opt1') {
+        document.getElementById('opt').value = 1;
         pool_ID_br.style.display = 'block';
         pool_ID_label.style.display = 'block';
         pool_ID.style.display = 'block';
@@ -277,10 +278,11 @@
         update_time.required = true;
       }
       else if (selectedOption === 'opt2') {
-        pool_ID_br.style.display = 'none';
-        pool_ID_label.style.display = 'none';
-        pool_ID.style.display = 'none';
-        pool_ID.required = false;
+        document.getElementById('opt').value = 2;
+        pool_ID_br.style.display = 'block';
+        pool_ID_label.style.display = 'block';
+        pool_ID.style.display = 'block';
+        pool_ID.required = true;
         food_ID_br.style.display = 'block';
         food_ID_label.style.display = 'block';
         food_ID.style.display = 'block';
@@ -300,10 +302,11 @@
         update_time.required = true;
       }
       else if (selectedOption === 'opt3') {
-        pool_ID_br.style.display = 'none';
-        pool_ID_label.style.display = 'none';
-        pool_ID.style.display = 'none';
-        pool_ID.required = false;
+        document.getElementById('opt').value = 3;
+        pool_ID_br.style.display = 'block';
+        pool_ID_label.style.display = 'block';
+        pool_ID.style.display = 'block';
+        pool_ID.required = true;
         food_ID_br.style.display = 'none';
         food_ID_label.style.display = 'none';
         food_ID.style.display = 'none';
@@ -332,6 +335,10 @@
   // 將日期和時間填充到隱藏的輸入字段中
   document.getElementById('update_time').value = formattedDate + ' ' + formattedTime;
 
+  var button = document.getElementById('send_logs');
+  button.addEventListener('click', function() {
+      alert('紀錄完成！');
+  });
 </script>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"></script>

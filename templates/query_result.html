@@ -169,27 +169,23 @@
             <h2>查詢結果</h2>
           </div>
           <div>
-            <span>
-              <label for="age">已養了: </label>{{ age }} 天
-              <br>
-              <label for="estimated_weights">系統估算當前魚總重量: </label>{{ estimated_weights }} 公斤
-              <br>
-              <label for="estimated_fcr">系統估算當前換肉率: </label>{{ estimated_fcr }}
-              <br>
-              <label for="estimated_date">系統推估此魚池可上市的日期: </label>{{ estimated_date }}
-              <br>
-            </span>
+            <label for="age">已養了: {{ age }} 天</label>
+            <br>
+            <label for="estimated_weights">系統估算當前魚總重量: {{ estimated_weights }} 公斤</label>
+            <br>
+            <label for="estimated_fcr">系統估算當前換肉率: {{ estimated_fcr }}</label>
+            <br>
+            <label for="estimated_date">系統推估此魚池可上市的日期: {{ estimated_date }}</label>
+            <br>
           </div>
         
           <hr>
         
           <div>
-            <span>
-              <b>說明:<br></b>
-              系統估算當前換肉率 = 飼料量 / (系統預估當前魚總重量 - 初重)<br>
-              {{ estimated_fcr }} = ({{ total_used }} / {{ estimated_weights }} - {{ first_weights }})
-              <br>
-            </span>
+            <b>說明:<br></b>
+            系統估算當前換肉率 = 飼料量 / (系統預估當前魚總重量 - 初重)<br>
+            {{ estimated_fcr }} = {{ total_feeding_amount }} / ({{ estimated_weights }} - {{ first_weights }})
+            <br>
           </div>
         </div>
       </div>

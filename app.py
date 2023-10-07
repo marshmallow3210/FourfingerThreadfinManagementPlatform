@@ -41,7 +41,7 @@ def utc8(utc, p):
 
     return utc
 
-def preidict_weights(age):
+def preidict_weights(age, total_fish_number):
     # 鱸魚
     '''
     days= 210 # 0 to 210 days
@@ -70,8 +70,9 @@ def preidict_weights(age):
     x_new = np.array([int(age)])
     y_pred = knn.predict(x_new.reshape(-1, 1))
     y_pred = y_pred[0]
+    y_pred = y_pred * total_fish_number /1000
     print("input Age(d):", x_new)
-    print("predicted Body weight(g):", y_pred)
+    print("predicted Body weight(kg):", y_pred)
     
     return y_pred
 
@@ -96,7 +97,11 @@ def preidict_date(weight):
     print("predicted Age(d):", y_pred)
     
     return y_pred
-    
+
+def counting_fcr(total_feeding_amount, estimated_weights, first_weights):
+    estimated_fcr = round(total_feeding_amount/(estimated_weights-first_weights), 2)
+    return estimated_fcr
+
 @app.route('/dispenser', methods=["GET", "POST"])
 def dispenser():
     global connection
@@ -195,19 +200,68 @@ def home():
     # home = render_template('home.html')
     # return home
 
+def getDataFromESP32():
+    global connection
+    cursor = connection.cursor()
+    sql = "use " + databaseName + ";"
+    cursor.execute(sql)
+
+    # counting feeding_amount
+    today_date = datetime.datetime.today().date()
+    today_date = "2023-10-05"
+    sql = "SELECT COUNT(*) AS feeding_count FROM ESP32 WHERE date = '" + today_date +"';"
+    cursor.execute(sql)
+    feeding_count = list(cursor.fetchall())
+    feeding_count = int(feeding_count[0][0])
+
+    sql = "select weight from ESP32"
+    cursor.execute(sql)
+    weight = list(cursor.fetchall())
+    
+    feeding_amount = 0
+    feeding_benchmark = weight[0][0]
+    for i in range(0, feeding_count):
+        if weight[i][0] < feeding_benchmark:
+            feeding_amount = feeding_amount + (feeding_benchmark - weight[i][0])
+        else:
+            feeding_benchmark = weight[i][0]
+    print('feeding_amount:', feeding_amount)
+
+    # counting start_time and use_time
+    sql = "SELECT CONCAT(date, ' ', MIN(time)) AS start_time FROM ESP32 GROUP BY date;"
+    cursor.execute(sql)
+    start_time = list(cursor.fetchall())
+    start_time = start_time[0][0]
+    start_time = datetime.datetime.strptime(start_time, "%Y-%m-%d %H:%M:%S")
+    print('start_time:', start_time)
+
+    sql = "SELECT CONCAT(date, ' ', MAX(time)) AS last_time FROM ESP32 GROUP BY date;"
+    cursor.execute(sql)
+    last_time = list(cursor.fetchall())
+    last_time = last_time[0][0]
+    last_time = datetime.datetime.strptime(last_time, "%Y-%m-%d %H:%M:%S")
+
+    use_time = last_time - start_time
+    use_time = use_time.total_seconds() / 60
+    use_time = round(use_time, 2)
+    print('use_time:', use_time)
+
+    sql = 'insert into feeding_logs (start_time, use_time, feeding_amount) values("{}", {}, {});'.format(start_time, use_time, feeding_amount)
+    cursor.execute(sql)
+
 @app.route('/feeding_logs', methods=["GET", "POST"])
 def feeding_logs():
     global connection
     cursor = connection.cursor()
     sql = "use " + databaseName + ";"
     cursor.execute(sql)
-    
-    sql = "select weight, laser, time, date from ESP32"
+
+    sql = "select * from feeding_logs"
     cursor.execute(sql)
-    data = list(cursor.fetchall())
-    print(data)
-   
-    page = render_template('feeding_logs.html', data=data)
+    feeding_data = list(cursor.fetchall())
+    print(feeding_data)
+
+    page = render_template('feeding_logs.html', feeding_data=feeding_data)
     return page   
   
 @app.route('/field_logs', methods=["GET", "POST"])
@@ -227,6 +281,7 @@ def field_logs():
     cursor.execute(sql)
     data = list(cursor.fetchall())
     data = utc8(data, 6)
+    print(data)
     
     # sql = "select fcr from field_logs;"
     # cursor.execute(sql)
@@ -283,79 +338,118 @@ def field_logs():
     
 @app.route('/update', methods=["GET", "POST"])
 def update():
+    isSuccess = 0
     global connection
     cursor = connection.cursor()
     sql = "use " + databaseName + ";"
     cursor.execute(sql)
 
-    if request.method == "POST":   
+    if request.method == "POST":  
+        opt = int(request.form.get("opt"))
         pool_ID = request.form.get("pool_ID")
         food_ID = request.form.get("food_ID")
-        spec = float(request.form.get("spec"))
+        spec = request.form.get("spec")
         record_weights = float(request.form.get("record_weights"))
         dead_counts = int(request.form.get("dead_counts"))
         update_time = request.form.get("update_time")
-        # update_time = utc8(update_time, 0)
 
-        print(f"pool_ID: {pool_ID}, food_ID: {food_ID}, spec: {spec}, record_weights: {record_weights}, dead_counts: {dead_counts}, update_time: {update_time}")
+        print(f"opt: {opt}, pool_ID: {pool_ID}, food_ID: {food_ID}, spec: {spec}, record_weights: {record_weights}, dead_counts: {dead_counts}, update_time: {update_time}")
         
-        '''
-        if request.form["fcr"] == "":
-            sql = "select fcr from field_logs where pool_ID = "+str(pool_ID)+" order by update_time desc;"
+        # dispenser_ID = 1 # default
+
+        if opt == 1:
+            # insert food_ID into feeding_logs
+            sql = "UPDATE feeding_logs SET food_ID = " + "'" + str(food_ID) + "'" + " WHERE pool_ID = "+str(pool_ID)+" order by start_time desc;"
+            # sql = 'insert into feeding_logs (pool_ID, food_ID) values({}, "{}");'.format(pool_ID, food_ID)
             cursor.execute(sql)
-            fcr = cursor.fetchone()
-            fcr = fcr[0]
-        else:
-            fcr=float(request.form["fcr"])
+
+            # insert all data into field_logs
+            estimated_weights = record_weights
+            fcr = 0
+            sql = 'insert into field_logs (pool_ID, spec, record_weights, estimated_weights, fcr, dead_counts, update_time) values({}, {}, {}, {}, {}, {}, "{}");'.format(pool_ID, float(spec), record_weights, estimated_weights, fcr, dead_counts, update_time)
+            cursor.execute(sql)
+        elif opt == 2:
+            # insert food_ID into feeding_logs
+            sql = "UPDATE feeding_logs SET food_ID = " + "'" + str(food_ID) + "'" + " WHERE pool_ID = "+str(pool_ID)+" order by start_time desc;"
+            # sql = 'insert into feeding_logs (pool_ID, food_ID) values({}, "{}");'.format(pool_ID, food_ID)
+            cursor.execute(sql)
             
-        if request.form["counts"] == "":
-            sql = "select counts from field_logs where pool_ID = "+str(pool_ID)+" order by update_time desc;"
+            # counting estimated_weights
+            sql = "select record_weights from field_logs where pool_ID = "+str(pool_ID)+" order by update_time asc;"
             cursor.execute(sql)
-            counts = cursor.fetchone()
-            counts = counts[0]
-        else:
-            counts=int(request.form["counts"])
+            first_weights = cursor.fetchone()
+            first_weights = first_weights[0]
+            sql = "select spec from field_logs where pool_ID = "+str(pool_ID)+" order by update_time asc;"
+            cursor.execute(sql)
+            first_spec = cursor.fetchone()
+            first_spec = first_spec[0]
+            total_fish_number = first_spec * first_weights
+            sql = "select update_time from field_logs where pool_ID = "+str(pool_ID)+" order by update_time asc;"
+            cursor.execute(sql) 
+            first_time = cursor.fetchone()
+            first_time = first_time[0]
+            update_time = datetime.datetime.strptime(update_time, "%Y-%m-%d %H:%M:%S")
+            age = str((update_time-first_time).days)
+            print("養殖了:" + age + "天")
+            estimated_weights = preidict_weights(age, total_fish_number)
+            print('total_fish_number:', total_fish_number)
+            print('estimated_weights:', estimated_weights)
             
-        if request.form["dead_counts"] == "":
-            dead_counts=0
-        else:
-            dead_counts=int(request.form["dead_counts"])
-        
-        if request.form["avg_weights"] == "":
-            sql = "select * from field_logs where pool_ID = "+str(pool_ID)+" order by update_time desc;"
+            # counting fcr
+            sql = "select feeding_amount from feeding_logs where pool_ID = "+str(pool_ID)+";"
             cursor.execute(sql)
-            fields_data = cursor.fetchone()
-            avg_weights = "NULL" or None 
-            estimated_avg_weights = fields_data[2] # estimated_avg_weights on last time
-            fcr = fields_data[3]
-            counts = fields_data[4]
-            update_time = fields_data[6]
-            cursor.execute(sql)
-            sql = "select feeding_time, used from feeding_logs where pool_ID = "+str(pool_ID)+" order by feeding_time desc;"
-            cursor.execute(sql)
-            feeding_logs = list(cursor.fetchall())
-            total_used = 0
-            for i in range(len(feeding_logs)):
-                feeding_time = feeding_logs[i][0]
-                used = feeding_logs[i][1]
-                if update_time < feeding_time:
-                    total_used += used
+            feeding_amount = list(cursor.fetchall())
+            total_feeding_amount = 0
+            for i in range(len(feeding_amount)):
+                total_feeding_amount += feeding_amount[i][0]
+            print("total_feeding_amount:", total_feeding_amount)
+            fcr = counting_fcr(total_feeding_amount, estimated_weights, first_weights)
             
-            estimated_avg_weights = round(((counts*estimated_avg_weights)+(total_used/fcr))/(counts-dead_counts),2)
+            # insert all data into field_logs
+            spec = None
+            sql = 'INSERT INTO field_logs (pool_ID, spec, record_weights, estimated_weights, fcr, dead_counts, update_time) VALUES ({}, %s, {}, {}, {}, {}, %s);'.format(pool_ID, record_weights, estimated_weights, fcr, dead_counts)
+            data = (spec, update_time)
+            cursor.execute(sql, data)
 
         else:
-            avg_weights=float(request.form["avg_weights"])
-            estimated_avg_weights=avg_weights
+            # counting estimated_weights
+            sql = "select record_weights from field_logs where pool_ID = "+str(pool_ID)+" order by update_time asc;"
+            cursor.execute(sql)
+            first_weights = cursor.fetchone()
+            first_weights = first_weights[0]
+            sql = "select spec from field_logs where pool_ID = "+str(pool_ID)+" order by update_time asc;"
+            cursor.execute(sql)
+            first_spec = cursor.fetchone()
+            first_spec = first_spec[0]
+            total_fish_number = first_spec * first_weights
+            sql = "select update_time from field_logs where pool_ID = "+str(pool_ID)+" order by update_time asc;"
+            cursor.execute(sql) 
+            first_time = cursor.fetchone()
+            first_time = first_time[0]
+            update_time = datetime.datetime.strptime(update_time, "%Y-%m-%d %H:%M:%S")
+            age = str((update_time-first_time).days)
+            print("養殖了:" + age + "天")
+            estimated_weights = preidict_weights(age, total_fish_number)
+            print('total_fish_number:', total_fish_number)
+            print('estimated_weights:', estimated_weights)
             
-        sql = 'insert into field_logs (pool_ID, avg_weights, estimated_avg_weights, fcr, counts, dead_counts, update_time) values({}, {}, {}, {}, {}, {}, "{}");'.format(pool_ID, avg_weights, estimated_avg_weights, fcr, counts, dead_counts, datetime.datetime.now())
-        cursor.execute(sql)
-        '''       
+            # counting fcr
+            sql = "select feeding_amount from feeding_logs where pool_ID = "+str(pool_ID)+";"
+            cursor.execute(sql)
+            feeding_amount = list(cursor.fetchall())
+            total_feeding_amount = 0
+            for i in range(len(feeding_amount)):
+                total_feeding_amount += feeding_amount[i][0]
+            print("total_feeding_amount:", total_feeding_amount)
+            fcr = counting_fcr(total_feeding_amount, estimated_weights, first_weights)
+
+            # insert all data into field_logs
+            sql = 'insert into field_logs (pool_ID, spec, record_weights, estimated_weights, fcr, dead_counts, update_time) values({}, {}, {}, {}, {}, {}, "{}");'.format(pool_ID, float(spec), record_weights, estimated_weights, fcr, dead_counts, update_time)
+            cursor.execute(sql)
+            isSuccess = 1
         return redirect(url_for("field_logs"))
 
-    sql = "select pool_ID from field_logs;"
-    cursor.execute(sql)
-    pool_count = cursor.fetchall()
-    page = render_template('update.html', pool_count=pool_count)
+    page = render_template('update.html', isSuccess=isSuccess)
     return page
 
 @app.route('/query', methods=["GET", "POST"])
@@ -371,88 +465,45 @@ def query_result():
     cursor.execute(sql)
     
     if request.method == "POST":
-        pool_ID = int(request.form["pool_ID"])
-        query_time = datetime.datetime.now()
-        # target_weight = float(request.form["target_weight"])
-        # daily_feed = float(request.form["daily_feed"])
-        sql = "select update_time from field_logs where pool_ID = "+str(pool_ID)+" order by update_time asc;"
-        cursor.execute(sql)
-        first_time = cursor.fetchone()
-        first_time = first_time[0]
-        print(first_time)
-        age = str((query_time-first_time).days)
-        print("兩個日期相差了"+ age +"天")
-        estimated_weights = preidict_weights(age)
-        
-        sql = "select spec from field_logs where pool_ID = "+str(pool_ID)+" order by update_time asc;"
-        cursor.execute(sql)
-        first_spec = cursor.fetchone()
-        first_spec = first_spec[0]
-        print(first_spec)
+        pool_ID = request.form.get("pool_ID")
+        print(pool_ID)
+        # counting estimated_weights
         sql = "select record_weights from field_logs where pool_ID = "+str(pool_ID)+" order by update_time asc;"
         cursor.execute(sql)
         first_weights = cursor.fetchone()
         first_weights = first_weights[0]
-        print(first_weights)
-        estimated_weights = round(estimated_weights * first_spec * first_weights / 1000, 2)
+        sql = "select spec from field_logs where pool_ID = "+str(pool_ID)+" order by update_time asc;"
+        cursor.execute(sql)
+        first_spec = cursor.fetchone()
+        first_spec = first_spec[0]
+        total_fish_number = first_spec * first_weights
+        sql = "select update_time from field_logs where pool_ID = "+str(pool_ID)+" order by update_time asc;"
+        cursor.execute(sql) 
+        first_time = cursor.fetchone()
+        first_time = first_time[0]
+        query_time = datetime.datetime.now()
+        age = str((query_time-first_time).days)
+        print("養殖了:" + age + "天")
+        estimated_weights = preidict_weights(age, total_fish_number)
+        print('total_fish_number:', total_fish_number)
+        print('estimated_weights:', estimated_weights)
         
+        # counting fcr
+        sql = "select feeding_amount from feeding_logs where pool_ID = "+str(pool_ID)+";"
+        cursor.execute(sql)
+        feeding_amount = list(cursor.fetchall())
+        total_feeding_amount = 0
+        for i in range(len(feeding_amount)):
+            total_feeding_amount += feeding_amount[i][0]
+        print("total_feeding_amount:", total_feeding_amount)
+        estimated_fcr = counting_fcr(total_feeding_amount, estimated_weights, first_weights)
+        
+        # counting estimated_date
         estimated_date = preidict_date(estimated_weights)
         estimated_date = first_time + datetime.timedelta(days=int(estimated_date))
         print('estimated_date:', estimated_date)
         
-        '''
-        if request.form["avg_weights"] == '':
-            sql = "select avg_weights from field_logs where pool_ID = "+str(pool_ID)+";"
-            cursor.execute(sql)
-            avg_weights = cursor.fetchone()
-            avg_weights = avg_weights[0]
-        else:
-            avg_weights=float(request.form["avg_weights"])
-        
-        if request.form["fcr"] == '':
-            sql = "select fcr from fcr where pool_ID = "+str(pool_ID)+" order by end_time desc;"
-            cursor.execute(sql)           
-            fcr = cursor.fetchone()
-            fcr = fcr[0]
-        else:
-            fcr=float(request.form["fcr"])
-            
-        if request.form["counts"] == '':
-            sql = "select counts from field_logs where pool_ID = "+str(pool_ID)+";"
-            cursor.execute(sql)
-            counts = cursor.fetchone()
-            counts = counts[0]
-        else:
-            counts=int(request.form["counts"])
-            
-        if request.form["dead_counts"] == '':
-            sql = "select dead_counts from field_logs where pool_ID ="+str(pool_ID)+";"
-            cursor.execute(sql)
-            dead_counts = cursor.fetchone()
-            dead_counts = dead_counts[0]
-        else:
-            dead_counts=int(request.form["dead_counts"])
-        
-        '''
-        
-        sql = "select used from feeding_logs where pool_ID = "+str(pool_ID)+";"
-        cursor.execute(sql)
-        used = list(cursor.fetchall())
-        total_used = 0
-        for i in range(len(used)):
-            total_used += used[i][0]
-        total_used = total_used/1000
-        print("total_used", total_used)
-        
-        # target_feed = (target_weight-avg_weights)*(counts-dead_counts)*fcr
-        # estimated_feed = target_feed-total_used
-        # estimated_days = estimated_feed/daily_feed
-        # print("換肉率:", fcr, "\n目標均重(公克):", target_weight, "\n目前均重(公克):", avg_weights, "\n魚隻數量(隻):", counts, "\n魚隻死亡數量(隻):", dead_counts)
-        # print("目標飼料量(公克):", target_feed, "\n已用飼料量(公克):", total_used, "\n每日飼料量(公克):", daily_feed, "\n預估天數(天):", estimated_days)
-
-        estimated_fcr = round(total_used/(estimated_weights-first_weights), 2)
-    query_result = render_template('query_result.html', age=int(age), estimated_date=estimated_date, estimated_weights=estimated_weights, estimated_fcr=estimated_fcr, total_used=total_used, first_weights=first_weights)
-    # target_feed=target_feed, total_used=total_used, estimated_days=estimated_days, fcr=fcr, target_weight=target_weight, avg_weights=avg_weights, counts=counts, dead_counts=dead_counts, estimated_feed=estimated_feed, daily_feed=daily_feed)
+    query_result = render_template('query_result.html', age=int(age), estimated_date=estimated_date, estimated_weights=estimated_weights, estimated_fcr=estimated_fcr, total_feeding_amount=total_feeding_amount, first_weights=first_weights)
     return query_result
 
 # get field data

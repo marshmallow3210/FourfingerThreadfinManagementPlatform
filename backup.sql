@@ -102,6 +102,7 @@ DROP TABLE IF EXISTS `ESP32`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `ESP32` (
+  `pool_ID` int(11) DEFAULT NULL,
   `dispenser_ID` int(11) NOT NULL default '1',
   `weight` float(10,2) DEFAULT NULL,
   `laser` float(10,2) DEFAULT NULL,
@@ -155,12 +156,15 @@ INSERT INTO `ESP32` VALUES (22.73,0.00,'off','0','600','0','15:48:40','2023-10-0
 INSERT INTO `ESP32` VALUES (22.53,0.00,'off','0','600','0','15:48:45','2023-10-05');
 INSERT INTO `ESP32` VALUES (22.65,0.00,'off','0','600','0','15:48:50','2023-10-05');
 INSERT INTO `ESP32` VALUES (22.71,0.00,'off','0','600','0','15:48:55','2023-10-05');
+
+INSERT INTO `ESP32` VALUES (22.66,0.00,'off','0','600','0','17:00:00','2023-10-06',1);
 /*!40000 ALTER TABLE `ESP32` ENABLE KEYS */;
 UNLOCK TABLES;
 
 --
 -- Table structure for table `feeding_logs`
 --
+UPDATE feeding_logs SET pool_ID = 1 WHERE dispenser_ID = 1;
 
 DROP TABLE IF EXISTS `feeding_logs`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
@@ -170,8 +174,8 @@ CREATE TABLE `feeding_logs` (
   `dispenser_ID` int(11) NOT NULL default '1',
   `start_time` datetime DEFAULT current_timestamp(),
   `use_time` float DEFAULT NULL,
-  `food_ID` char(50) DEFAULT NULL,
-  `feeding_amount` float DEFAULT NULL,
+  `food_ID` varchar(255) DEFAULT NULL,
+  `feeding_amount` float DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -182,16 +186,8 @@ CREATE TABLE `feeding_logs` (
 LOCK TABLES `feeding_logs` WRITE;
 /*!40000 ALTER TABLE `feeding_logs` DISABLE KEYS */;
 INSERT INTO `feeding_logs` VALUES 
-(1,'2023-04-01 13:00:00',30,'test',100000,1),
-(2,'2023-04-02 13:00:00',30,'test',100000,1), 
-(1,'2023-04-03 13:00:00',30,'test',100000,1),
-(1,'2023-04-04 13:00:00',30,'test',100000,1),
-(1,'2023-04-05 13:00:00',30,'test',100000,1),
-(2,'2023-04-06 13:00:00',30,'test',100000,1), 
-(1,'2023-04-07 13:00:00',30,'test',100000,1),
-(1,'2023-04-08 13:00:00',30,'test',100000,1),
-(2,'2023-04-09 13:00:00',30,'test',100000,1), 
-(1,'2023-04-10 13:00:00',30,'test',100000,1);
+(1, 1,'2023-10-05 15:50:00',30, NULL,1000),
+(1, 1,'2023-10-06 12:00:00',60, NULL,2000);
 /*!40000 ALTER TABLE `feeding_logs` ENABLE KEYS */;
 UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
