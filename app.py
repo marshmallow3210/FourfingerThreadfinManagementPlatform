@@ -139,30 +139,26 @@ def dispenser():
 
     return page
 
-@app.route('/test', methods=["GET", "POST"])
-def test():
-    global connection
-    cursor = connection.cursor()
-    sql = "use " + databaseName + ";"
-    cursor.execute(sql)
-
+@app.route('/decision', methods=["GET", "POST"])
+def decision():
+    command=None
     if request.method == "POST":
-        pool_ID = int(request.form.get("pool_ID"))
-        use_time = int(request.form.get("use_time"))
-        dispenser_ID = int(request.form.get("dispenser_ID"))
-        food_ID = request.form.get("food_ID")
-        used = float(request.form.get("used"))
-        print(pool_ID, dispenser_ID, used)
-        sql = 'insert into feeding_logs(dispenser_ID, use_time, food_ID, used, pool_ID) values({}, {}, "{}", {}, {})'.format(dispenser_ID, use_time, food_ID, used, pool_ID)
-        cursor.execute(sql)
-        return redirect(url_for("test"))
+        id = request.form.get("id")
+        mode = request.form.get("mode")
+        angle = request.form.get("angle")
+        period = request.form.get("period")
+        amount = request.form.get("amount")
+        fetch_interval = request.form.get("fetch_interval")
+        command = {
+            'id': id, 
+            'mode': mode, 
+            'angle': angle, 
+            'period': period, 
+            'amount': amount, 
+            'fetch_interval': fetch_interval
+        }
 
-
-    sql = "select pool_ID from field_logs;"
-    cursor.execute(sql)
-    pool_count = cursor.fetchall()
-    page = render_template('test.html', pool_count=pool_count)
-
+    page = render_template('decision.html')
     return page
 
 @app.route('/login', methods=['GET', 'POST'])

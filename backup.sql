@@ -200,4 +200,26 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2023-04-09 11:00:33
+--
+-- Table structure for table `decision`
+--
+DROP TABLE IF EXISTS `decision`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `decision` (
+  `id` varchar(1) NOT NULL,
+  `mode` varchar(1) DEFAULT NULL,
+  `angle` varchar(3) DEFAULT NULL,
+  `period` varchar(3) DEFAULT NULL,
+  `amount` varchar(3) DEFAULT NULL,
+  `fetch_interval` varchar(3) DEFAULT NULL,
+  PRIMARY KEY (id)
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+| id             | varchar(1) | NO   | PRI | NULL    |       |
+| mode           | varchar(1) | NO   |     | NULL    |       |
+| angle          | varchar(3) | NO   |     | NULL    |       |
+| period         | varchar(3) | NO   |     | NULL    |       |
+| amount         | varchar(3) | NO   |     | NULL    |       |
+| fetch_interval | varchar(3) | NO   |     | NULL

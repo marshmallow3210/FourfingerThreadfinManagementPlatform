@@ -138,7 +138,7 @@ header {
     padding: 60px;
 }
 
-.main{
+.main {
     padding: 40px;
 }
 
@@ -172,6 +172,7 @@ span {
     background-color: #009999; 
     color: #ccf2f2; 
     border: 1px solid #009999; 
+    outline: none;
 }
 
 /* 在小屏幕時，讓側邊欄堆疊在主內容上方 */
