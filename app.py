@@ -102,65 +102,6 @@ def counting_fcr(total_feeding_amount, estimated_weights, first_weights):
     estimated_fcr = round(total_feeding_amount/(estimated_weights-first_weights), 2)
     return estimated_fcr
 
-@app.route('/dispenser', methods=["GET", "POST"])
-def dispenser():
-    global connection
-    cursor = connection.cursor()
-    sql = "use " + databaseName + ";"
-    cursor.execute(sql)
-
-    if request.method == "POST":
-        try:
-            pool_ID = int(request.form.get("pool_ID"))
-            sql = "insert into dispenser(pool_ID) value({})".format(pool_ID)
-            cursor.execute(sql)
-        except:
-            sql = "truncate dispenser;"
-            cursor.execute(sql)
-
-    sql = "select pool_ID from field_logs;"
-    cursor.execute(sql)
-    pool_count = cursor.fetchall()
-    sql = "select ff.pool_ID, d.dispenser_ID from field_logs as ff inner join dispenser as d where ff.pool_ID=d.pool_ID order by pool_ID, dispenser_ID;"
-    cursor.execute(sql)
-    dispenser_count = cursor.fetchall()
-    try:
-        s=dispenser_count[0][0]
-        data = [["場域 {}:".format(s)]]
-        if s!=None:
-            for temp in dispenser_count:
-                if temp[0] != s:
-                    data.append(["場域 {}: ".format(temp[0])])
-                    s=temp[0]
-                data[-1].append(temp[1])
-    except:
-        data=[]
-    page = render_template('dispenser.html', pool_count=pool_count, data=data, data_len=len(data))
-
-    return page
-
-@app.route('/decision', methods=["GET", "POST"])
-def decision():
-    command=None
-    if request.method == "POST":
-        id = request.form.get("id")
-        mode = request.form.get("mode")
-        angle = request.form.get("angle")
-        period = request.form.get("period")
-        amount = request.form.get("amount")
-        fetch_interval = request.form.get("fetch_interval")
-        command = {
-            'id': id, 
-            'mode': mode, 
-            'angle': angle, 
-            'period': period, 
-            'amount': amount, 
-            'fetch_interval': fetch_interval
-        }
-
-    page = render_template('decision.html')
-    return page
-
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
@@ -195,6 +136,33 @@ def home():
         return redirect(url_for('login'))
     # home = render_template('home.html')
     # return home
+
+@app.route('/decision', methods=["GET", "POST"])
+def decision():
+    command=None
+    if request.method == "POST":
+        id = request.form.get("id")
+        mode = request.form.get("mode")
+        angle = request.form.get("angle")
+        period = request.form.get("period")
+        amount = request.form.get("amount")
+        fetch_interval = request.form.get("fetch_interval")
+        command = {
+            'id': id, 
+            'mode': mode, 
+            'angle': angle, 
+            'period': period, 
+            'amount': amount, 
+            'fetch_interval': fetch_interval
+        }
+
+    page = render_template('decision.html')
+    return page
+
+@app.route('/field_view', methods=["GET", "POST"])
+def field_view():
+    page = render_template('field_view.html')
+    return page
 
 def getDataFromESP32():
     global connection
