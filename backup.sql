@@ -16,56 +16,6 @@
 /*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
 
 --
--- Table structure for table `dispenser`
---
-
-DROP TABLE IF EXISTS `dispenser`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `dispenser` (
-  `dispenser_ID` int(11) NOT NULL AUTO_INCREMENT,
-  `field_ID` int(11) DEFAULT NULL,
-  PRIMARY KEY (`dispenser_ID`)
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `dispenser`
---
-
-LOCK TABLES `dispenser` WRITE;
-/*!40000 ALTER TABLE `dispenser` DISABLE KEYS */;
-INSERT INTO `dispenser` VALUES (1,1),(2,1);
-/*!40000 ALTER TABLE `dispenser` ENABLE KEYS */;
-UNLOCK TABLES;
-
---
--- Table structure for table `fcr`
--- `fcr`: 換肉率
---
-
-DROP TABLE IF EXISTS `fcr`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `fcr` (
-  `field_ID` int(11) DEFAULT NULL,
-  `fcr` float DEFAULT NULL,
-  `start_time` datetime DEFAULT NULL,
-  `end_time` datetime DEFAULT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `fcr`
---
-
-LOCK TABLES `fcr` WRITE;
-/*!40000 ALTER TABLE `fcr` DISABLE KEYS */;
-INSERT INTO `fcr` VALUES (1,2,'2023-03-12 11:13:42','2023-03-12 11:15:48');
-/*!40000 ALTER TABLE `fcr` ENABLE KEYS */;
-UNLOCK TABLES;
-
---
 -- Table structure for table `field_logs`
 --
 
@@ -125,39 +75,41 @@ ADD COLUMN `dispenser_ID` int(11) NOT NULL DEFAULT '1';
 
 LOCK TABLES `ESP32` WRITE;
 /*!40000 ALTER TABLE `ESP32` DISABLE KEYS */;
-INSERT INTO `ESP32` VALUES (22.46,0.00,'off','0','600','0','15:46:35','2023-10-05');
-INSERT INTO `ESP32` VALUES (23.16,0.00,'off','0','600','0','15:46:40','2023-10-05');
-INSERT INTO `ESP32` VALUES (23.27,0.00,'off','0','600','0','15:46:45','2023-10-05');
-INSERT INTO `ESP32` VALUES (23.56,0.00,'off','0','600','0','15:46:50','2023-10-05');
-INSERT INTO `ESP32` VALUES (23.57,0.00,'off','0','600','0','15:46:55','2023-10-05');
+INSERT INTO `ESP32` VALUES 
+(1,1,22.46,0.00,'off','0','600','0','15:46:35','2023-10-05'), 
+(1,1,23.16,0.00,'off','0','600','0','15:46:40','2023-10-05'), 
 
-INSERT INTO `ESP32` VALUES (23.45,0.00,'off','0','600','0','15:47:00','2023-10-05');
-INSERT INTO `ESP32` VALUES (23.52,0.00,'off','0','600','0','15:47:05','2023-10-05');
-INSERT INTO `ESP32` VALUES (23.54,0.00,'off','0','600','0','15:47:10','2023-10-05');
-INSERT INTO `ESP32` VALUES (24.98,0.00,'off','0','600','0','15:47:15','2023-10-05');
-INSERT INTO `ESP32` VALUES (25.12,0.00,'off','0','600','0','15:47:20','2023-10-05');
-INSERT INTO `ESP32` VALUES (26.32,0.00,'off','0','600','0','15:47:25','2023-10-05');
-INSERT INTO `ESP32` VALUES (23.99,0.00,'off','0','600','0','15:47:30','2023-10-05');
-INSERT INTO `ESP32` VALUES (24.18,0.00,'off','0','600','0','15:47:35','2023-10-05');
-INSERT INTO `ESP32` VALUES (22.72,0.00,'off','0','600','0','15:47:40','2023-10-05');
-INSERT INTO `ESP32` VALUES (22.52,0.00,'off','0','600','0','15:47:45','2023-10-05');
-INSERT INTO `ESP32` VALUES (22.50,0.00,'off','0','600','0','15:47:50','2023-10-05');
-INSERT INTO `ESP32` VALUES (22.68,0.00,'off','0','600','0','15:47:55','2023-10-05');
+(1,1,23.27,0.00,'off','0','600','0','15:46:45','2023-10-05'),
+(1,1,23.56,0.00,'off','0','600','0','15:46:50','2023-10-05'), 
+(1,1,23.57,0.00,'off','0','600','0','15:46:55','2023-10-05'),
+(1,1,23.45,0.00,'off','0','600','0','15:47:00','2023-10-05'),
+(1,1,23.52,0.00,'off','0','600','0','15:47:05','2023-10-05'),
+(1,1,23.54,0.00,'off','0','600','0','15:47:10','2023-10-05'),
+(1,1,24.98,0.00,'off','0','600','0','15:47:15','2023-10-05'),
+(1,1,25.12,0.00,'off','0','600','0','15:47:20','2023-10-05'),
+(1,1,26.32,0.00,'off','0','600','0','15:47:25','2023-10-05'),
+(1,1,23.99,0.00,'off','0','600','0','15:47:30','2023-10-05'),
+(1,1,24.18,0.00,'off','0','600','0','15:47:35','2023-10-05'),
+(1,1,22.72,0.00,'off','0','600','0','15:47:40','2023-10-05'),
+(1,1,22.52,0.00,'off','0','600','0','15:47:45','2023-10-05'),
+(1,1,22.50,0.00,'off','0','600','0','15:47:50','2023-10-05'),
+(1,1,22.68,0.00,'off','0','600','0','15:47:55','2023-10-05'),
 
-INSERT INTO `ESP32` VALUES (22.57,0.00,'off','0','600','0','15:48:00','2023-10-05');
-INSERT INTO `ESP32` VALUES (22.56,0.00,'off','0','600','0','15:48:05','2023-10-05');
-INSERT INTO `ESP32` VALUES (22.57,0.00,'off','0','600','0','15:48:10','2023-10-05');
-INSERT INTO `ESP32` VALUES (22.57,0.00,'off','0','600','0','15:48:15','2023-10-05');
-INSERT INTO `ESP32` VALUES (22.56,0.00,'off','0','600','0','15:48:20','2023-10-05');
-INSERT INTO `ESP32` VALUES (22.56,0.00,'off','0','600','0','15:48:25','2023-10-05');
-INSERT INTO `ESP32` VALUES (22.69,0.00,'off','0','600','0','15:48:30','2023-10-05');
-INSERT INTO `ESP32` VALUES (22.66,0.00,'off','0','600','0','15:48:35','2023-10-05');
-INSERT INTO `ESP32` VALUES (22.73,0.00,'off','0','600','0','15:48:40','2023-10-05');
-INSERT INTO `ESP32` VALUES (22.53,0.00,'off','0','600','0','15:48:45','2023-10-05');
-INSERT INTO `ESP32` VALUES (22.65,0.00,'off','0','600','0','15:48:50','2023-10-05');
-INSERT INTO `ESP32` VALUES (22.71,0.00,'off','0','600','0','15:48:55','2023-10-05');
+(1,1,22.57,0.00,'off','0','600','0','15:48:00','2023-10-05'),
+(1,1,22.56,0.00,'off','0','600','0','15:48:05','2023-10-05'),
+(1,1,22.57,0.00,'off','0','600','0','15:48:10','2023-10-05'),
+(1,1,22.57,0.00,'off','0','600','0','15:48:15','2023-10-05'),
+(1,1,22.56,0.00,'off','0','600','0','15:48:20','2023-10-05'),
+(1,1,22.56,0.00,'off','0','600','0','15:48:25','2023-10-05'),
+(1,1,22.69,0.00,'off','0','600','0','15:48:30','2023-10-05'),
+(1,1,22.66,0.00,'off','0','600','0','15:48:35','2023-10-05'),
+(1,1,22.73,0.00,'off','0','600','0','15:48:40','2023-10-05'),
+(1,1,22.53,0.00,'off','0','600','0','15:48:45','2023-10-05'),
+(1,1,22.65,0.00,'off','0','600','0','15:48:50','2023-10-05'),
+(1,1,22.71,0.00,'off','0','600','0','15:48:55','2023-10-05'),
 
-INSERT INTO `ESP32` VALUES (22.66,0.00,'off','0','600','0','17:00:00','2023-10-06',1);
+(1,1,22.66,0.00,'off','0','600','0','17:00:00','2023-10-06'),
+(1,1,25.00,0.00,'off','0','600','0','17:17:17','2023-10-07');
 /*!40000 ALTER TABLE `ESP32` ENABLE KEYS */;
 UNLOCK TABLES;
 

@@ -165,31 +165,8 @@
         
         <!--content-->
         <div class="row">
-          <!--dispenser-->
-          <div class="main-page"><form action="{{url_for("dispenser")}}" method="post">
-            <table style="border:3px #cccccc solid;" cellpadding="10" border='1'>
-              <tr> <th colspan="10">目前投餌機</th></tr>
-              {% for i in range(0, data_len) %}
-              <tr>
-                  {% for t in data[i] %}
-                  <td>{{t}}</td>
-                  {% endfor %}
-              </tr>
-              {% endfor %}
-            </table>  
-            <br>
+          <div class="main-page">
 
-            <div class="input-group mb-3">
-              <select name="field_ID" class="selectpicker form-control custom-select select-title" width="40">
-                <option disable select>場域選擇</option>
-                <option disable select>清空!!!</option>
-                {% for id in fields_count %}
-                <option>{{id[0]}}</option>
-                {% endfor %}
-              </select>
-              <div class="input-group-append">
-                <button class="btn btn-outline-secondary" type="submit">新增/清空</button>
-              </div>
           </div>
 
           <span height="20"></span>
