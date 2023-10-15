@@ -176,7 +176,8 @@
                       <option value="1">定量投餵</option>
                       <option value="2">定時投餵</option>
                       <option value="3">智能投餵</option>
-                  </select><br>
+                  </select>
+                  <br>
           
                   <label for="angle">投餌角度:</label>
                   <select class="form-select mb-3" name="angle" id="angle">
@@ -186,7 +187,8 @@
                       <option value="120">120</option>
                       <option value="150">150</option>
                       <option value="180">180</option>
-                  </select><br>
+                  </select>
+                  <br>
           
                   <label for="period">投餌時長:(分鐘)</label>
                   <select class="form-select mb-3" name="period" id="period">
@@ -194,17 +196,31 @@
                       <option value="60">60</option>
                       <option value="120">120</option>
                       <option value="240">240</option>
-                  </select><br>
+                  </select>
+                  <br>
           
                   <label for="amount">投料量:(公斤)</label>
-                  <input class="input-group-text"type="text" name="amount" id="amount"><br>
+                  <select class="form-select mb-3" name="amount" id="amount">
+                      <option value="010">10</option>
+                      <option value="020">20</option>
+                      <option value="030">30</option>
+                      <option value="040">40</option>
+                      <option value="050">50</option>
+                      <option value="060">60</option>
+                      <option value="070">70</option>
+                      <option value="080">80</option>
+                      <option value="090">90</option>
+                      <option value="100">100</option>
+                  </select>
+                  <br>
           
                   <label for="fetch_interval">投餌機指令更新頻率:(秒)</label>
                   <select class="form-select mb-3" name="fetch_interval" id="fetch_interval">
                       <option value="2">2秒</option>
                       <option value="5">5秒</option>
                       <option value="10">10秒</option>
-                  </select><br>
+                  </select>
+                  <br>
           
                   <input class="btn btn-outline-secondary" type="submit" value="提交">
               </form>

@@ -53,7 +53,7 @@ function(){
     }
     // console.log("data = " + JSON.stringify(data));
     $.ajax({
-    url : 'http://localhost:5000/field_logs',
+    url : 'http://35.236.132.208:8080/field_logs',
     type : 'POST', 
     data : JSON.stringify(data),
     contentType : 'application/json; charset=utf-8', // 要送到server的資料型態
