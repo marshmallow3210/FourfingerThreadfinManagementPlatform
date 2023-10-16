@@ -191,4 +191,5 @@ span {
 .monitor {
     width: 100%; /* 使圖片寬度佔滿其父元素 */
     height: auto; /* 讓高度根據比例自動調整 */
+    border: 1px solid #003366;
 }

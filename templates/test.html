@@ -1,9 +1,21 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>test</title>
+    <meta charset="utf-8">
+    <title>index</title>
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/style.css') }}" />
+    
 </head>
+
 <body>
-    <h1>{{ data }}</h1>
+    <div class="row main">
+        <div class="mb-3 col-md-6">
+            <h1>{{ data }}</h1>
+            <a href="/login" class="color: #ccf2f2;">
+            <span>來去登入</span>           
+        </div>
+    </div>
 </body>
 </html>
