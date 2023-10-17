@@ -304,7 +304,7 @@ def update():
             spec = request.form.get("spec")
             record_weights = float(request.form.get("record_weights"))
             dead_counts = int(request.form.get("dead_counts"))
-            update_time = request.form.get("update_time")
+            update_time = datetime.datetime.today().strftime('%Y-%m-%d %H:%M:%S')
 
             print(f"opt: {opt}, pool_ID: {pool_ID}, food_ID: {food_ID}, spec: {spec}, record_weights: {record_weights}, dead_counts: {dead_counts}, update_time: {update_time}")
             
