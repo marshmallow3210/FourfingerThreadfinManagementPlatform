@@ -2,7 +2,7 @@
 <html>
 <head>
   <meta charset="utf-8">
-  <title>新增場域資料</title>
+  <title>新增養殖紀錄</title>
 
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css">
   <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/style.css') }}" />
@@ -165,21 +165,10 @@
       <!--main-page-->
       <div id="content" class="row">
         <div class="main-page">
-          <form action="{{ url_for("update")}}" method="post">
-          <!--
-            <select name="field_ID" class="selectpicker form-control">
-            <option disabled selected>請選擇場域</option>
-            <option>新增場域</option>
-            {% for id in fields_count %}
-            <option>{{id[0]}}</option>
-            {% endfor %}
-          </select>
-          <br>
-          -->
-          
           <h2>新增養殖紀錄</h2>
           <span height="5"></span>
 
+          <form action="{{ url_for("update")}}" method="post">
           <div class="col-lg-3">
             <select class="form-select mb-3" id="chooseTime">
                 <option disabled selected value="">選擇時間</option>

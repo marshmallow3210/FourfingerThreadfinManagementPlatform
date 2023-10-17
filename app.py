@@ -1,3 +1,5 @@
+import base64
+import io
 import json
 from flask import Flask, jsonify, render_template, request, redirect, url_for, session
 from flask_cors import CORS
@@ -5,16 +7,14 @@ import pymysql
 import datetime
 from datetime import timezone, timedelta
 import numpy as np
-import matplotlib.pyplot as plt
-from sklearn.linear_model import LinearRegression
-from sklearn.preprocessing import PolynomialFeatures
+import requests
 from sklearn.neighbors import KNeighborsRegressor
 
 app=Flask(__name__)
 CORS(app)  # 允許所有來源的跨來源請求
 app.secret_key = '66386638'  # 替換為隨機的密鑰，用於安全性目的
 
-databaseName = "fishDB"
+databaseName = "fishDB" # ar0DB
 
 # connection = pymysql.connect(host='127.0.0.1',
 #                              port=3306,
@@ -169,83 +169,68 @@ def decision():
     else:
         return redirect(url_for('login'))
 
-@app.route('/field_view', methods=["GET", "POST"])
-def field_view():
-    if 'username' in session:
-        return render_template('field_view.html')
+def storeFrames():
+    github_image_url = "https://raw.githubusercontent.com/marshmallow3210/FourfingerThreadfinManagementPlatform/3127ab028ece5cd6c1954797151c70cba5341fca/images/SpeakerAndyLin.jpg"
+    response = requests.get(github_image_url)
+
+    if response.status_code == 200:
+        image_binary = response.content
+        print("Success to download the image")
     else:
-        return redirect(url_for('login'))
-
-def getDataFromESP32():
-    global connection
-    cursor = connection.cursor()
-    sql = "use " + databaseName + ";"
-    cursor.execute(sql)
-
-    # counting feeding_amount
-    today_date = datetime.datetime.today().date()
-    today_date = "2023-10-05"
-    sql = "SELECT COUNT(*) AS feeding_count FROM ESP32 WHERE date = '" + today_date +"';"
-    cursor.execute(sql)
-    feeding_count = list(cursor.fetchall())
-    feeding_count = int(feeding_count[0][0])
-
-    sql = "select weight from ESP32"
-    cursor.execute(sql)
-    weight = list(cursor.fetchall())
+        print("Failed to download the image")
     
-    feeding_amount = 0
-    feeding_benchmark = weight[0][0]
-    for i in range(0, feeding_count):
-        if weight[i][0] < feeding_benchmark:
-            feeding_amount = feeding_amount + (feeding_benchmark - weight[i][0])
-        else:
-            feeding_benchmark = weight[i][0]
-    print('feeding_amount:', feeding_amount)
-
-    # counting start_time and use_time
-    sql = "SELECT CONCAT(date, ' ', MIN(time)) AS start_time FROM ESP32 GROUP BY date;"
-    cursor.execute(sql)
-    start_time = list(cursor.fetchall())
-    start_time = start_time[0][0]
-    start_time = datetime.datetime.strptime(start_time, "%Y-%m-%d %H:%M:%S")
-    print('start_time:', start_time)
-
-    sql = "SELECT CONCAT(date, ' ', MAX(time)) AS last_time FROM ESP32 GROUP BY date;"
-    cursor.execute(sql)
-    last_time = list(cursor.fetchall())
-    last_time = last_time[0][0]
-    last_time = datetime.datetime.strptime(last_time, "%Y-%m-%d %H:%M:%S")
-
-    use_time = last_time - start_time
-    use_time = use_time.total_seconds() / 60
-    use_time = round(use_time, 2)
-    print('use_time:', use_time)
-
-    sql = 'insert into feeding_logs (start_time, use_time, feeding_amount) values("{}", {}, {});'.format(start_time, use_time, feeding_amount)
-    cursor.execute(sql)
-
-@app.route('/feeding_logs', methods=["GET", "POST"])
-def feeding_logs():
-    if 'username' in session:
+    try:
         global connection
         cursor = connection.cursor()
         sql = "use " + databaseName + ";"
         cursor.execute(sql)
 
-        sql = "select * from feeding_logs"
-        cursor.execute(sql)
-        feeding_data = list(cursor.fetchall())
-        print(feeding_data)
+        frame_id = 2
+        today_time = datetime.datetime.today()
+        update_time = today_time.strftime('%Y-%m-%d %H:%M:%S')
+        
+        name = "image_" + str(update_time)
+        print(name)
 
-        return render_template('feeding_logs.html', feeding_data=feeding_data)  
+        sql = "INSERT INTO frames (id, name, update_time, data) VALUES (%s, %s, %s, %s)"
+        cursor.execute(sql, (str(frame_id), name, update_time, image_binary))
+        print("Success to store the image")
+
+    except:
+        print("Failed to store the image")
+
+def getFrames():
+    global connection
+    cursor = connection.cursor()
+    sql = "use " + databaseName + ";"
+    cursor.execute(sql)
+
+    sql = "select update_time, data from frames order by update_time desc;"
+    cursor.execute(sql)
+    data = cursor.fetchone()
+
+    if data:
+        update_time = data[0]
+        binary_data = data[1]
+        binary_data_btye_str = io.BytesIO(binary_data) # 將二進制數據讀取為字節串
+        binary_data_base64 = base64.b64encode(binary_data_btye_str.getvalue()).decode('utf-8') # 將圖片轉換為Base64字串
+        print("return base64 str")
+        return update_time, binary_data_base64
     else:
-        return redirect(url_for('login'))   
+        return 'data from frames were not found', 404
+
+@app.route('/field_view', methods=["GET", "POST"])
+def field_view():
+    if 'username' in session:
+        update_time, binary_data_base64 = getFrames()
+        return render_template('field_view.html', update_time=update_time, binary_data_base64=binary_data_base64)
+    else:
+        return redirect(url_for('login'))
   
 @app.route('/field_logs', methods=["GET", "POST"])
 def field_logs():
     if 'username' in session:
-        print(request.method)
+        # print(request.method)
         global connection
         cursor = connection.cursor()
         sql = "use " + databaseName + ";"
@@ -255,7 +240,7 @@ def field_logs():
         cursor.execute(sql)
         data = list(cursor.fetchall())
         data = utc8(data, 6)
-        print(data)
+        # print(data)
         
         if request.method == "POST":
             json_data = request.get_json("data")
@@ -421,6 +406,71 @@ def update():
     else:
         return redirect(url_for('login'))
 
+def getDataFromESP32():
+    global connection
+    cursor = connection.cursor()
+    sql = "use " + databaseName + ";"
+    cursor.execute(sql)
+
+    # counting feeding_amount
+    today_date = datetime.datetime.today().date()
+    today_date = "2023-10-05"
+    sql = "SELECT COUNT(*) AS feeding_count FROM ESP32 WHERE date = '" + today_date +"';"
+    cursor.execute(sql)
+    feeding_count = list(cursor.fetchall())
+    feeding_count = int(feeding_count[0][0])
+
+    sql = "select weight from ESP32"
+    cursor.execute(sql)
+    weight = list(cursor.fetchall())
+    
+    feeding_amount = 0
+    feeding_benchmark = weight[0][0]
+    for i in range(0, feeding_count):
+        if weight[i][0] < feeding_benchmark:
+            feeding_amount = feeding_amount + (feeding_benchmark - weight[i][0])
+        else:
+            feeding_benchmark = weight[i][0]
+    print('feeding_amount:', feeding_amount)
+
+    # counting start_time and use_time
+    sql = "SELECT CONCAT(date, ' ', MIN(time)) AS start_time FROM ESP32 GROUP BY date;"
+    cursor.execute(sql)
+    start_time = list(cursor.fetchall())
+    start_time = start_time[0][0]
+    start_time = datetime.datetime.strptime(start_time, "%Y-%m-%d %H:%M:%S")
+    print('start_time:', start_time)
+
+    sql = "SELECT CONCAT(date, ' ', MAX(time)) AS last_time FROM ESP32 GROUP BY date;"
+    cursor.execute(sql)
+    last_time = list(cursor.fetchall())
+    last_time = last_time[0][0]
+    last_time = datetime.datetime.strptime(last_time, "%Y-%m-%d %H:%M:%S")
+
+    use_time = last_time - start_time
+    use_time = use_time.total_seconds() / 60
+    use_time = round(use_time, 2)
+    print('use_time:', use_time)
+
+    sql = 'insert into feeding_logs (start_time, use_time, feeding_amount) values("{}", {}, {});'.format(start_time, use_time, feeding_amount)
+    cursor.execute(sql)
+
+@app.route('/feeding_logs', methods=["GET", "POST"])
+def feeding_logs():
+    if 'username' in session:
+        global connection
+        cursor = connection.cursor()
+        sql = "use " + databaseName + ";"
+        cursor.execute(sql)
+
+        sql = "select * from feeding_logs"
+        cursor.execute(sql)
+        feeding_data = list(cursor.fetchall())
+
+        return render_template('feeding_logs.html', feeding_data=feeding_data)  
+    else:
+        return redirect(url_for('login'))   
+
 @app.route('/query', methods=["GET", "POST"])
 def query():
     if 'username' in session:
@@ -479,7 +529,7 @@ def query_result():
     else:
         return redirect(url_for('login'))
     
-# get field data
+# get field data by jsgrid
 def load_data():
     return json.load(open('field_logs.json', encoding="utf-8"))
 
@@ -517,7 +567,7 @@ def deletedata():
     write_data(out)
     return jsonify(success=True)
 
-# get feeding data
+# get feeding data by jsgrid
 def load_feeding_data():
     return json.load(open('feeding_logs.json', encoding="utf-8"))
 
@@ -556,7 +606,7 @@ def delete_feeding_data():
     return jsonify(success=True)
 
 if __name__ == '__main__':
-    app.config['TEMPLATES_AUTO_RELOAD'] = True
-    app.jinja_env.auto_reload = True
+    app.config['TEMPLATES_AUTO_RELOAD'] = True # flask app 自動重新加載模板(html)
+    app.jinja_env.auto_reload = True # Jinja2 自動重新加載設定
     # app.run(debug=True) # in development server
     app.run(debug=False) # in production server

@@ -2,7 +2,7 @@
 <html>
 <head>
   <meta charset="utf-8">
-  <title>投餌控制</title>
+  <title>場域畫面</title>
 
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css">
   <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/style.css') }}" />
@@ -171,9 +171,9 @@
              
             <div style="padding:20px;">
               <h3> 監視器1</h3>
-              <img class="monitor" src="https://github.com/marshmallow3210/FourfingerThreadfinManagementPlatform/blob/main/images/output-2023-08-13-13-32-47%20-%20frame%20at%200m5s.jpg?raw=true" alt="監視器畫面">
-            
-            
+              <img id="monitor" class="monitor" src="data:image/jpeg;base64, {{ binary_data_base64 }}" alt={{ binary_data_base64 }}>
+              <br>
+              <label for="update_time">畫面更新時間: {{ update_time }}</label>
             </div>
 
           </div>
@@ -183,8 +183,8 @@
   
 </body>
 
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"></script>
-  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.4/jquery.min.js"></script>
-  <script type="text/javascript" src="{{ url_for('static', filename='js/script.js') }}"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.4/jquery.min.js"></script>
+<script type="text/javascript" src="{{ url_for('static', filename='js/script.js') }}"></script>
 
 </html>

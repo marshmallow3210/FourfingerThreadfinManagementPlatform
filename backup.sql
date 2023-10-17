@@ -156,22 +156,34 @@ UNLOCK TABLES;
 -- Table structure for table `decision`
 --
 DROP TABLE IF EXISTS `decision`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
+-- 
 CREATE TABLE `decision` (
-  `id` varchar(1) NOT NULL,
+  `id` varchar(1) NOT NULL PRIMARY KEY,
   `mode` varchar(1) DEFAULT NULL,
   `angle` varchar(3) DEFAULT NULL,
   `period` varchar(3) DEFAULT NULL,
   `amount` varchar(3) DEFAULT NULL,
-  `fetch_interval` varchar(3) DEFAULT NULL,
-  PRIMARY KEY (id)
+  `fetch_interval` varchar(3) DEFAULT NULL
 ) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
+--
 
-| id             | varchar(1) | NO   | PRI | NULL    |       |
-| mode           | varchar(1) | NO   |     | NULL    |       |
-| angle          | varchar(3) | NO   |     | NULL    |       |
-| period         | varchar(3) | NO   |     | NULL    |       |
-| amount         | varchar(3) | NO   |     | NULL    |       |
-| fetch_interval | varchar(3) | NO   |     | NULL
+
+--
+-- Table structure for table `decision`
+--
+DROP TABLE IF EXISTS `frames`;
+-- 
+CREATE TABLE `frames` (
+    `id` INT(11) NOT NULL PRIMARY KEY,
+    `name` VARCHAR(255) DEFAULT NULL,
+    `update_time` datetime DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+    `data` LONGBLOB DEFAULT NULL
+);
+
++-------+--------------+------+-----+---------+-------+
+| Field | Type         | Null | Key | Default | Extra |
++-------+--------------+------+-----+---------+-------+
+| id    | int(11)      | NO   | PRI | NULL    |       |
+| name  | varchar(255) | YES  |     | NULL    |       |
+| data  | longblob     | YES  |     | NULL    |       |
++-------+--------------+------+-----+---------+-------+
