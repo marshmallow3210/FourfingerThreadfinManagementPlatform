@@ -167,13 +167,13 @@
       <div class="row">
         <div class="main-page">
           <div>
-            <h2>查詢結果</h2>
+            <h2>估算查詢結果</h2>
             <span height="5"></span>
           </div>
           <div>
             <label for="age">已養了: {{ age }} 天</label>
             <br>
-            <label for="estimated_weights">系統估算當前魚總重量: {{ estimated_weights }} 公斤</label>
+            <label for="estimated_weights">系統估算當前魚池總重量: {{ estimated_weights }} 公斤</label>
             <br>
             <label for="estimated_fcr">系統估算當前換肉率: {{ estimated_fcr }}</label>
             <br>
@@ -185,7 +185,7 @@
         
           <div>
             <b>說明:<br></b>
-            系統估算當前換肉率 = 飼料量 / (系統預估當前魚總重量 - 初重)<br>
+            系統估算當前換肉率 = 飼料量 / (系統預估當前魚池總重量 - 初重)<br>
             {{ estimated_fcr }} = {{ total_feeding_amount }} / ({{ estimated_weights }} - {{ first_weights }})
             <br>
           </div>
