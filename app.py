@@ -16,18 +16,6 @@ app.secret_key = '66386638'  # 替換為隨機的密鑰，用於安全性目的
 
 databaseName = "fishDB" # ar0DB
 
-# connection = pymysql.connect(host='127.0.0.1',
-#                              port=3306,
-#                              user='root',
-#                              password='marsh12mallow14',
-#                              autocommit=True)
-
-# connection = pymysql.connect(host='34.81.183.159',
-#                              port=3306,
-#                              user='lab403',
-#                              password='66386638',
-#                              autocommit=True)
-
 connection = pymysql.connect(host='127.0.0.1',
                              port=3306,
                              user='lab403',
@@ -141,6 +129,8 @@ def logout():
 def home():
     # 檢查用戶是否登入，未登入則返回登入頁面
     if 'username' in session:
+        update_time = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        print(update_time)
         return render_template('home.html', username=session['username'])
     else:
         return redirect(url_for('login'))
@@ -170,7 +160,7 @@ def decision():
         return redirect(url_for('login'))
 
 def storeFrames():
-    github_image_url = "https://raw.githubusercontent.com/marshmallow3210/FourfingerThreadfinManagementPlatform/3127ab028ece5cd6c1954797151c70cba5341fca/images/SpeakerAndyLin.jpg"
+    github_image_url = "https://github.com/marshmallow3210/FourfingerThreadfinManagementPlatform/blob/main/images/output-2023-08-20-12-45-24%20-%20frame%20at%200m7s.jpg?raw=true"
     response = requests.get(github_image_url)
 
     if response.status_code == 200:
@@ -185,9 +175,8 @@ def storeFrames():
         sql = "use " + databaseName + ";"
         cursor.execute(sql)
 
-        frame_id = 2
-        today_time = datetime.datetime.today()
-        update_time = today_time.strftime('%Y-%m-%d %H:%M:%S')
+        frame_id = 3
+        update_time = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
         
         name = "image_" + str(update_time)
         print(name)
@@ -222,6 +211,7 @@ def getFrames():
 @app.route('/field_view', methods=["GET", "POST"])
 def field_view():
     if 'username' in session:
+        storeFrames()
         update_time, binary_data_base64 = getFrames()
         return render_template('field_view.html', update_time=update_time, binary_data_base64=binary_data_base64)
     else:
@@ -305,7 +295,8 @@ def update():
             record_weights = float(request.form.get("record_weights"))
             dead_counts = int(request.form.get("dead_counts"))
             update_time = datetime.datetime.today().strftime('%Y-%m-%d %H:%M:%S')
-
+            print(update_time)
+            
             print(f"opt: {opt}, pool_ID: {pool_ID}, food_ID: {food_ID}, spec: {spec}, record_weights: {record_weights}, dead_counts: {dead_counts}, update_time: {update_time}")
             
             # dispenser_ID = 1 # default
