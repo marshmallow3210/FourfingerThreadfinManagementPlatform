@@ -10,7 +10,7 @@ import numpy as np
 import requests
 from sklearn.neighbors import KNeighborsRegressor
 
-app=Flask(__name__)
+app = Flask(__name__)
 CORS(app)  # 允許所有來源的跨來源請求
 app.secret_key = '66386638'  # 替換為隨機的密鑰，用於安全性目的
 
@@ -419,55 +419,6 @@ def update():
     else:
         return redirect(url_for('login'))
 
-def getDataFromESP32():
-    global connection
-    cursor = connection.cursor()
-    sql = "use " + databaseName + ";"
-    cursor.execute(sql)
-
-    # counting feeding_amount
-    today_date = datetime.datetime.today().date()
-    today_date = "2023-10-05"
-    sql = "SELECT COUNT(*) AS feeding_count FROM ESP32 WHERE date = '" + today_date +"';"
-    cursor.execute(sql)
-    feeding_count = list(cursor.fetchall())
-    feeding_count = int(feeding_count[0][0])
-
-    sql = "select weight from ESP32"
-    cursor.execute(sql)
-    weight = list(cursor.fetchall())
-    
-    feeding_amount = 0
-    feeding_benchmark = weight[0][0]
-    for i in range(0, feeding_count):
-        if weight[i][0] < feeding_benchmark:
-            feeding_amount = feeding_amount + (feeding_benchmark - weight[i][0])
-        else:
-            feeding_benchmark = weight[i][0]
-    print('feeding_amount:', feeding_amount)
-
-    # counting start_time and use_time
-    sql = "SELECT CONCAT(date, ' ', MIN(time)) AS start_time FROM ESP32 GROUP BY date;"
-    cursor.execute(sql)
-    start_time = list(cursor.fetchall())
-    start_time = start_time[0][0]
-    start_time = datetime.datetime.strptime(start_time, "%Y-%m-%d %H:%M:%S")
-    print('start_time:', start_time)
-
-    sql = "SELECT CONCAT(date, ' ', MAX(time)) AS last_time FROM ESP32 GROUP BY date;"
-    cursor.execute(sql)
-    last_time = list(cursor.fetchall())
-    last_time = last_time[0][0]
-    last_time = datetime.datetime.strptime(last_time, "%Y-%m-%d %H:%M:%S")
-
-    use_time = last_time - start_time
-    use_time = use_time.total_seconds() / 60
-    use_time = round(use_time, 2)
-    print('use_time:', use_time)
-
-    sql = 'insert into feeding_logs (start_time, use_time, feeding_amount) values("{}", {}, {});'.format(start_time, use_time, feeding_amount)
-    cursor.execute(sql)
-
 @app.route('/feeding_logs', methods=["GET", "POST"])
 def feeding_logs():
     if 'username' in session:
@@ -634,4 +585,4 @@ if __name__ == '__main__':
     app.config['TEMPLATES_AUTO_RELOAD'] = True # flask app 自動重新加載模板(html)
     app.jinja_env.auto_reload = True # Jinja2 自動重新加載設定
     # app.run(debug=True) # in development server
-    app.run(debug=False) # in production server
+    app.run(port=8080, debug=False) # in production server
