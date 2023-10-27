@@ -150,7 +150,6 @@ CREATE TABLE `decision` (
 ) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 --
 
-
 --
 -- Table structure for table `decision`
 --
