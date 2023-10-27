@@ -14,8 +14,6 @@ app=Flask(__name__)
 CORS(app)  # 允許所有來源的跨來源請求
 app.secret_key = '66386638'  # 替換為隨機的密鑰，用於安全性目的
 
-databaseName = "fishDB" # ar0DB
-
 connection = pymysql.connect(host='127.0.0.1',
                              port=3306,
                              user='lab403',
@@ -24,8 +22,30 @@ connection = pymysql.connect(host='127.0.0.1',
 
 users = {
     'oakley': 'letmein',
-    'admin': 'admin'
+    'admin': 'admin',
+    'fishDB': 'fishDB',
+    'ar0DB': 'ar0DB',
+    'ar1DB': 'ar1DB',
+    'ar2DB': 'ar2DB',
+    'ar3DB': 'ar3DB',
+    'ar4DB': 'ar4DB'
 }
+
+def choooseDatabaseName(username):
+    global databaseName
+    databaseName = ""
+    if username == "fishDB" or username == "oakley":
+        databaseName = "fishDB"
+    elif username == "ar0DB":
+        databaseName = "ar0DB"
+    elif username == "ar1DB":
+        databaseName = "ar1DB"
+    elif username == "ar2DB":
+        databaseName = "ar2DB"
+    elif username == "ar3DB":
+        databaseName = "ar3DB"
+    elif username == "ar4DB":
+        databaseName = "ar4DB"
 
 def utc8(utc, p):
     for i in range(0, len(utc)):
@@ -106,12 +126,13 @@ def login():
     if request.method == 'POST':
         username = request.form['username']
         password = request.form['password']
-        print(username)
 
         if username in users and users[username] == password:
             # 登入成功，將用戶名存入 session
             session['username'] = username
-            print('yes')
+            choooseDatabaseName(username)
+            print('username:', username)
+            print('databaseName:', databaseName)
             return redirect(url_for('home'))
         else:
             error = 'Invalid username or password. Please try again.'
@@ -123,6 +144,7 @@ def login():
 def logout():
     # 清除用戶名的 session 資料
     session.pop('username', None)
+    print('logout!')
     return redirect(url_for('login'))
 
 @app.route('/home')
@@ -211,7 +233,7 @@ def getFrames():
 @app.route('/field_view', methods=["GET", "POST"])
 def field_view():
     if 'username' in session:
-        storeFrames()
+        # storeFrames()
         update_time, binary_data_base64 = getFrames()
         return render_template('field_view.html', update_time=update_time, binary_data_base64=binary_data_base64)
     else:
@@ -235,7 +257,7 @@ def field_logs():
         if request.method == "POST":
             json_data = request.get_json("data")
             pool_ID = int(json_data["pool_ID"])
-            print("receive POST", pool_ID)
+            print("receive pool_ID:", pool_ID)
 
             if pool_ID == 0:
                 sql = "select * from field_logs;"
@@ -480,43 +502,55 @@ def query_result():
         if request.method == "POST":
             pool_ID = request.form.get("pool_ID")
             print(pool_ID)
-            # counting estimated_weights
-            sql = "select record_weights from field_logs where pool_ID = "+str(pool_ID)+" order by update_time asc;"
+            sql = "select pool_ID from field_logs where pool_ID = "+str(pool_ID)+" order by update_time asc;"
             cursor.execute(sql)
-            first_weights = cursor.fetchone()
-            first_weights = first_weights[0]
-            sql = "select spec from field_logs where pool_ID = "+str(pool_ID)+" order by update_time asc;"
-            cursor.execute(sql)
-            first_spec = cursor.fetchone()
-            first_spec = first_spec[0]
-            total_fish_number = first_spec * first_weights
-            sql = "select update_time from field_logs where pool_ID = "+str(pool_ID)+" order by update_time asc;"
-            cursor.execute(sql) 
-            first_time = cursor.fetchone()
-            first_time = first_time[0]
-            query_time = datetime.datetime.now()
-            age = str((query_time-first_time).days)
-            print("養殖了:" + age + "天")
-            estimated_weights = preidict_weights(age, total_fish_number)
-            print('total_fish_number:', total_fish_number)
-            print('estimated_weights:', estimated_weights)
+            result = cursor.fetchall()
             
-            # counting fcr
-            sql = "select feeding_amount from feeding_logs where pool_ID = "+str(pool_ID)+";"
-            cursor.execute(sql)
-            feeding_amount = list(cursor.fetchall())
-            total_feeding_amount = 0
-            for i in range(len(feeding_amount)):
-                total_feeding_amount += feeding_amount[i][0]
-            print("total_feeding_amount:", total_feeding_amount)
-            estimated_fcr = counting_fcr(total_feeding_amount, estimated_weights, first_weights)
+            if len(result) == 0:
+                print("Result set is empty")
+                alertContent="ThisPoolhasNoData!"
+
+            else:
+                print("Result set is not empty")
+                # counting estimated_weights
+                sql = "select record_weights from field_logs where pool_ID = "+str(pool_ID)+" order by update_time asc;"
+                cursor.execute(sql)
+                first_weights = cursor.fetchone()
+                first_weights = first_weights[0]
+                sql = "select spec from field_logs where pool_ID = "+str(pool_ID)+" order by update_time asc;"
+                cursor.execute(sql)
+                first_spec = cursor.fetchone()
+                first_spec = first_spec[0]
+                total_fish_number = first_spec * first_weights
+                sql = "select update_time from field_logs where pool_ID = "+str(pool_ID)+" order by update_time asc;"
+                cursor.execute(sql) 
+                first_time = cursor.fetchone()
+                first_time = first_time[0]
+                query_time = datetime.datetime.now()
+                age = str((query_time-first_time).days)
+                print("養殖了:" + age + "天")
+                estimated_weights = preidict_weights(age, total_fish_number)
+                print('total_fish_number:', total_fish_number)
+                print('estimated_weights:', estimated_weights)
+                
+                # counting fcr
+                sql = "select feeding_amount from feeding_logs where pool_ID = "+str(pool_ID)+";"
+                cursor.execute(sql)
+                feeding_amount = list(cursor.fetchall())
+                total_feeding_amount = 0
+                for i in range(len(feeding_amount)):
+                    total_feeding_amount += feeding_amount[i][0]
+                print("total_feeding_amount:", total_feeding_amount)
+                estimated_fcr = counting_fcr(total_feeding_amount, estimated_weights, first_weights)
+                
+                # counting estimated_date
+                estimated_date = preidict_date(estimated_weights)
+                estimated_date = first_time + datetime.timedelta(days=int(estimated_date))
+                print('estimated_date:', estimated_date)
             
-            # counting estimated_date
-            estimated_date = preidict_date(estimated_weights)
-            estimated_date = first_time + datetime.timedelta(days=int(estimated_date))
-            print('estimated_date:', estimated_date)
+                return render_template('query_result.html', age=int(age), estimated_date=estimated_date, estimated_weights=estimated_weights, estimated_fcr=estimated_fcr, total_feeding_amount=total_feeding_amount, first_weights=first_weights)
         
-        return render_template('query_result.html', age=int(age), estimated_date=estimated_date, estimated_weights=estimated_weights, estimated_fcr=estimated_fcr, total_feeding_amount=total_feeding_amount, first_weights=first_weights)
+            return render_template('query.html', alertContent=alertContent)
     else:
         return redirect(url_for('login'))
     
