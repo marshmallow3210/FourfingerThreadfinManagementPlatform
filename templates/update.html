@@ -188,24 +188,21 @@
                 <input class="input-group-text" type="text" id="food_ID" name="food_ID" style="display:none;">
               </label>
               <br id="spec_br">
-              <label id="spec_label" style="display:none;">規格:
+              <label id="spec_label" style="display:none;">規格(尾/公斤):
                 <input class="input-group-text" type="number" id="spec" name="spec" style="display:none;" min="0">
-                (尾/公斤)
               </label>
               <br>
-              <label id="record_weights_label" style="display:none;">魚隻總重: 
+              <label id="record_weights_label" style="display:none;">魚隻總重(公斤): 
                 <input class="input-group-text" type="number" id="record_weights" name="record_weights" style="display:none;" min="0">
-                (公斤)
               </label>
               <br>
-              <label id="dead_counts_label" style="display:none;">死亡數量: 
+              <label id="dead_counts_label" style="display:none;">死亡數量(隻): 
                 <input class="input-group-text" type="number" id="dead_counts" name="dead_counts" style="display:none;" min="0">
-                (隻)
               </label>
               <br>
               <!--
-              <label id="update_time_label" style="display:none;">更新時間:
-                <input class="input-group-text" type="datetime-local" id="update_time" name="update_time" style="display:none;">
+              <label id="age_label" style="display:none;">魚隻年齡(天):
+                <input class="input-group-text" type="number" id="age" name="age" style="display:none;" min="0">
               </label>
               <br>
               -->
@@ -233,12 +230,12 @@
       var spec = document.getElementById('spec');
       var record_weights = document.getElementById('record_weights');
       var dead_counts = document.getElementById('dead_counts');
-      // var update_time = document.getElementById('update_time');
+      var age = document.getElementById('age');
       var pool_ID_label = document.getElementById('pool_ID_label');
       var spec_label = document.getElementById('spec_label');
       var record_weights_label = document.getElementById('record_weights_label');
       var dead_counts_label = document.getElementById('dead_counts_label');
-      // var update_time_label = document.getElementById('update_time_label');
+      var age_label = document.getElementById('age_label');
       var send_logs = document.getElementById('send_logs');
       var pool_ID_br = document.getElementById('pool_ID_br');
       var spec_br = document.getElementById('spec_br');
@@ -265,9 +262,9 @@
         dead_counts_label.style.display = 'block';
         dead_counts.style.display = 'block';
         dead_counts.required = true;
-        // update_time_label.style.display = 'block';
-        // update_time.style.display = 'block';
-        // update_time.required = true;
+        age_label.style.display = 'block';
+        age.style.display = 'block';
+        age.required = true;
       }
       else if (selectedOption === 'opt2') {
         document.getElementById('opt').value = 2;
@@ -289,9 +286,9 @@
         dead_counts_label.style.display = 'block';
         dead_counts.style.display = 'block';
         dead_counts.required = true;
-        // update_time_label.style.display = 'block';
-        // update_time.style.display = 'block';
-        // update_time.required = true;
+        age_label.style.display = 'none';
+        age.style.display = 'none';
+        age.required = false;
       }
       else if (selectedOption === 'opt3') {
         document.getElementById('opt').value = 3;
@@ -313,9 +310,9 @@
         dead_counts_label.style.display = 'block';
         dead_counts.style.display = 'block';
         dead_counts.required = true;
-        // update_time_label.style.display = 'block';
-        // update_time.style.display = 'block';
-        // update_time.required = true;
+        age_label.style.display = 'none';
+        age.style.display = 'none';
+        age.required = false;
       }
   });
 

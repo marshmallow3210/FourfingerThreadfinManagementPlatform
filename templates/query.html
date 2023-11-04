@@ -189,9 +189,12 @@
 <script>
   var alertContent = document.getElementById('alertContent').value;
 
-  // Check if alertContent is "ThisPoolhasNoData!"
-  if (alertContent.trim() == "ThisPoolhasNoData!") {
-    alert("該魚池無資料可查詢！");
+  // Check if alertContent is no data!
+  if (alertContent.trim() == "ThisPoolhasNoFieldData!") {
+    alert("該魚池無養殖紀錄可查詢！");
+  }
+  if (alertContent.trim() == "ThisPoolhasNoFeedingData!") {
+    alert("該魚池無投餌紀錄可查詢！");
   }
 </script>
 

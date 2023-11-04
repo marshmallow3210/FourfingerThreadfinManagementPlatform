@@ -90,30 +90,34 @@ def preidict_weights(age, total_fish_number):
     
     return y_pred
 
-def preidict_date(weight):
+def preidict_date(latest_weight):
     # 午仔魚
-    # 9 months
-    x_set = np.array([0, 2, 15, 47, 73, 81, 116, 157, 178, 193]) #, 190, 195, 199, 202, 208, 215, 230, 238, 250, 260])
+    # 17 months, 2015/4~2016/8
+    x_set = np.array([0, 2, 15, 47, 73, 81, 116, 157, 178, 193, 190, 195, 199, 202, 208, 215, 230]) #, 238, 250, 260])
     x_set = x_set * 600 / 328
     date1 = datetime.date(2015,4,1)
-    date2 = datetime.date(2015,12,31)
+    date2 = datetime.date(2016,8,31)
     days_count = (date2-date1).days
-    y_set = np.linspace(0, days_count, 10)
+    y_set = np.linspace(0, days_count, 18)
 
     # KNN Regression
-    k = 3
-    knn = KNeighborsRegressor(n_neighbors=k)
+    knn = KNeighborsRegressor(n_neighbors=3)
     knn.fit(x_set.reshape(-1, 1), y_set)
-    x_new = np.array([int(weight)])
+
+    x_target = np.array([int(400.0)]) # 八兩
+    y_target = knn.predict(x_target.reshape(-1, 1))
+    y_target = y_target[0]
+
+    x_new = np.array([int(latest_weight)])
     y_pred = knn.predict(x_new.reshape(-1, 1))
     y_pred = y_pred[0]
-    print("input Body weight(g):", x_new)
-    print("predicted Age(d):", y_pred)
+    print("魚隻重量(公克/隻):", x_new)
+    print("預測剩餘天數(天):", y_target - y_pred)
     
-    return y_pred
+    return y_target - y_pred
 
-def counting_fcr(total_feeding_amount, estimated_weights, first_weights):
-    estimated_fcr = round(total_feeding_amount/(estimated_weights-first_weights), 2)
+def counting_fcr(total_feeding_amount, latest_weight, first_weights):
+    estimated_fcr = round(total_feeding_amount/(latest_weight-first_weights), 2)
     return estimated_fcr
 
 @app.route('/')
@@ -216,7 +220,7 @@ def getFrames():
     sql = "use " + databaseName + ";"
     cursor.execute(sql)
 
-    sql = "select update_time, data from frames order by update_time desc;"
+    sql = "select update_time, data from frames order by update_time desc LIMIT 1;"
     cursor.execute(sql)
     data = cursor.fetchone()
 
@@ -453,36 +457,47 @@ def query_result():
         if request.method == "POST":
             pool_ID = request.form.get("pool_ID")
             print(pool_ID)
-            sql = "select pool_ID from field_logs where pool_ID = "+str(pool_ID)+" order by update_time asc;"
+            sql = "select pool_ID from field_logs where pool_ID = "+str(pool_ID)+";"
             cursor.execute(sql)
-            result = cursor.fetchall()
+            field_result = cursor.fetchall()
+
+            sql = "select pool_ID from feeding_logs where pool_ID = "+str(pool_ID)+";"
+            cursor.execute(sql)
+            feeding_result = cursor.fetchall()
             
-            if len(result) == 0:
-                print("Result set is empty")
-                alertContent="ThisPoolhasNoData!"
+            if len(field_result) == 0:
+                print("field_logs is empty")
+                alertContent="ThisPoolhasNoFieldData!"
+
+            elif len(feeding_result) == 0:
+                print("feeding_logs is empty")
+                alertContent="ThisPoolhasNoFeedingData!"
 
             else:
                 print("Result set is not empty")
                 # counting estimated_weights
                 sql = "select record_weights from field_logs where pool_ID = "+str(pool_ID)+" order by update_time asc;"
                 cursor.execute(sql)
-                first_weights = cursor.fetchone()
-                first_weights = first_weights[0]
+                first_weight = cursor.fetchone()
+                first_weight = first_weight[0]
+
                 sql = "select spec from field_logs where pool_ID = "+str(pool_ID)+" order by update_time asc;"
                 cursor.execute(sql)
                 first_spec = cursor.fetchone()
                 first_spec = first_spec[0]
-                total_fish_number = first_spec * first_weights
+                total_fish_number = first_spec * first_weight
+
+                sql = "select estimated_weights from field_logs where pool_ID = "+str(pool_ID)+" order by update_time desc;"
+                cursor.execute(sql)
+                latest_weight = cursor.fetchone()
+                latest_weight = latest_weight[0]
+
                 sql = "select update_time from field_logs where pool_ID = "+str(pool_ID)+" order by update_time asc;"
                 cursor.execute(sql) 
                 first_time = cursor.fetchone()
                 first_time = first_time[0]
                 query_time = datetime.datetime.now()
                 age = str((query_time-first_time).days)
-                print("養殖了:" + age + "天")
-                estimated_weights = preidict_weights(age, total_fish_number)
-                print('total_fish_number:', total_fish_number)
-                print('estimated_weights:', estimated_weights)
                 
                 # counting fcr
                 sql = "select feeding_amount from feeding_logs where pool_ID = "+str(pool_ID)+";"
@@ -492,14 +507,14 @@ def query_result():
                 for i in range(len(feeding_amount)):
                     total_feeding_amount += feeding_amount[i][0]
                 print("total_feeding_amount:", total_feeding_amount)
-                estimated_fcr = counting_fcr(total_feeding_amount, estimated_weights, first_weights)
+                estimated_fcr = counting_fcr(total_feeding_amount, latest_weight, first_weight)
                 
-                # counting estimated_date
-                estimated_date = preidict_date(estimated_weights)
-                estimated_date = first_time + datetime.timedelta(days=int(estimated_date))
+                # counting estimated_date(上市日期) 
+                remaining_date = preidict_date(latest_weight/total_fish_number) # 計算剩餘天數
+                estimated_date = first_time + datetime.timedelta(days = int(remaining_date))
                 print('estimated_date:', estimated_date)
             
-                return render_template('query_result.html', age=int(age), estimated_date=estimated_date, estimated_weights=estimated_weights, estimated_fcr=estimated_fcr, total_feeding_amount=total_feeding_amount, first_weights=first_weights)
+                return render_template('query_result.html', age=int(age), estimated_date=estimated_date, estimated_weights=latest_weight, estimated_fcr=estimated_fcr, total_feeding_amount=total_feeding_amount, first_weights=first_weight)
         
             return render_template('query.html', alertContent=alertContent)
     else:

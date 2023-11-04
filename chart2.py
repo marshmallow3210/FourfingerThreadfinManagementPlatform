@@ -8,7 +8,7 @@ from sklearn.neighbors import KNeighborsRegressor
 from sklearn.model_selection import train_test_split
 
 # 午仔魚
-# 9 months
+# 17 months, 2015/4~2016/8
 date1 = datetime.date(2015,4,1)
 date2 = datetime.date(2016,11,30)
 days_count = (date2-date1).days
