@@ -2,6 +2,7 @@ import base64
 import io
 import json
 from flask import Flask, jsonify, render_template, request, redirect, url_for, session
+from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user
 from flask_cors import CORS
 import pymysql
 import datetime
@@ -30,6 +31,18 @@ users = {
     'ar3DB': 'ar3DB',
     'ar4DB': 'ar4DB'
 }
+
+login_manager = LoginManager()
+login_manager.init_app(app)
+
+# User class for demonstration purposes
+class User(UserMixin):
+    def __init__(self, id):
+        self.id = id
+
+@login_manager.user_loader
+def load_user(user_id):
+    return User(user_id)
 
 def choooseDatabaseName(username):
     global databaseName
@@ -84,9 +97,9 @@ def preidict_weights(age, total_fish_number):
     x_new = np.array([int(age)])
     y_pred = knn.predict(x_new.reshape(-1, 1))
     y_pred = y_pred[0]
-    y_pred = y_pred * total_fish_number /1000
-    print("input Age(d):", x_new)
-    print("predicted Body weight(kg):", y_pred)
+    y_pred = y_pred * total_fish_number / 600
+    print("輸入天數(天):", x_new)
+    print("預估魚池總重(斤):", y_pred)
     
     return y_pred
 
@@ -117,8 +130,11 @@ def preidict_date(latest_weight):
     return y_target - y_pred
 
 def counting_fcr(total_feeding_amount, latest_weight, first_weights):
-    estimated_fcr = round(total_feeding_amount/(latest_weight-first_weights), 2)
-    return estimated_fcr
+    if total_feeding_amount == 0:
+        return 0
+    else:
+        estimated_fcr = round(total_feeding_amount/(latest_weight-first_weights), 2)
+        return estimated_fcr
 
 @app.route('/')
 def test():
@@ -134,6 +150,8 @@ def login():
         if username in users and users[username] == password:
             # 登入成功，將用戶名存入 session
             session['username'] = username
+            user = User(1)  # Replace with your user authentication logic
+            login_user(user)
             choooseDatabaseName(username)
             print('username:', username)
             print('databaseName:', databaseName)
@@ -141,13 +159,14 @@ def login():
         else:
             error = 'Invalid username or password. Please try again.'
             return render_template('login.html', error=error)
-
+    
     return render_template('login.html')
 
 @app.route('/logout')
 def logout():
     # 清除用戶名的 session 資料
     session.pop('username', None)
+    logout_user()
     print('logout!')
     return redirect(url_for('login'))
 
@@ -306,7 +325,7 @@ def field_logs():
     
 @app.route('/update', methods=["GET", "POST"])
 def update():
-    if 'username' in session:
+    #if 'username' in session:
         isSuccess = 0
         global connection
         cursor = connection.cursor()
@@ -320,8 +339,11 @@ def update():
             spec = request.form.get("spec")
             record_weights = float(request.form.get("record_weights"))
             dead_counts = int(request.form.get("dead_counts"))
-            update_time = datetime.datetime.today().strftime('%Y-%m-%d %H:%M:%S')
-            print(update_time)
+            update_time = request.form.get("update_time")
+            # Parse the input string
+            parsed_datetime = datetime.datetime.strptime(update_time, "%Y-%m-%dT%H:%M")
+            update_time = parsed_datetime.strftime("%Y-%m-%d %H:%M:%S")
+            print("update_time:", update_time)
             
             print(f"opt: {opt}, pool_ID: {pool_ID}, food_ID: {food_ID}, spec: {spec}, record_weights: {record_weights}, dead_counts: {dead_counts}, update_time: {update_time}")
             
@@ -340,11 +362,11 @@ def update():
                 cursor.execute(sql)
             elif opt == 2:
                 # insert food_ID into feeding_logs
-                sql = "UPDATE feeding_logs SET food_ID = " + "'" + str(food_ID) + "'" + " WHERE pool_ID = "+str(pool_ID)+" order by start_time desc;"
+                sql = "UPDATE feeding_logs SET food_ID = " + "'" + str(food_ID) + "'" + " WHERE pool_ID = "+str(pool_ID)+" order by start_time desc LIMIT 1;"
                 # sql = 'insert into feeding_logs (pool_ID, food_ID) values({}, "{}");'.format(pool_ID, food_ID)
                 cursor.execute(sql)
-                
-                # counting estimated_weights
+
+                # counting total_fish_number
                 sql = "select record_weights from field_logs where pool_ID = "+str(pool_ID)+" order by update_time asc;"
                 cursor.execute(sql)
                 first_weights = cursor.fetchone()
@@ -354,15 +376,27 @@ def update():
                 first_spec = cursor.fetchone()
                 first_spec = first_spec[0]
                 total_fish_number = first_spec * first_weights
+                total_fish_number = total_fish_number - dead_counts
+
+                sql = "select dead_counts from field_logs where pool_ID = "+str(pool_ID)+";"
+                cursor.execute(sql)
+                dead_counts_list = list(cursor.fetchall())
+                for i in range(len(dead_counts_list)):
+                    total_fish_number -= dead_counts_list[i][0]
+                print("total_fish_number:", total_fish_number)
+                
+                # counting spec
+                # spec = round(total_fish_number / record_weights, 2)
+
+                # counting estimated_weights
                 sql = "select update_time from field_logs where pool_ID = "+str(pool_ID)+" order by update_time asc;"
                 cursor.execute(sql) 
                 first_time = cursor.fetchone()
                 first_time = first_time[0]
                 update_time = datetime.datetime.strptime(update_time, "%Y-%m-%d %H:%M:%S")
-                age = str((update_time-first_time).days)
-                print("養殖了:" + age + "天")
+                age = str((update_time - first_time).days)
+                print("該魚池已養殖了:" + age + "天")
                 estimated_weights = preidict_weights(age, total_fish_number)
-                print('total_fish_number:', total_fish_number)
                 print('estimated_weights:', estimated_weights)
                 
                 # counting fcr
@@ -372,7 +406,7 @@ def update():
                 total_feeding_amount = 0
                 for i in range(len(feeding_amount)):
                     total_feeding_amount += feeding_amount[i][0]
-                print("total_feeding_amount:", total_feeding_amount)
+                print("total_feeding_amount:", total_feeding_amount, "kg")
                 fcr = counting_fcr(total_feeding_amount, estimated_weights, first_weights)
                 
                 # insert all data into field_logs
@@ -382,7 +416,7 @@ def update():
                 cursor.execute(sql, data)
 
             else:
-                # counting estimated_weights
+                # counting total_fish_number
                 sql = "select record_weights from field_logs where pool_ID = "+str(pool_ID)+" order by update_time asc;"
                 cursor.execute(sql)
                 first_weights = cursor.fetchone()
@@ -392,15 +426,24 @@ def update():
                 first_spec = cursor.fetchone()
                 first_spec = first_spec[0]
                 total_fish_number = first_spec * first_weights
+                total_fish_number = total_fish_number - dead_counts
+
+                sql = "select dead_counts from field_logs where pool_ID = "+str(pool_ID)+";"
+                cursor.execute(sql)
+                dead_counts_list = list(cursor.fetchall())
+                for i in range(len(dead_counts_list)):
+                    total_fish_number -= dead_counts_list[i][0]
+                print("total_fish_number:", total_fish_number)
+
+                # counting estimated_weights
                 sql = "select update_time from field_logs where pool_ID = "+str(pool_ID)+" order by update_time asc;"
                 cursor.execute(sql) 
                 first_time = cursor.fetchone()
                 first_time = first_time[0]
                 update_time = datetime.datetime.strptime(update_time, "%Y-%m-%d %H:%M:%S")
-                age = str((update_time-first_time).days)
-                print("養殖了:" + age + "天")
+                age = str((update_time - first_time).days)
+                print("該魚池已養殖了:" + age + "天")
                 estimated_weights = preidict_weights(age, total_fish_number)
-                print('total_fish_number:', total_fish_number)
                 print('estimated_weights:', estimated_weights)
                 
                 # counting fcr
@@ -410,8 +453,8 @@ def update():
                 total_feeding_amount = 0
                 for i in range(len(feeding_amount)):
                     total_feeding_amount += feeding_amount[i][0]
-                print("total_feeding_amount:", total_feeding_amount)
-                fcr = counting_fcr(total_feeding_amount, estimated_weights, first_weights)
+                print("total_feeding_amount:", total_feeding_amount, "kg") 
+                fcr = counting_fcr(total_feeding_amount, record_weights, first_weights)
 
                 # insert all data into field_logs
                 sql = 'insert into field_logs (pool_ID, spec, record_weights, estimated_weights, fcr, dead_counts, update_time) values({}, {}, {}, {}, {}, {}, "{}");'.format(pool_ID, float(spec), record_weights, estimated_weights, fcr, dead_counts, update_time)
@@ -420,8 +463,8 @@ def update():
             return redirect(url_for("field_logs"))
 
         return render_template('update.html', isSuccess=isSuccess)
-    else:
-        return redirect(url_for('login'))
+    # else:
+    #     return redirect(url_for('login'))
 
 @app.route('/feeding_logs', methods=["GET", "POST"])
 def feeding_logs():

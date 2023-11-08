@@ -1,3 +1,23 @@
+// all pages
+var sessionTimeout = 5 * 60 * 1000;  // 5 minutes in milliseconds
+
+function resetSessionTimer() {
+    clearTimeout(sessionTimeoutID);
+    sessionTimeoutID = setTimeout(logout, sessionTimeout);
+}
+
+function logout() {
+    window.location.href = '/logout';  // Redirect to the logout route
+    alert('系統閒置時間過久，已為您自動登出!')
+}
+
+var sessionTimeoutID = setTimeout(logout, sessionTimeout);
+
+// Listen for user activity events to reset the session timer
+window.addEventListener('mousemove', resetSessionTimer);
+window.addEventListener('keydown', resetSessionTimer);
+
+//
 // home.html
 // 顯示當前日期與時間
 function displayDateTime() {
@@ -53,7 +73,7 @@ function(){
     }
     // console.log("data = " + JSON.stringify(data));
     $.ajax({
-    url : 'http://35.236.132.208:8080/field_logs',
+    url : 'http://34.81.183.159:8080/field_logs',
     type : 'POST', 
     data : JSON.stringify(data),
     contentType : 'application/json; charset=utf-8', // 要送到server的資料型態
