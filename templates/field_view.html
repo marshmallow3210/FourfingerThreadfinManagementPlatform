@@ -17,7 +17,9 @@
       <!-- logo -->
       <div id="sidebar" class="logo d-flex flex-column flex-shrink-0 p-3">
         <a href="/home">
-          <img src="https://github.com/marshmallow3210/FourfingerThreadfinManagementPlatform/blob/main/images/IMG_1676.png?raw=true" alt="一隻魚" width="200" height="56">
+          {% if species_logo_url %}
+            <img src="{{ species_logo_url }}" alt="" width="200" height="56">
+          {% endif %}
         </a>
       </div>
 
@@ -113,7 +115,7 @@
           <div class="col-md">
             <p class="center">
               <h3 class="center">
-                午仔魚養殖管理平台
+                {{ species }}養殖管理平台
               </h3>
             </p>
           </div>

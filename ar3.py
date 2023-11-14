@@ -11,17 +11,6 @@ import numpy as np
 import requests
 from sklearn.neighbors import KNeighborsRegressor
 
-'''
-you need to change the: 
-databaseName
-species
-species_logo_url
-users
-preidict_weights()
-preidict_date()
-port in app.run()
-'''
-
 app = Flask(__name__)
 CORS(app)  # 允許所有來源的跨來源請求
 app.secret_key = '66386638'  # 替換為隨機的密鑰，用於安全性目的
@@ -32,14 +21,14 @@ connection = pymysql.connect(host='127.0.0.1',
                              password='66386638',
                              autocommit=True)
 
-databaseName = "fishDB"
-species = "午仔魚"
-species_logo_url = "https://github.com/marshmallow3210/FourfingerThreadfinManagementPlatform/blob/main/images/IMG_1676.png?raw=true"
+databaseName = "ar3DB"
+species = "鱸魚"
+species_logo_url = ""
 
 users = {
     'oakley': 'letmein',
     'admin': 'admin',
-    'fishDB': 'fishDB'
+    'ar3DB': 'ar3DB'
 }
 
 login_manager = LoginManager()
@@ -80,7 +69,6 @@ def utc8(utc, p):
 
 def preidict_weights(age, total_fish_number):
     # 鱸魚
-    '''
     days= 210 # 0 to 210 days
     step = 30 # interval 30 days
     phase = days//step + 1 # phase = 8
@@ -90,15 +78,6 @@ def preidict_weights(age, total_fish_number):
         x_set = np.append(x_set, x)
     y_set = np.array([16, 27, 66, 188, 368, 625, 856, 1077, 16, 27, 77, 208, 379, 606, 862, 1102, 16, 48, 108, 246, 425, 717, 904, 1180, 16, 42, 106, 276, 477, 754, 991, 1202])
     y_set = y_set * 800 / 1336
-    '''
-    # 午仔魚
-    # 9 months
-    date1 = datetime.date(2015,4,1)
-    date2 = datetime.date(2015,12,31)
-    days_count = (date2-date1).days
-    x_set = np.linspace(0, days_count, 10)
-    y_set = np.array([0, 2, 15, 47, 73, 81, 116, 157, 178, 193]) #, 190, 195, 199, 202, 208, 215, 230, 238, 250, 260])
-    y_set = y_set * 600 / 328
 
     # KNN Regression
     k = 3
@@ -114,14 +93,16 @@ def preidict_weights(age, total_fish_number):
     return y_pred
 
 def preidict_date(latest_weight):
-    # 午仔魚
-    # 17 months, 2015/4~2016/8
-    x_set = np.array([0, 2, 15, 47, 73, 81, 116, 157, 178, 193, 190, 195, 199, 202, 208, 215, 230]) #, 238, 250, 260])
-    x_set = x_set * 600 / 328
-    date1 = datetime.date(2015,4,1)
-    date2 = datetime.date(2016,8,31)
-    days_count = (date2-date1).days
-    y_set = np.linspace(0, days_count, 18)
+    # 鱸魚
+    days= 210 # 0 to 210 days
+    step = 30 # interval 30 days
+    phase = days//step + 1 # phase = 8
+    x_set = np.array([])
+    for i in range(0, 4):
+        x = np.linspace(0, days, phase)
+        x_set = np.append(x_set, x)
+    y_set = np.array([16, 27, 66, 188, 368, 625, 856, 1077, 16, 27, 77, 208, 379, 606, 862, 1102, 16, 48, 108, 246, 425, 717, 904, 1180, 16, 42, 106, 276, 477, 754, 991, 1202])
+    y_set = y_set * 800 / 1336
 
     # KNN Regression
     knn = KNeighborsRegressor(n_neighbors=3)
@@ -162,7 +143,6 @@ def login():
             session['username'] = username
             user = User(1)  # Replace with your user authentication logic
             login_user(user)
-            # choooseDatabaseName(username)
             print('username:', username)
             print('databaseName:', databaseName)
             return redirect(url_for('home'))
@@ -258,7 +238,7 @@ def getFrames():
         binary_data = data[1]
         binary_data_btye_str = io.BytesIO(binary_data) # 將二進制數據讀取為字節串
         binary_data_base64 = base64.b64encode(binary_data_btye_str.getvalue()).decode('utf-8') # 將圖片轉換為Base64字串
-        print("getFrames: return base64 str")
+        print("return base64 str")
         return update_time, binary_data_base64
     else:
         return 'data from frames were not found', 404
@@ -653,4 +633,4 @@ if __name__ == '__main__':
     app.config['TEMPLATES_AUTO_RELOAD'] = True # flask app 自動重新加載模板(html)
     app.jinja_env.auto_reload = True # Jinja2 自動重新加載設定
     # app.run(debug=True) # in development server
-    app.run(port=8080, debug=False) # in production server
+    app.run(port=3030, debug=False) # in production server
