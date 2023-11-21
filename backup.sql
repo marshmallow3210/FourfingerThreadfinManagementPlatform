@@ -25,7 +25,7 @@ CREATE TABLE `field_logs` (
   `spec` float DEFAULT NULL,
   `record_weights` float DEFAULT NULL,
   `estimated_weights` float DEFAULT NULL,
-  `fcr` float DEFAULT NULL,
+  `fcr` varchar(255) DEFAULT '-',
   `dead_counts` int(11) DEFAULT NULL,
   `update_time` datetime DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
@@ -37,12 +37,13 @@ CREATE TABLE `field_logs` (
 --
 LOCK TABLES `field_logs` WRITE;
 --
-INSERT INTO `field_logs` VALUES (1,100.0,300.0,300.0,0.0,0,'2023-03-01 12:30:00'),(1,50.0,600.0,600.0,1.5,100,'2023-04-01 12:30:00');
-INSERT INTO `field_logs` VALUES (2,120.0,300.0,300.0,0.0,0,'2023-03-02 12:00:00'),(2,90.0,400.0,400.0,2.0,100,'2023-03-10 12:20:00'),(2,60.0,600.0,600.0,2.0,100,'2023-04-01 12:40:00');
-INSERT INTO `field_logs` VALUES (3,145.0,500.0,500.0,0.0,0,'2023-03-03 12:45:00'),(3,98.0,850.0,900.0,1.2,100,'2023-04-04 12:00:00');
+INSERT INTO `field_logs` VALUES (1,100.0,300.0,300.0,'-',0,'2023-03-01 12:30:00'),(1,50.0,600.0,600.0,'-',0,'2023-04-01 12:30:00');
+INSERT INTO `field_logs` VALUES (2,120.0,300.0,300.0,'-',0,'2023-03-02 12:00:00'),(2,90.0,400.0,400.0,'-',0,'2023-03-10 12:20:00'),(2,60.0,600.0,600.0,'-',0,'2023-04-01 12:40:00');
+INSERT INTO `field_logs` VALUES (3,145.0,500.0,500.0,'-',0,'2023-03-03 12:45:00'),(3,98.0,850.0,900.0,'-',0,'2023-04-04 12:00:00');
 --
 UNLOCK TABLES;
 
+UPDATE field_logs SET fcr='-';
 --
 -- Table structure for table `ESP32`
 --
@@ -164,6 +165,10 @@ INSERT INTO `feeding_logs` VALUES
 --
 UNLOCK TABLES;
 --
+UPDATE feeding_logs SET food_ID='2號料' WHERE food_ID='test';
+--
+UPDATE feeding_logs SET food_ID='鱸魚3號';
+UPDATE feeding_logs SET feeding_amount='170.5' WHERE start_time = '2023-10-25 13:04:00';
 
 --
 -- Table structure for table `decision`

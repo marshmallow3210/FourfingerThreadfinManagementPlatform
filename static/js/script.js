@@ -58,7 +58,53 @@ toggleButton.addEventListener("click", function() {
     }
 });
 
-//
+// port 3030
+// field_logs.html 
+pool_data = []
+$(document).ready(function(){
+$('#pool_ID').change(
+function(){
+    var selected = document.getElementById("pool_ID").value;
+    var newPoolData = document.getElementById("pool_tbody");
+    // console.log("pool_ID =" + selected);
+    var data = {
+    "pool_ID": selected,
+    "pool_data": pool_data
+    }
+    // console.log("data = " + JSON.stringify(data));
+    $.ajax({
+    url : 'http://34.81.183.159:3030/field_logs',
+    type : 'POST', 
+    data : JSON.stringify(data),
+    contentType : 'application/json; charset=utf-8', // 要送到server的資料型態
+    dataType : 'json', // 預期從server接收的資料型態
+    success : function(data) {
+        // console.log("傳送成功" + JSON.stringify(data));
+        var colCount = $("#pool_tbody tr").length;
+        for (var i = 0; i < colCount; i++){
+            newPoolData.deleteRow(0);
+        }
+        newPoolData.insertRow(0);
+        var dataArray = Object.values(data);
+        var pool_data = dataArray[1];
+        var r = pool_data.length;
+        var c = pool_data[0].length;
+        for (var i = 0; i < r; i++){
+        var newRow = newPoolData.insertRow(i+1);
+        for (var j = 0; j < c; j++){
+            var newCell = newPoolData.rows[i+1].insertCell(j);
+            newCell.innerHTML = pool_data[i][j];
+        }
+        }
+    },
+    error: function (xhr, type){
+        console.log("傳送失敗" + xhr + type);
+    }
+    });
+})
+})
+
+// port 8080
 // field_logs.html
 pool_data = []
 $(document).ready(function(){

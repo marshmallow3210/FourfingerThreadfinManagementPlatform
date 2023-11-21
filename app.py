@@ -243,32 +243,54 @@ def storeFrames():
     except:
         print("Failed to store the image")
 
-def getFrames():
+def connect_to_db():
     global connection
     cursor = connection.cursor()
     sql = "use " + databaseName + ";"
     cursor.execute(sql)
 
-    sql = "select update_time, data from frames order by update_time desc LIMIT 1;"
+    global framesData
+    sql = "select update_time, data from frames where ID = 1;"
     cursor.execute(sql)
-    data = cursor.fetchone()
+    framesData = cursor.fetchone()
+    return framesData
 
-    if data:
-        update_time = data[0]
-        binary_data = data[1]
-        binary_data_btye_str = io.BytesIO(binary_data) # 將二進制數據讀取為字節串
-        binary_data_base64 = base64.b64encode(binary_data_btye_str.getvalue()).decode('utf-8') # 將圖片轉換為Base64字串
-        print("getFrames: return base64 str")
-        return update_time, binary_data_base64
-    else:
-        return 'data from frames were not found', 404
+def getFrames():
+    connection_cnt = 1 #0000
+
+    while connection_cnt:
+        framesData = connect_to_db()
+        connection_cnt -= 1
+
+        if framesData:
+            update_time = framesData[0]
+            binary_data = framesData[1]
+            binary_data_btye_str = io.BytesIO(binary_data) # 將二進制數據讀取為字節串
+            binary_data_base64 = base64.b64encode(binary_data_btye_str.getvalue()).decode('utf-8') # 將圖片轉換為Base64字串
+            print("Get data! return base64 str")
+            return update_time, binary_data_base64
+        else:
+            # update_time, binary_data_base64 = getFrames()
+            # return '監視器畫面讀取中，請再更新一次！', ''
+            yesterday_time = datetime.datetime.now() - timedelta(days=1)
+            print('no framesData!', connection_cnt)
+
+    return yesterday_time, ''
 
 @app.route('/field_view', methods=["GET", "POST"])
 def field_view():
     if 'username' in session:
         # storeFrames()
         update_time, binary_data_base64 = getFrames()
-        return render_template('field_view.html', update_time=update_time, binary_data_base64=binary_data_base64, species=species, species_logo_url=species_logo_url)
+        current_time = datetime.datetime.now()
+        time_difference = current_time - update_time
+        time_difference = int(time_difference.total_seconds())
+
+        if abs(time_difference) <= 10:
+            update_time = update_time.strftime("%Y-%m-%d %H:%M:%S")
+            return render_template('field_view.html', update_time="監視器畫面連線成功，畫面更新時間: " + update_time, binary_data_base64=binary_data_base64, species=species, species_logo_url=species_logo_url, time_difference=time_difference)
+        else:
+            return render_template('field_view.html', update_time="監視器畫面連線失敗，請再更新一次！", binary_data_base64='無影像畫面', species=species, species_logo_url=species_logo_url, time_difference=time_difference)
     else:
         return redirect(url_for('login'))
   

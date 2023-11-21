@@ -173,9 +173,9 @@
              
             <div style="padding:20px;">
               <h3> 監視器1</h3>
-              <label for="update_time">畫面更新時間: {{ update_time }}</label>
+              <label for="update_time" style="color: {{ 'red' if time_difference > 10 else 'green' }};">{{ update_time }}</label>
               <br>
-              <img id="monitor" class="monitor" src="data:image/jpeg;base64, {{ binary_data_base64 }}" alt={{ binary_data_base64 }}>
+              <img id="monitor" class="monitor" style="color: {{ 'red' if time_difference > 10 }};" src="data:image/jpeg;base64, {{ binary_data_base64 }}" alt={{ binary_data_base64 }}>
             </div>
 
           </div>
