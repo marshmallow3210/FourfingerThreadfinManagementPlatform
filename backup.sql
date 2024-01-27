@@ -204,3 +204,66 @@ CREATE TABLE `frames` (
 | name  | varchar(255) | YES  |     | NULL    |       |
 | data  | longblob     | YES  |     | NULL    |       |
 +-------+--------------+------+-----+---------+-------+
+
+CREATE TABLE feeding_records (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    aquarium_id INT,
+    journal_id INT,
+    action VARCHAR(255),
+    date BIGINT,
+    food_id INT,
+    food_weight INT,
+    food_unit VARCHAR(255),
+    food_name VARCHAR(255),
+    feeding_time BIGINT,
+    period INT,
+    status VARCHAR(255),
+    left_amount VARCHAR(255),
+    description TEXT,
+    checked_list VARCHAR(255),
+    name VARCHAR(255),
+    version INT
+);
+
+INSERT INTO feeding_records (
+    aquarium_id,
+    journal_id,
+    action,
+    date,
+    food_id,
+    food_weight,
+    food_unit,
+    food_name,
+    feeding_time,
+    period,
+    status,
+    left_amount,
+    description,
+    checked_list,
+    name,
+    version
+) VALUES (
+    '84',
+    '0',
+    'create',
+    '1693877576891',
+    '19',
+    '5',
+    'catty',
+    'A牌',
+    '1693877520000',
+    '35',
+    'normal',
+    '',
+    '吃很久',
+    '19',
+    'configure_journal_feeding',
+    '1'
+);
+
+ERROR 1366 (HY000): Incorrect string value, 資料庫字符集和校對(collation)不支援存儲這個特定的 Unicode 字符
+solution
+更改資料庫字符集和校對: 將字符集設定為 'utf8mb4'，並選擇一個適當的校對，如 'utf8mb4_unicode_ci'
+ALTER DATABASE your_database_name CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+更改表格的字符集和校對
+ALTER TABLE your_table_name CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
