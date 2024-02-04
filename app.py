@@ -516,73 +516,74 @@ def feeding_logs():
 
 @app.route('/provide_data', methods=['GET'])
 def provide_data():
-    if 'username' in session:
-        global connection
-        cursor = connection.cursor()
-        sql = "use " + databaseName + ";"
-        cursor.execute(sql)
+    # auth = request.authorization
+    # if auth and auth.username == 'fishDB' and auth.password == 'fishDB':
+    global connection
+    cursor = connection.cursor()
+    sql = "use " + databaseName + ";"
+    cursor.execute(sql)
 
-        sql = "select pool_ID, start_time, use_time, food_ID, feeding_amount from feeding_logs order by start_time desc limit 1;"
-        cursor.execute(sql)
-        feeding_logs = list(cursor.fetchall())
-        start_time = utc8(feeding_logs, 1)
-        feeding_logs = feeding_logs[0]
-        pool_ID = feeding_logs[0]
-        use_time = feeding_logs[2]
-        food_ID = feeding_logs[3]
-        feeding_amount = feeding_logs[4]
+    sql = "select pool_ID, start_time, use_time, food_ID, feeding_amount from feeding_logs order by start_time desc limit 1;"
+    cursor.execute(sql)
+    feeding_logs = list(cursor.fetchall())
+    start_time = utc8(feeding_logs, 1)
+    feeding_logs = feeding_logs[0]
+    pool_ID = feeding_logs[0]
+    use_time = feeding_logs[2]
+    food_ID = feeding_logs[3]
+    feeding_amount = feeding_logs[4]
 
-        data = {
-            "result": "success",
-            "reason": None,
-            "data": {
-                "journal": {
-                    "id": "4186",
-                    "created": "1696559981173",
-                    "updated": 1696559981198,
-                    "date": 1693877576891,
-                    "type": "feeding",
-                    "feeding": [
-                        {
-                            "id": str(pool_ID),
-                            "created": "1696559981188",
-                            "updated": "1696559981188",
-                            "feedingTime": start_time,
-                            "food": [
-                                {
-                                    "weight": float(feeding_amount),
-                                    "unit": "catty",
+    data = {
+        "result": "success",
+        "reason": None,
+        "data": {
+            "journal": {
+                "id": "4186",
+                "created": "1696559981173",
+                "updated": 1696559981198,
+                "date": 1693877576891,
+                "type": "feeding",
+                "feeding": [
+                    {
+                        "id": str(pool_ID),
+                        "created": "1696559981188",
+                        "updated": "1696559981188",
+                        "feedingTime": start_time,
+                        "food": [
+                            {
+                                "weight": float(feeding_amount),
+                                "unit": "catty",
+                                "name": "A牌",
+                                "food": {
+                                    "id": str(food_ID),
+                                    "created": "1641794839794",
+                                    "updated": 1696559981206,
                                     "name": "A牌",
-                                    "food": {
-                                        "id": str(food_ID),
-                                        "created": "1641794839794",
-                                        "updated": 1696559981206,
-                                        "name": "A牌",
-                                        "weight": 50,
-                                        "remaining": -51.4999,
-                                        "unit": "catty",
-                                        "vendor": "",
-                                        "enable": True,
-                                        "purchase_date": "1638338824027",
-                                        "manufactured_date": "1637734027935",
-                                        "period_of_validity": "6",
-                                        "description": ""
-                                    }
+                                    "weight": 50,
+                                    "remaining": -51.4999,
+                                    "unit": "catty",
+                                    "vendor": "",
+                                    "enable": True,
+                                    "purchase_date": "1638338824027",
+                                    "manufactured_date": "1637734027935",
+                                    "period_of_validity": "6",
+                                    "description": ""
                                 }
-                            ],
-                            "period": use_time,
-                            "status": "normal",
-                            "left": None,
-                            "description": "吃很久"
-                        }
-                    ]
-                }
+                            }
+                        ],
+                        "period": use_time,
+                        "status": "normal",
+                        "left": None,
+                        "description": "吃很久"
+                    }
+                ]
             }
         }
+    }
 
-        return jsonify(data), 200
-    else:
-        return jsonify({"error": "User not authenticated"}), 401  # 處理未認證的情況
+    return jsonify(data), 200
+    # else:
+    #     return jsonify({"error": "User not authenticated"}), 401  # 處理未認證的情況
     
 @app.route('/query', methods=["GET", "POST"])
 def query():
