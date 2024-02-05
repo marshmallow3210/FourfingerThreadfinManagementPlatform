@@ -520,7 +520,7 @@ def provide_data():
         if request.method == 'POST':
             print("POST")
             if request.content_type == 'application/json':
-                request_data = request.get_json()
+                # request_data = request.get_json()
                 # print(f"request_data: {request_data}")
             
                 username = request.headers.get('x-username')
