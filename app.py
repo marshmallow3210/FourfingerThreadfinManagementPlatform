@@ -537,6 +537,8 @@ def provide_data():
                     cursor.execute(sql)
                     feeding_logs = list(cursor.fetchall())
                     start_time = utc8(feeding_logs, 1)
+                    start_time = start_time[0]
+                    start_time = start_time[1]
                     feeding_logs = feeding_logs[0]
                     pool_ID = feeding_logs[0]
                     use_time = feeding_logs[2]
