@@ -146,6 +146,63 @@ def counting_fcr(total_feeding_amount, latest_weight, first_weights):
         estimated_fcr = round(total_feeding_amount * 1000 / ((latest_weight - first_weights) * 600), 2)
         return estimated_fcr
 
+def storeRippleFrames():
+    github_image_url = "https://github.com/marshmallow3210/FourfingerThreadfinManagementPlatform/blob/main/images/output-2023-08-20-12-45-24%20-%20frame%20at%200m7s.jpg?raw=true"
+    response = requests.get(github_image_url)
+
+    if response.status_code == 200:
+        frame_data = response.content
+        print("Success to download the image")
+    else:
+        print("Failed to download the image")
+    
+    try:
+        global connection
+        cursor = connection.cursor()
+        sql = "use " + databaseName + ";"
+        cursor.execute(sql)
+
+        frame_id = 1
+        value = 100
+        isChoose = False
+
+        sql = "INSERT INTO ripple_frames (id, frame_data, value, isChoose) VALUES (%s, %s, %s, %s)"
+        cursor.execute(sql, (frame_id, frame_data, value, isChoose))
+        connection.commit()
+        print("Success to store the image")
+    except Exception as e:
+        print("Failed to store the image:", e)
+
+def getRippleFrames():
+    global connection
+    cursor = connection.cursor()
+    sql = "use " + "fishDB" + ";"
+    cursor.execute(sql)
+
+    global RippleFramesData
+    sql = "select frame_data, value, isChoose from ripple_frames where id = 1;"
+    cursor.execute(sql)
+    RippleFramesData = cursor.fetchone()
+    print(RippleFramesData)
+
+    if RippleFramesData:
+        ripple_data = RippleFramesData[0]
+        value = RippleFramesData[1]
+        isChoose = RippleFramesData[2]
+        
+        ripple_data_btye_str = io.BytesIO(ripple_data) # 將二進制數據讀取為字節串
+        ripple_data_base64 = base64.b64encode(ripple_data_btye_str.getvalue()).decode('utf-8') # 將圖片轉換為Base64字串
+        print("Get ripple data! return base64 str")
+        return ripple_data_base64, value, isChoose
+    else:
+        print('no rippleData!')
+        return '', 0, False
+
+@app.route('/choose_ripple_frames', methods=["GET", "POST"])
+def choose_ripple_frames():
+    ripple_data_base64, value, isChoose = getRippleFrames()
+    return render_template('choose_ripple_frames.html', ripple_data_base64=ripple_data_base64, value=value, isChoose=isChoose)
+    
 @app.route('/')
 def test():
     data = "Hello!"

@@ -267,3 +267,17 @@ solution
 ALTER DATABASE your_database_name CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 更改表格的字符集和校對
 ALTER TABLE your_table_name CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+
+--
+-- Table structure for table `ripple_frames`
+--
+DROP TABLE IF EXISTS `ripple_frames`;
+-- 
+CREATE TABLE `ripple_frames` (
+    `id` INT(11) NOT NULL PRIMARY KEY,
+    `frame_data` LONGBLOB DEFAULT NULL,
+    `value` INT(11) DEFAULT 0,
+    `isChoose` TINYINT(1) DEFAULT 0
+);
+
