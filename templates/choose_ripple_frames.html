@@ -172,11 +172,32 @@
             <span height="5"></span>
              
             <div style="padding:20px;">
+              <!--
               <h3> 請選擇...</h3>
               <label for="value">水花面積: {{ value }}</label>
               <br>
               <img id="ripple_frames" class="ripple_frames" src="data:image/jpeg;base64, {{ ripple_data_base64 }}" alt={{ ripple_data_base64 }}>
+              -->
+              <table id="ripple_frames" style="border:3px #cccccc solid;" cellpadding="10" border='1'>
+                <thead>
+                  <tr>
+                    <td>水花影像</td>
+                    <td>水花面積數值</td>
+                    <td>是否選擇影像</td>
+                  </tr>
+                </thead>
+                <tbody id="ripple_frames">
+                  {% for data in ripple_frames %}
+                  <tr>
+                    <td><img id="ripple_frames" style="width: 500px;" src="data:image/jpeg;base64, {{ data.0 }}" alt={{ data.0 }}></td>
+                    <td>{{data.1}}</td>
+                    <td>{{data.2}}</td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
             </div>
+
           </div>
         </div>
     </div>
