@@ -162,8 +162,8 @@ def storeRippleFrames():
         sql = "use " + databaseName + ";"
         cursor.execute(sql)
 
-        frame_id = 1
-        value = 100
+        frame_id = 2
+        value = 200
         isChoose = False
 
         sql = "INSERT INTO ripple_frames (id, frame_data, value, isChoose) VALUES (%s, %s, %s, %s)"
@@ -173,38 +173,49 @@ def storeRippleFrames():
     except Exception as e:
         print("Failed to store the image:", e)
 
-# 改我的database
+# 要改我的 database name
 def getRippleFrames():
     global connection
     cursor = connection.cursor()
     sql = "use " + "fishDB" + ";"
     cursor.execute(sql)
 
-    global RippleFramesData
-    sql = "select frame_data, value, isChoose from ripple_frames where id = 1;"
+    sql = "select count(*) as row_count from ripple_frames"
     cursor.execute(sql)
-    RippleFramesData = cursor.fetchone()
+    row_count = cursor.fetchone()
+    row_count = row_count[0]
 
-    if RippleFramesData:
-        ripple_data = RippleFramesData[0]
-        value = RippleFramesData[1]
-        isChoose = RippleFramesData[2]
-        
-        ripple_data_btye_str = io.BytesIO(ripple_data) # 將二進制數據讀取為字節串
-        ripple_data_base64 = base64.b64encode(ripple_data_btye_str.getvalue()).decode('utf-8') # 將圖片轉換為Base64字串
+    if row_count:
+        global ripple_frames
+        ripple_frames = []
+        for i in range(1, row_count+1):
+            sql = "select id, frame_data, value, isChoose from ripple_frames where id = "+ str(i) +";"
+            cursor.execute(sql)
+            RippleFramesData = cursor.fetchone()
 
-        ripple_frames = [(ripple_data_base64, value, isChoose)]
-        print(ripple_frames)
-        print("Get ripple data! return base64 str")
-        return ripple_frames, ripple_data_base64, value, isChoose
+            if RippleFramesData:
+                id = RippleFramesData[0]
+                ripple_data = RippleFramesData[1]
+                value = RippleFramesData[2]
+                isChoose = RippleFramesData[3]
+                
+                ripple_data_btye_str = io.BytesIO(ripple_data) # 將二進制數據讀取為字節串
+                ripple_data_base64 = base64.b64encode(ripple_data_btye_str.getvalue()).decode('utf-8') # 將圖片轉換為Base64字串
+
+                newRippleFramesData = (id, ripple_data_base64, value, isChoose)
+                print(newRippleFramesData)
+                print("Get ripple data!" + str(i))
+            ripple_frames.append(newRippleFramesData)
+        return ripple_frames
     else:
-        print('no rippleData!')
-        return '', 0, False
+        print('no ripple data!')
+        return [0, '', 0, False]
 
 @app.route('/choose_ripple_frames', methods=["GET", "POST"])
 def choose_ripple_frames():
-    ripple_frames, ripple_data_base64, value, isChoose = getRippleFrames()
-    return render_template('choose_ripple_frames.html', ripple_frames=ripple_frames, ripple_data_base64=ripple_data_base64, value=value, isChoose=isChoose)
+    # storeRippleFrames()
+    ripple_frames = getRippleFrames()
+    return render_template('choose_ripple_frames.html', ripple_frames=ripple_frames)
     
 @app.route('/')
 def test():

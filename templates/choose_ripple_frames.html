@@ -189,9 +189,9 @@
                 <tbody id="ripple_frames">
                   {% for data in ripple_frames %}
                   <tr>
-                    <td><img id="ripple_frames" style="width: 500px;" src="data:image/jpeg;base64, {{ data.0 }}" alt={{ data.0 }}></td>
-                    <td>{{data.1}}</td>
+                    <td><img id="ripple_frames" style="width: 500px;" src="data:image/jpeg;base64, {{ data.1 }}" alt={{ data.1 }}></td>
                     <td>{{data.2}}</td>
+                    <td><input type="radio" name="option" value="option"+{{data.0}}>{{data.3}}</td>
                   </tr>
                   {% endfor %}
                 </tbody>
