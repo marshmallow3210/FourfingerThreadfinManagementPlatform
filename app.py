@@ -147,7 +147,7 @@ def counting_fcr(total_feeding_amount, latest_weight, first_weights):
         return estimated_fcr
 
 def storeRippleFrames():
-    github_image_url = "https://github.com/marshmallow3210/FourfingerThreadfinManagementPlatform/blob/main/images/output-2023-08-20-12-45-24%20-%20frame%20at%200m7s.jpg?raw=true"
+    github_image_url = "https://github.com/marshmallow3210/FourfingerThreadfinManagementPlatform/blob/main/images/output-2023-08-13-13-32-47%20-%20frame%20at%200m5s.jpg?raw=true"
     response = requests.get(github_image_url)
 
     if response.status_code == 200:
@@ -162,14 +162,16 @@ def storeRippleFrames():
         sql = "use " + databaseName + ";"
         cursor.execute(sql)
 
-        frame_id = 2
-        value = 200
+        frame_id = 3
+        value = 126
         isChoose = False
 
         sql = "INSERT INTO ripple_frames (id, frame_data, value, isChoose) VALUES (%s, %s, %s, %s)"
         cursor.execute(sql, (frame_id, frame_data, value, isChoose))
         connection.commit()
+        cursor.close()
         print("Success to store the image")
+        return
     except Exception as e:
         print("Failed to store the image:", e)
 
@@ -211,10 +213,37 @@ def getRippleFrames():
         print('no ripple data!')
         return [0, '', 0, False]
 
+# 要改我的 database name
 @app.route('/choose_ripple_frames', methods=["GET", "POST"])
 def choose_ripple_frames():
     # storeRippleFrames()
     ripple_frames = getRippleFrames()
+
+    if request.method == "POST":  
+        global connection
+        cursor = connection.cursor()
+        sql = "use " + "fishDB" + ";"
+        cursor.execute(sql)
+
+        sql = "select count(*) as row_count from ripple_frames"
+        cursor.execute(sql)
+        row_count = cursor.fetchone()
+        row_count = row_count[0]
+
+        if row_count:
+            for i in range(1, row_count+1):
+                option_value = request.form.get("option_" + str(i))
+                if option_value:
+                    sql = "update ripple_frames SET isChoose = %s where id = %s;"
+                    cursor.execute(sql, (1, str(i)))
+                else:
+                    sql = "update ripple_frames SET isChoose = %s where id = %s;"
+                    cursor.execute(sql, (0, str(i)))
+
+        connection.commit()
+        cursor.close()
+        ripple_frames = getRippleFrames()
+
     return render_template('choose_ripple_frames.html', ripple_frames=ripple_frames)
     
 @app.route('/')
@@ -585,7 +614,7 @@ def feeding_logs():
     else:
         return redirect(url_for('login'))   
 
-@app.route('/provide_data', methods=["GET", "POST"])
+@app.route('/provide_data', methods=["POST"])
 def provide_data():
     try:
         if request.method == 'POST':

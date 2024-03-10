@@ -170,33 +170,30 @@
           <div class="main-page">
             <h2>選擇水花面積</h2>
             <span height="5"></span>
-             
-            <div style="padding:20px;">
-              <!--
-              <h3> 請選擇...</h3>
-              <label for="value">水花面積: {{ value }}</label>
-              <br>
-              <img id="ripple_frames" class="ripple_frames" src="data:image/jpeg;base64, {{ ripple_data_base64 }}" alt={{ ripple_data_base64 }}>
-              -->
-              <table id="ripple_frames" style="border:3px #cccccc solid;" cellpadding="10" border='1'>
-                <thead>
-                  <tr>
-                    <td>水花影像</td>
-                    <td>水花面積數值</td>
-                    <td>是否選擇影像</td>
-                  </tr>
-                </thead>
-                <tbody id="ripple_frames">
-                  {% for data in ripple_frames %}
-                  <tr>
-                    <td><img id="ripple_frames" style="width: 500px;" src="data:image/jpeg;base64, {{ data.1 }}" alt={{ data.1 }}></td>
-                    <td>{{data.2}}</td>
-                    <td><input type="radio" name="option" value="option"+{{data.0}}>{{data.3}}</td>
-                  </tr>
-                  {% endfor %}
-                </tbody>
-              </table>
-            </div>
+            
+            <form action="{{ url_for("choose_ripple_frames")}}" method="post">
+              <div style="padding:20px;">
+                <table id="ripple_frames" style="border:3px #cccccc solid;" cellpadding="10" border='1'>
+                  <thead>
+                    <tr>
+                      <td>水花影像</td>
+                      <td>水花面積數值</td>
+                      <td>是否選擇影像</td>
+                    </tr>
+                  </thead>
+                  <tbody id="ripple_frames">
+                    {% for data in ripple_frames %}
+                    <tr>
+                      <td><img id="ripple_frames"+{{ data.0 }} style="width: 500px;" src="data:image/jpeg;base64, {{ data.1 }}" alt={{ data.1 }}></td>
+                      <td>{{ data.2 }}</td>
+                      <td><input type="radio" id="{{ data.0 }}" name="option_{{ data.0 }}" value="{{ data.0 }}">{{ data.3 }}</td>
+                    </tr>
+                    {% endfor %}
+                  </tbody>
+                </table>
+                <br>
+                <button id="submit" class="btn btn-outline-secondary" type="submit">送出</button>
+              </div>
 
           </div>
         </div>
@@ -208,5 +205,13 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.4/jquery.min.js"></script>
 <script type="text/javascript" src="{{ url_for('static', filename='js/script.js') }}"></script>
+
+<script>
+var button = document.getElementById('submit');
+button.addEventListener('click', function() {
+    alert('選擇完成！');
+    window.location.reload();
+})
+</script>
 
 </html>
