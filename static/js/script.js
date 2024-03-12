@@ -17,7 +17,7 @@ var sessionTimeoutID = setTimeout(logout, sessionTimeout);
 window.addEventListener('mousemove', resetSessionTimer);
 window.addEventListener('keydown', resetSessionTimer);
 
-if (window.location.pathname.includes('choose_ripple_frame.html')) {
+if (window.location.pathname.includes('choose_ripple_frames.html')) {
     window.removeEventListener('mousemove', resetSessionTimer);
     window.removeEventListener('keydown', resetSessionTimer);
 }
