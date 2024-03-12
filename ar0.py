@@ -13,7 +13,7 @@ from sklearn.neighbors import KNeighborsRegressor
 
 '''
 you need to change the: 
-databaseName: ar_DB, admin_
+databaseName: ar0DB, admin0
 port
 species
 species_logo_url
@@ -32,14 +32,13 @@ connection = pymysql.connect(host='127.0.0.1',
                              autocommit=True)
 
 # change me!
-databaseName = "fishDB"
-port = 8080
+databaseName = "ar0DB"
+port = 5000
 species = "午仔魚"
 species_logo_url = "https://github.com/marshmallow3210/FourfingerThreadfinManagementPlatform/blob/main/images/IMG_1676.png?raw=true"
 users = {
-    'oakley': 'letmein',
-    'admin': 'admin',
-    'fishDB': 'fishDB'
+    'ar0DB': 'ar0DB',
+    'admin0': 'admin0',
 }
 
 

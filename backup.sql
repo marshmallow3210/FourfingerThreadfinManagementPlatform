@@ -186,7 +186,7 @@ CREATE TABLE `decision` (
 --
 
 --
--- Table structure for table `decision`
+-- Table structure for table `frames`
 --
 DROP TABLE IF EXISTS `frames`;
 -- 
@@ -281,3 +281,18 @@ CREATE TABLE `ripple_frames` (
     `isChoose` TINYINT(1) DEFAULT 0
 );
 
+
+-- tables of database to copy: 
+-- feeding_logs, feeding_records, field_logs, ripple_frames
+
+-- 複製 feeding_logs 表格結構
+CREATE TABLE ar0DB.feeding_logs LIKE fishDB.feeding_logs;
+
+-- 複製 feeding_records 表格結構
+CREATE TABLE ar0DB.feeding_records LIKE fishDB.feeding_records;
+
+-- 複製 field_logs 表格結構
+CREATE TABLE ar0DB.field_logs LIKE fishDB.field_logs;
+
+-- 複製 ripple_frames 表格結構
+CREATE TABLE ar0DB.ripple_frames LIKE fishDB.ripple_frames;
