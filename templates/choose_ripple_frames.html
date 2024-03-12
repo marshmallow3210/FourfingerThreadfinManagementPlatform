@@ -193,6 +193,7 @@
                 </table>
                 <br>
                 <button id="submit" class="btn btn-outline-secondary" type="submit">送出</button>
+                {{ url_from_db }}
               </div>
 
           </div>
@@ -209,6 +210,17 @@
 <script>
 var button = document.getElementById('submit');
 button.addEventListener('click', function() {
+    var xhr = new XMLHttpRequest();
+    // var notify_url= {{ url_from_db }}+"/set_ripple_threshold"
+    var notify_url = "https://segformer-test-xzfbysibua-de.a.run.app"
+    xhr.open("GET", notify_url, true);
+    xhr.onreadystatechange = function() {
+      if (xhr.readyState == 4 && xhr.status == 200) {
+        console.log(xhr.responseText);
+        alert('選擇水花面積已傳送完成！' + notify_url);
+      }
+    };
+    xhr.send();
     alert('選擇完成！');
     window.location.reload();
 })

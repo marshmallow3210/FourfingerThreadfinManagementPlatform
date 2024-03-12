@@ -205,8 +205,7 @@ def getRippleFrames():
                 ripple_data_base64 = base64.b64encode(ripple_data_btye_str.getvalue()).decode('utf-8') # 將圖片轉換為Base64字串
 
                 newRippleFramesData = (id, ripple_data_base64, value, isChoose)
-                print(newRippleFramesData)
-                print("Get ripple data!" + str(i))
+                print(f"Get {str(i)} ripple data!")
             ripple_frames.append(newRippleFramesData)
         return ripple_frames
     else:
@@ -218,7 +217,8 @@ def getRippleFrames():
 def choose_ripple_frames():
     # storeRippleFrames()
     ripple_frames = getRippleFrames()
-
+    url = " "
+    
     if request.method == "POST":  
         global connection
         cursor = connection.cursor()
@@ -241,10 +241,13 @@ def choose_ripple_frames():
                     cursor.execute(sql, (0, str(i)))
 
         connection.commit()
-        cursor.close()
         ripple_frames = getRippleFrames()
+        
+        sql = "select segformer_url from cloud_config"
+        cursor.execute(sql)
+        url = cursor.fetchone()[0]
 
-    return render_template('choose_ripple_frames.html', ripple_frames=ripple_frames)
+    return render_template('choose_ripple_frames.html', ripple_frames=ripple_frames, url_from_db=url)
     
 @app.route('/')
 def test():
