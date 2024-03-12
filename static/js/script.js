@@ -1,5 +1,5 @@
 // all pages
-var sessionTimeout = 5 * 60 * 1; //000;  // 5 minutes in milliseconds
+var sessionTimeout = 5 * 60 * 1000;  // 5 minutes in milliseconds
 
 function resetSessionTimer() {
     clearTimeout(sessionTimeoutID);
