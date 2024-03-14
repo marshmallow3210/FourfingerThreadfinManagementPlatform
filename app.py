@@ -647,102 +647,86 @@ def query_result():
 
 
 ''' API integration'''
-@app.route('/provide_data', methods=["POST"])
-def provide_data():
+def convert_to_unix_timestamp(datetime_str):
+    # 將日期時間字串轉換為 datetime 物件
+    dt_obj = datetime.datetime.strptime(datetime_str, '%Y-%m-%d %H:%M:%S')
+    # 計算 Unix timestamp（以秒為單位）
+    timestamp = int(dt_obj.timestamp() * 1000)  # 乘以1000轉換為毫秒
+    return timestamp
+
+@app.route('/send_data')
+def send_data():
     try:
-        if request.method == 'POST':
-            print("POST")
-            if request.content_type == 'application/json':
-                # request_data = request.get_json()
-                # print(f"request_data: {request_data}")
-            
-                username = request.headers.get('x-username')
-                password = request.headers.get('x-password')
-                nonce = request.headers.get('x-authorization-nonce')
-                if username == 'fishDB' and password == 'fishDB' and nonce == 'ekoen':
-                    print("authenticated!")
-                    global connection
-                    cursor = connection.cursor()
-                    sql = "use " + databaseName + ";"
-                    cursor.execute(sql)
+        current_time = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        date = convert_to_unix_timestamp(current_time)
+        global connection
+        cursor = connection.cursor()
+        sql = "use " + databaseName + ";"
+        cursor.execute(sql)
 
-                    sql = "select pool_ID, start_time, use_time, food_ID, feeding_amount from feeding_logs order by start_time desc limit 1;"
-                    cursor.execute(sql)
-                    feeding_logs = list(cursor.fetchall())
-                    start_time = utc8(feeding_logs, 1)
-                    start_time = start_time[0]
-                    start_time = start_time[1]
-                    feeding_logs = feeding_logs[0]
-                    pool_ID = feeding_logs[0]
-                    use_time = feeding_logs[2]
-                    food_ID = feeding_logs[3]
-                    feeding_amount = feeding_logs[4]
+        sql = "select pool_ID, start_time, use_time, food_ID, feeding_amount from feeding_logs order by start_time desc limit 1;"
+        cursor.execute(sql)
+        feeding_logs = list(cursor.fetchall())
+        start_time = utc8(feeding_logs, 1)
+        start_time = start_time[0]
+        start_time = start_time[1]
+        feedingTime = convert_to_unix_timestamp(start_time)
+        feeding_logs = feeding_logs[0]
+        # aquarium_id = feeding_logs[0]
+        period = int(feeding_logs[2])
+        # food_ID = feeding_logs[3]
+        weight = float(feeding_logs[4])
 
-                    response_data = {
-                        "result": "success",
-                        "reason": None,
-                        "data": {
-                            "journal": {
-                                "id": "4186",
-                                "created": "1696559981173",
-                                "updated": 1696559981198,
-                                "date": 1693877576891,
-                                "type": "feeding",
-                                "feeding": [
-                                    {
-                                        "id": str(pool_ID),
-                                        "created": "1696559981188",
-                                        "updated": "1696559981188",
-                                        "feedingTime": start_time,
-                                        "food": [
-                                            {
-                                                "weight": float(feeding_amount),
-                                                "unit": "catty",
-                                                "name": "A牌",
-                                                "food": {
-                                                    "id": str(food_ID),
-                                                    "created": "1641794839794",
-                                                    "updated": 1696559981206,
-                                                    "name": "A牌",
-                                                    "weight": 50,
-                                                    "remaining": -51.4999,
-                                                    "unit": "catty",
-                                                    "vendor": "",
-                                                    "enable": True,
-                                                    "purchase_date": "1638338824027",
-                                                    "manufactured_date": "1637734027935",
-                                                    "period_of_validity": "6",
-                                                    "description": ""
-                                                }
-                                            }
-                                        ],
-                                        "period": use_time,
-                                        "status": "normal",
-                                        "left": None,
-                                        "description": "吃很久"
-                                    }
-                                ]
-                            }
+        # api integration
+        url = 'https://api.ekoral.io/api/get_aquarium_food'
+        headers = {
+            'api-key': 'KuDtDcK5pLmiU57PWd5mnicVf06Fl3yn',
+            'x-ekoral-memberid': '30009',
+            'x-ekoral-authorization': 'Mjc2ODFhMjExZGI2MjYxNTU2NGVmN2UwNzM2YzkyOWEyMGE0NTc4OWNhNzEzZWY4Y2E2OWQxNGI5ODk5M2JhMQ==',
+            'x-ekoral-authorization-nonce': 'e8e95e3d-f8a5-4a95-ab18-5b0a6b08d56c',
+            'Content-Type': 'application/json'
+        }
+
+        data = {
+            "parm": {
+                "journal": {
+                    "aquarium_id": "144",
+                    "journal_id": 0,
+                    "action": "create",
+                    "date": date,
+                    "feeding": [
+                        {
+                            "food": [
+                                {
+                                    "id": "19",
+                                    "weight": weight,
+                                    "unit": "catty",
+                                    "name": "A牌"
+                                }
+                            ],
+                            "feedingTime": feedingTime,
+                            "period": period,
+                            "status": "normal",
+                            "left": "",
+                            "description": "吃很久",
+                            "checkedList": [
+                                "19"
+                            ]
                         }
-                    }
+                    ]
+                }
+            },
+            "name": "configure_journal_feeding",
+            "version": 1
+        }
 
-                    print('return!')
-                    return jsonify(response_data), 200 #, {'Content-Type': 'application/json; charset=utf-8'}
-                else:
-                    return jsonify({"error": "User not authenticated"}), 401  # 處理未認證的情況
-            else:
-                return jsonify({"error": "Unsupported Media Type. Use 'application/json'"}), 415
-        elif request.method == 'GET':
-            print("GET")
-            return jsonify(response_data), 200
-        else:
-            print("Method Not Allowed")
-            return jsonify({"error": "Method Not Allowed"}), 405
-        
-    except Exception as e:
-        error_message = f"Error: {e}"
-        return jsonify({"error": error_message}), 500
+        response = requests.post(url, headers=headers, json=data)
+        response.raise_for_status()  # 如果請求不成功，引發異常
 
+        return jsonify(response.json())
+
+    except requests.exceptions.RequestException as e:
+        return jsonify({'error': str(e)})
 
 ''' choose ripple frames (send to linebot)'''
 def storeRippleFrames():
