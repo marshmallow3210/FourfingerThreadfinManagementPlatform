@@ -151,7 +151,20 @@ def preidict_date(latest_weight):
     date2 = datetime.date(2016,8,31)
     days_count = (date2-date1).days
     y_set = np.linspace(0, days_count, 18)
-
+    
+    # 鱸魚
+    '''
+    days= 210 # 0 to 210 days
+    step = 30 # interval 30 days
+    phase = days//step + 1 # phase = 8
+    x_set = np.array([])
+    for i in range(0, 4):
+        x = np.linspace(0, days, phase)
+        x_set = np.append(x_set, x)
+    y_set = np.array([16, 27, 66, 188, 368, 625, 856, 1077, 16, 27, 77, 208, 379, 606, 862, 1102, 16, 48, 108, 246, 425, 717, 904, 1180, 16, 42, 106, 276, 477, 754, 991, 1202])
+    y_set = y_set * 800 / 1336
+    '''
+    
     # KNN Regression
     knn = KNeighborsRegressor(n_neighbors=3)
     knn.fit(x_set.reshape(-1, 1), y_set)

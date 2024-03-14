@@ -11,54 +11,89 @@ import numpy as np
 import requests
 from sklearn.neighbors import KNeighborsRegressor
 
+'''
+you need to change the: 
+databaseName: ar_DB, admin_
+port
+fieldName
+fieldManager
+contact
+species
+species_logo_url
+users: : ar_DB, admin_
+preidict_weights()
+preidict_date()
+'''
+
 app = Flask(__name__)
 CORS(app)  # 允許所有來源的跨來源請求
 app.secret_key = '66386638'  # 替換為隨機的密鑰，用於安全性目的
-
 connection = pymysql.connect(host='127.0.0.1',
                              port=3306,
                              user='lab403',
                              password='66386638',
                              autocommit=True)
 
+# change me!
 databaseName = "ar3DB"
+port = 3030
+fieldName = "嘉義鍾XX"
+fieldManager = "鍾XX"
+contact = "0988776655"
 species = "鱸魚"
-species_logo_url = ""
-
+species_logo_url = "https://github.com/marshmallow3210/FourfingerThreadfinManagementPlatform/blob/main/images/IMG_1676.png?raw=true"
 users = {
-    'oakley': 'letmein',
-    'admin': 'admin',
-    'ar3DB': 'ar3DB'
+    'ar3DB': 'ar3DB',
+    'admin3': 'admin3',
 }
 
-login_manager = LoginManager()
-login_manager.init_app(app)
 
-# User class for demonstration purposes
-class User(UserMixin):
-    def __init__(self, id):
-        self.id = id
-
-@login_manager.user_loader
-def load_user(user_id):
-    return User(user_id)
-
-def choooseDatabaseName(username):
+''' database name settings ''' 
+def usernameChooseDatabaseName(username):
     global databaseName
     databaseName = ""
-    if username == "fishDB" or username == "oakley":
+    if username == "fishDB" or username == "oakley" or username == "admin":
         databaseName = "fishDB"
-    elif username == "ar0DB":
+    elif username == "ar0DB" or username == "admin0":
         databaseName = "ar0DB"
-    elif username == "ar1DB":
+    elif username == "ar1DB" or username == "admin1":
         databaseName = "ar1DB"
-    elif username == "ar2DB":
+    elif username == "ar2DB" or username == "admin2":
         databaseName = "ar2DB"
-    elif username == "ar3DB":
+    elif username == "ar3DB" or username == "admin3":
         databaseName = "ar3DB"
-    elif username == "ar4DB":
+    elif username == "ar4DB" or username == "admin4":
         databaseName = "ar4DB"
+    elif username == "ar5DB" or username == "admin5":
+        databaseName = "ar5DB"
+    elif username == "ar6DB" or username == "admin6":
+        databaseName = "ar6DB"
+    elif username == "ar7DB" or username == "admin7":
+        databaseName = "ar7DB"
+    return databaseName
 
+def portChoooseDatabaseName():
+    if port == 8080:
+        return "fishDB"
+    elif port == 5000:
+        return "ar0DB"
+    elif port == 5010:
+        return "ar1DB"
+    elif port == 5020:
+        return "ar2DB"
+    elif port == 5030:
+        return "ar3DB"
+    elif port == 5040:
+        return "ar4DB"
+    elif port == 5050:
+        return "ar5DB"
+    elif port == 5060:
+        return "ar6DB"
+    elif port == 5070:
+        return "ar7DB"
+
+
+''' date format setting ''' 
 def utc8(utc, p):
     for i in range(0, len(utc)):
         if utc[i][p] != None:
@@ -67,6 +102,9 @@ def utc8(utc, p):
 
     return utc
 
+
+''' predictions and calculations ''' 
+# change me!
 def preidict_weights(age, total_fish_number):
     # 鱸魚
     days= 210 # 0 to 210 days
@@ -78,6 +116,16 @@ def preidict_weights(age, total_fish_number):
         x_set = np.append(x_set, x)
     y_set = np.array([16, 27, 66, 188, 368, 625, 856, 1077, 16, 27, 77, 208, 379, 606, 862, 1102, 16, 48, 108, 246, 425, 717, 904, 1180, 16, 42, 106, 276, 477, 754, 991, 1202])
     y_set = y_set * 800 / 1336
+    # 午仔魚
+    # 9 months
+    '''
+    date1 = datetime.date(2015,4,1)
+    date2 = datetime.date(2015,12,31)
+    days_count = (date2-date1).days
+    x_set = np.linspace(0, days_count, 10)
+    y_set = np.array([0, 2, 15, 47, 73, 81, 116, 157, 178, 193]) #, 190, 195, 199, 202, 208, 215, 230, 238, 250, 260])
+    y_set = y_set * 600 / 328
+    '''
 
     # KNN Regression
     k = 3
@@ -89,10 +137,21 @@ def preidict_weights(age, total_fish_number):
     y_pred = y_pred * total_fish_number / 600
     print("輸入天數(天):", x_new)
     print("預估魚池總重(斤):", y_pred)
-    
+
     return y_pred
 
+# change me!
 def preidict_date(latest_weight):
+    # 午仔魚
+    '''
+    # 17 months, 2015/4~2016/8
+    x_set = np.array([0, 2, 15, 47, 73, 81, 116, 157, 178, 193, 190, 195, 199, 202, 208, 215, 230]) #, 238, 250, 260])
+    x_set = x_set * 600 / 328
+    date1 = datetime.date(2015,4,1)
+    date2 = datetime.date(2016,8,31)
+    days_count = (date2-date1).days
+    y_set = np.linspace(0, days_count, 18)
+    '''
     # 鱸魚
     days= 210 # 0 to 210 days
     step = 30 # interval 30 days
@@ -127,10 +186,25 @@ def counting_fcr(total_feeding_amount, latest_weight, first_weights):
         estimated_fcr = round(total_feeding_amount * 1000 / ((latest_weight - first_weights) * 600), 2)
         return estimated_fcr
 
+
+''' root page ''' 
 @app.route('/')
 def test():
     data = "Hello!"
     return render_template('test.html', data=data)
+
+
+''' login/logout ''' 
+login_manager = LoginManager()
+login_manager.init_app(app)
+
+class User(UserMixin):
+    def __init__(self, id):
+        self.id = id
+
+@login_manager.user_loader
+def load_user(user_id):
+    return User(user_id)
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -143,6 +217,7 @@ def login():
             session['username'] = username
             user = User(1)  # Replace with your user authentication logic
             login_user(user)
+            databaseName = usernameChooseDatabaseName(username)
             print('username:', username)
             print('databaseName:', databaseName)
             return redirect(url_for('home'))
@@ -160,16 +235,34 @@ def logout():
     print('logout!')
     return redirect(url_for('login'))
 
+
+''' homepage '''
 @app.route('/home')
 def home():
     # 檢查用戶是否登入，未登入則返回登入頁面
     if 'username' in session:
         update_time = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
         print(update_time)
-        return render_template('home.html', username=session['username'], species=species, species_logo_url=species_logo_url)
+        global connection
+        cursor = connection.cursor()
+        sql = "use " + databaseName + ";"
+        cursor.execute(sql)
+
+        sql= "select * from field_logs where DATE_FORMAT(update_time, '%Y-%m-%d') = CURDATE() limit 1; " 
+        pool_data = list(cursor.fetchall()) 
+        pool_data = utc8(pool_data, 6)
+        if pool_data:
+            pool_data = pool_data[0]
+        else:
+            pool_data = ["", "尚無紀錄", "尚無紀錄", "尚無紀錄", "尚無紀錄", "尚無紀錄"]
+
+        return render_template('home.html', username=session['username'], species=species, species_logo_url=species_logo_url, 
+                               fieldName=fieldName, fieldManager=fieldManager, contact=contact, pool_data=pool_data)
     else:
         return redirect(url_for('login'))
 
+
+''' decision function '''
 @app.route('/decision', methods=["GET", "POST"])
 def decision():
     if 'username' in session:
@@ -194,6 +287,8 @@ def decision():
     else:
         return redirect(url_for('login'))
 
+
+''' field_view function '''
 def storeFrames():
     github_image_url = "https://github.com/marshmallow3210/FourfingerThreadfinManagementPlatform/blob/main/images/output-2023-08-20-12-45-24%20-%20frame%20at%200m7s.jpg?raw=true"
     response = requests.get(github_image_url)
@@ -273,7 +368,9 @@ def field_view():
             return render_template('field_view.html', update_time="監視器畫面連線失敗，請再更新一次！", binary_data_base64='無影像畫面', species=species, species_logo_url=species_logo_url, time_difference=time_difference)
     else:
         return redirect(url_for('login'))
-  
+
+
+''' feeding_logs function '''
 @app.route('/field_logs', methods=["GET", "POST"])
 def field_logs():
     if 'username' in session:
@@ -478,6 +575,8 @@ def update():
     # else:
     #     return redirect(url_for('login'))
 
+
+''' feeding_logs function '''
 @app.route('/feeding_logs', methods=["GET", "POST"])
 def feeding_logs():
     if 'username' in session:
@@ -494,6 +593,8 @@ def feeding_logs():
     else:
         return redirect(url_for('login'))   
 
+
+''' query function '''
 @app.route('/query', methods=["GET", "POST"])
 def query():
     if 'username' in session:
@@ -574,8 +675,199 @@ def query_result():
             return render_template('query.html', alertContent=alertContent, species=species, species_logo_url=species_logo_url)
     else:
         return redirect(url_for('login'))
+
+
+''' API integration'''
+def convert_to_unix_timestamp(datetime_str):
+    # 將日期時間字串轉換為 datetime 物件
+    dt_obj = datetime.datetime.strptime(datetime_str, '%Y-%m-%d %H:%M:%S')
+    # 計算 Unix timestamp（以秒為單位）
+    timestamp = int(dt_obj.timestamp() * 1000)  # 乘以1000轉換為毫秒
+    return timestamp
+
+@app.route('/send_data')
+def send_data():
+    try:
+        current_time = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        date = convert_to_unix_timestamp(current_time)
+        global connection
+        cursor = connection.cursor()
+        sql = "use " + databaseName + ";"
+        cursor.execute(sql)
+
+        sql = "select pool_ID, start_time, use_time, food_ID, feeding_amount from feeding_logs order by start_time desc limit 1;"
+        cursor.execute(sql)
+        feeding_logs = list(cursor.fetchall())
+        start_time = utc8(feeding_logs, 1)
+        start_time = start_time[0]
+        start_time = start_time[1]
+        feedingTime = convert_to_unix_timestamp(start_time)
+        feeding_logs = feeding_logs[0]
+        # aquarium_id = feeding_logs[0]
+        period = int(feeding_logs[2])
+        # food_ID = feeding_logs[3]
+        weight = float(feeding_logs[4])
+
+        # api integration
+        url = 'https://api.ekoral.io/api/get_aquarium_food'
+        headers = {
+            'api-key': 'KuDtDcK5pLmiU57PWd5mnicVf06Fl3yn',
+            'x-ekoral-memberid': '30009',
+            'x-ekoral-authorization': 'Mjc2ODFhMjExZGI2MjYxNTU2NGVmN2UwNzM2YzkyOWEyMGE0NTc4OWNhNzEzZWY4Y2E2OWQxNGI5ODk5M2JhMQ==',
+            'x-ekoral-authorization-nonce': 'e8e95e3d-f8a5-4a95-ab18-5b0a6b08d56c',
+            'Content-Type': 'application/json'
+        }
+
+        data = {
+            "parm": {
+                "journal": {
+                    "aquarium_id": "144",
+                    "journal_id": 0,
+                    "action": "create",
+                    "date": date,
+                    "feeding": [
+                        {
+                            "food": [
+                                {
+                                    "id": "19",
+                                    "weight": weight,
+                                    "unit": "catty",
+                                    "name": "A牌"
+                                }
+                            ],
+                            "feedingTime": feedingTime,
+                            "period": period,
+                            "status": "normal",
+                            "left": "",
+                            "description": "吃很久",
+                            "checkedList": [
+                                "19"
+                            ]
+                        }
+                    ]
+                }
+            },
+            "name": "configure_journal_feeding",
+            "version": 1
+        }
+
+        response = requests.post(url, headers=headers, json=data)
+        response.raise_for_status()  # 如果請求不成功，引發異常
+
+        return jsonify(response.json())
+
+    except requests.exceptions.RequestException as e:
+        return jsonify({'error': str(e)})
+
+''' choose ripple frames (send to linebot)'''
+def storeRippleFrames():
+    github_image_url = "https://github.com/marshmallow3210/FourfingerThreadfinManagementPlatform/blob/main/images/output-2023-08-13-13-32-47%20-%20frame%20at%200m5s.jpg?raw=true"
+    response = requests.get(github_image_url)
+
+    if response.status_code == 200:
+        frame_data = response.content
+        print("Success to download the image")
+    else:
+        print("Failed to download the image")
     
-# get field data by jsgrid
+    try:
+        databaseName = portChoooseDatabaseName()
+        global connection
+        cursor = connection.cursor()
+        sql = "use " + databaseName + ";"
+        cursor.execute(sql)
+
+        frame_id = 3
+        value = 126
+        isChoose = False
+
+        sql = "INSERT INTO ripple_frames (id, frame_data, value, isChoose) VALUES (%s, %s, %s, %s)"
+        cursor.execute(sql, (frame_id, frame_data, value, isChoose))
+        connection.commit()
+        cursor.close()
+        print("Success to store the image")
+        return
+    except Exception as e:
+        print("Failed to store the image:", e)
+
+def getRippleFrames():
+    databaseName = portChoooseDatabaseName()
+
+    global connection
+    cursor = connection.cursor()
+    sql = "use " + databaseName + ";"
+    cursor.execute(sql)
+
+    sql = "select count(*) as row_count from ripple_frames"
+    cursor.execute(sql)
+    row_count = cursor.fetchone()
+    row_count = row_count[0]
+
+    if row_count:
+        global ripple_frames
+        ripple_frames = []
+        for i in range(1, row_count+1):
+            sql = "select id, frame_data, value, isChoose from ripple_frames where id = "+ str(i) +";"
+            cursor.execute(sql)
+            RippleFramesData = cursor.fetchone()
+
+            if RippleFramesData:
+                id = RippleFramesData[0]
+                ripple_data = RippleFramesData[1]
+                value = RippleFramesData[2]
+                isChoose = RippleFramesData[3]
+                
+                ripple_data_btye_str = io.BytesIO(ripple_data) # 將二進制數據讀取為字節串
+                ripple_data_base64 = base64.b64encode(ripple_data_btye_str.getvalue()).decode('utf-8') # 將圖片轉換為Base64字串
+
+                newRippleFramesData = (id, ripple_data_base64, value, isChoose)
+                print(f"Get {str(i)} ripple data!")
+            ripple_frames.append(newRippleFramesData)
+        return ripple_frames
+    else:
+        print('no ripple data!')
+        return [0, '', 0, False]
+
+@app.route('/choose_ripple_frames', methods=["GET", "POST"])
+def choose_ripple_frames():
+    # storeRippleFrames()
+    ripple_frames = getRippleFrames()
+    url = " "
+    
+    if request.method == "POST":  
+        databaseName = portChoooseDatabaseName()
+        
+        global connection
+        cursor = connection.cursor()
+        sql = "use " + databaseName + ";"
+        cursor.execute(sql)
+
+        sql = "select count(*) as row_count from ripple_frames"
+        cursor.execute(sql)
+        row_count = cursor.fetchone()
+        row_count = row_count[0]
+
+        if row_count:
+            for i in range(1, row_count+1):
+                option_value = request.form.get("option_" + str(i))
+                if option_value:
+                    sql = "update ripple_frames SET isChoose = %s where id = %s;"
+                    cursor.execute(sql, (1, str(i)))
+                else:
+                    sql = "update ripple_frames SET isChoose = %s where id = %s;"
+                    cursor.execute(sql, (0, str(i)))
+
+        connection.commit()
+        ripple_frames = getRippleFrames()
+        
+        sql = "select segformer_url from cloud_config"
+        cursor.execute(sql)
+        url = cursor.fetchone()[0]
+
+    return render_template('choose_ripple_frames.html', ripple_frames=ripple_frames, url_from_db=url)
+   
+
+''' get field data by jsgrid (not used now) '''
 def load_data():
     return json.load(open('field_logs.json', encoding="utf-8"))
 
@@ -613,7 +905,8 @@ def deletedata():
     write_data(out)
     return jsonify(success=True)
 
-# get feeding data by jsgrid
+
+''' get feeding data by jsgrid (not used now) '''
 def load_feeding_data():
     return json.load(open('feeding_logs.json', encoding="utf-8"))
 
@@ -651,8 +944,10 @@ def delete_feeding_data():
     write_feeding_data(out)
     return jsonify(success=True)
 
+
+''' app settings '''
 if __name__ == '__main__':
     app.config['TEMPLATES_AUTO_RELOAD'] = True # flask app 自動重新加載模板(html)
     app.jinja_env.auto_reload = True # Jinja2 自動重新加載設定
     # app.run(debug=True) # in development server
-    app.run(port=3030, debug=False) # in production server
+    app.run(port=port, debug=False) # in production server
