@@ -15,9 +15,12 @@ from sklearn.neighbors import KNeighborsRegressor
 you need to change the: 
 databaseName: ar_DB, admin_
 port
+fieldName
+fieldManager
+contact
 species
 species_logo_url
-users
+users: : ar_DB, admin_
 preidict_weights()
 preidict_date()
 '''
@@ -34,6 +37,9 @@ connection = pymysql.connect(host='127.0.0.1',
 # change me!
 databaseName = "fishDB"
 port = 8080
+fieldName = "XXX"
+fieldManager = "傅擇仁"
+contact = "0987654321"
 species = "午仔魚"
 species_logo_url = "https://github.com/marshmallow3210/FourfingerThreadfinManagementPlatform/blob/main/images/IMG_1676.png?raw=true"
 users = {
@@ -226,7 +232,21 @@ def home():
     if 'username' in session:
         update_time = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
         print(update_time)
-        return render_template('home.html', username=session['username'], species=species, species_logo_url=species_logo_url)
+        global connection
+        cursor = connection.cursor()
+        sql = "use " + databaseName + ";"
+        cursor.execute(sql)
+
+        sql= "select * from field_logs where DATE_FORMAT(update_time, '%Y-%m-%d') = CURDATE() limit 1; " 
+        pool_data = list(cursor.fetchall()) 
+        pool_data = utc8(pool_data, 6)
+        if pool_data:
+            pool_data = pool_data[0]
+        else:
+            pool_data = ["", "尚無紀錄", "尚無紀錄", "尚無紀錄", "尚無紀錄", "尚無紀錄"]
+
+        return render_template('home.html', username=session['username'], species=species, species_logo_url=species_logo_url, 
+                               fieldName=fieldName, fieldManager=fieldManager, contact=contact, pool_data=pool_data)
     else:
         return redirect(url_for('login'))
 

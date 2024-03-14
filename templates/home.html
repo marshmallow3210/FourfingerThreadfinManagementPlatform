@@ -172,15 +172,15 @@
           <div class="row main">
             
             <div class="col-xl-6 col-sm-6">
-              <h3>XXX養殖場</h3>
-              <h6>負責人：傅擇仁</h6>
-              <h6>聯絡電話：0987654321</h6>
+              <h3> {{ fieldName }} 養殖場</h3>
+              <h6>負責人: {{ fieldManager }}</h6>
+              <h6>聯絡電話: {{ contact }}</h6>
             </div>
 
             <div class="col-xl-6 col-sm-6">
-              <h3>時間</h3>
-              <h6>日期：<span id="current_date"></span></h6>
-              <h6>時間：<span id="current_time"></span></h6>
+              <h3>現在時間</h3>
+              <h6>日期: <span id="current_date"></span></h6>
+              <h6>時間: <span id="current_time"></span></h6>
             </div>
           </div>
           
@@ -191,28 +191,28 @@
             <table style="width:100%">
               <tr>
                 <th colspan="2">
-                  今日養殖紀錄
+                  今日最新養殖紀錄
                 </th>
               </tr>
               <tr>
-                <td>規格<br>(尾/斤)</td>
-                <td>225</td>
+                <td style="width:50%">規格<br>(尾/斤)</td>
+                <td>{{ pool_data.1 }}</td> <!--225-->
               </tr>
               <tr>
                 <td>紀錄魚群總重<br>(斤)</td>
-                <td>18500</td>
+                <td>{{ pool_data.2 }}</td> <!--18500-->
               </tr>
               <tr>
                 <td>預估魚群總重<br>(斤)</td>
-                <td>28000</td>
+                <td>{{ pool_data.3 }}</td> <!--28000-->
               </tr>
               <tr>
                 <td>估算換肉率</td>
-                <td>1.73</td>
+                <td>{{ pool_data.4 }}</td> <!--1.73-->
               </tr>
               <tr>
                 <td>死亡數量(隻)</td>
-                <td>3000</td>
+                <td>{{ pool_data.5 }}</td> <!--3000-->
               </tr>
             </table>
           </div>
@@ -227,19 +227,19 @@
                 </th>
               </tr>
               <tr>
-                <td class="tablename">水溫建議決策:</td>
+                <td style="width:50%">水溫建議決策</td>
                 <td>/</td>
               </tr>
               <tr>
-                <td>活存率建議:</td>
+                <td>活存率建議</td>
                 <td>/</td>
               </tr>
               <tr>
-                <td>肥滿度建議:</td>
+                <td>肥滿度建議</td>
                 <td>/</td>
               </tr>
               <tr>
-                <td>肥滿度建議:</td>
+                <td>肥滿度建議</td>
                 <td>/</td>
               </tr>
             </table>

@@ -30,7 +30,9 @@ CREATE TABLE `field_logs` (
   `update_time` datetime DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 --
-/* `spec`: 尾/公斤 */
+/* `spec`: 尾/斤 */
+/* `record_weights`:斤 */
+/* `estimated_weights`:斤 */
 
 --
 -- Dumping data for table `field_logs`
