@@ -1,6 +1,9 @@
 import base64
+import hashlib
+import hmac
 import io
 import json
+import uuid
 from flask import Flask, jsonify, render_template, request, redirect, url_for, session
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user
 from flask_cors import CORS
@@ -164,7 +167,7 @@ def preidict_date(latest_weight):
     y_set = np.array([16, 27, 66, 188, 368, 625, 856, 1077, 16, 27, 77, 208, 379, 606, 862, 1102, 16, 48, 108, 246, 425, 717, 904, 1180, 16, 42, 106, 276, 477, 754, 991, 1202])
     y_set = y_set * 800 / 1336
     '''
-    
+
     # KNN Regression
     knn = KNeighborsRegressor(n_neighbors=3)
     knn.fit(x_set.reshape(-1, 1), y_set)
@@ -681,85 +684,103 @@ def query_result():
 
 ''' API integration'''
 def convert_to_unix_timestamp(datetime_str):
-    # 將日期時間字串轉換為 datetime 物件
     dt_obj = datetime.datetime.strptime(datetime_str, '%Y-%m-%d %H:%M:%S')
-    # 計算 Unix timestamp（以秒為單位）
-    timestamp = int(dt_obj.timestamp() * 1000)  # 乘以1000轉換為毫秒
+    timestamp = int(dt_obj.timestamp() * 1000) # 計算 Unix timestamp (以秒為單位 = 毫秒*1000)
     return timestamp
+
+def generate_signature(api_key, api_endpoint, request_body, nonce):
+    message = api_key + api_endpoint + request_body + nonce # according to API Authentication from API key document
+    signature = hmac.new(bytes(api_key,'utf-8'), bytes(message,'utf-8'), hashlib.sha256).hexdigest().encode('utf-8')
+    return base64.b64encode(signature).decode('utf-8')
 
 @app.route('/send_data')
 def send_data():
-    try:
-        current_time = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-        date = convert_to_unix_timestamp(current_time)
-        global connection
-        cursor = connection.cursor()
-        sql = "use " + databaseName + ";"
-        cursor.execute(sql)
+    current_time = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    date = convert_to_unix_timestamp(current_time)
+    
+    global connection
+    cursor = connection.cursor()
+    sql = "use " + databaseName + ";"
+    cursor.execute(sql)
 
-        sql = "select pool_ID, start_time, use_time, food_ID, feeding_amount from feeding_logs order by start_time desc limit 1;"
-        cursor.execute(sql)
-        feeding_logs = list(cursor.fetchall())
-        start_time = utc8(feeding_logs, 1)
-        start_time = start_time[0]
-        start_time = start_time[1]
-        feedingTime = convert_to_unix_timestamp(start_time)
-        feeding_logs = feeding_logs[0]
-        # aquarium_id = feeding_logs[0]
-        period = int(feeding_logs[2])
-        # food_ID = feeding_logs[3]
-        weight = float(feeding_logs[4])
+    sql = "select pool_ID, start_time, use_time, food_ID, feeding_amount from feeding_logs order by start_time desc limit 1;"
+    cursor.execute(sql)
+    feeding_logs = list(cursor.fetchall())
+    start_time = utc8(feeding_logs, 1)
+    start_time = start_time[0]
+    start_time = start_time[1]
+    feedingTime = convert_to_unix_timestamp(start_time)
+    feeding_logs = feeding_logs[0]
+    # aquarium_id = feeding_logs[0]
+    period = int(feeding_logs[2])
+    # food_ID = feeding_logs[3]
+    weight = float(feeding_logs[4])
 
-        # api integration
-        url = 'https://api.ekoral.io/api/get_aquarium_food'
-        headers = {
-            'api-key': 'KuDtDcK5pLmiU57PWd5mnicVf06Fl3yn',
-            'x-ekoral-memberid': '30009',
-            'x-ekoral-authorization': 'Mjc2ODFhMjExZGI2MjYxNTU2NGVmN2UwNzM2YzkyOWEyMGE0NTc4OWNhNzEzZWY4Y2E2OWQxNGI5ODk5M2JhMQ==',
-            'x-ekoral-authorization-nonce': 'e8e95e3d-f8a5-4a95-ab18-5b0a6b08d56c',
-            'Content-Type': 'application/json'
-        }
+    
+    # 參數們
+    url = 'https://api.ekoral.io' 
+    api_key = 'WSGS4kmccIGadre9Cr3PgksaUeR4umR1'  # from ekoral
+    api_endpoint = '/api/configure_journal_feeding' # from ekoral
+    member_id = '30095'  # from ekoral
 
-        data = {
-            "parm": {
-                "journal": {
-                    "aquarium_id": "144",
-                    "journal_id": 0,
-                    "action": "create",
-                    "date": date,
-                    "feeding": [
-                        {
-                            "food": [
-                                {
-                                    "id": "19",
-                                    "weight": weight,
-                                    "unit": "catty",
-                                    "name": "A牌"
-                                }
-                            ],
-                            "feedingTime": feedingTime,
-                            "period": period,
-                            "status": "normal",
-                            "left": "",
-                            "description": "吃很久",
-                            "checkedList": [
-                                "19"
-                            ]
-                        }
-                    ]
-                }
-            },
-            "name": "configure_journal_feeding",
-            "version": 1
-        }
+    data = {
+        "parm": {
+            "journal": {
+                "aquarium_id": "144",
+                "journal_id": 0,
+                "action": "create",
+                "date": date,
+                "feeding": [
+                    {
+                        "food": [
+                            {
+                                "id": "19",
+                                "weight": weight,
+                                "unit": "catty",
+                                "name": "A牌"
+                            }
+                        ],
+                        "feedingTime": feedingTime,
+                        "period": period,
+                        "status": "normal",
+                        "left": "",
+                        "description": "吃很久",
+                        "checkedList": [
+                            "19"
+                        ]
+                    }
+                ]
+            }
+        },
+        "name": "configure_journal_feeding",
+        "version": 1
+    }
 
-        response = requests.post(url, headers=headers, json=data)
-        response.raise_for_status()  # 如果請求不成功，引發異常
+    request_body = str(data)
+    
+    nonce = str(uuid.uuid4()) # 動態生成 nonce  
 
-        return jsonify(response.json())
+    signature = generate_signature(api_key, api_endpoint, request_body, nonce)
+    print(f"signature: {signature}, {type(signature)}")
+    
+    headers = {
+        'x-ekoral-memberid': member_id,
+        'x-ekoral-authorization': signature,
+        'x-ekoral-authorization-nonce': nonce,
+        'Content-Type': 'application/json'
+    }
 
-    except requests.exceptions.RequestException as e:
-        return jsonify({'error': str(e)})
+    response = requests.post(url+api_endpoint, headers=headers, json=data)
+    response.raise_for_status()  # 如果請求不成功，引發異常
+    
+    if response.status_code == 200:
+        print("Request successful!")
+        print("Response:")
+        print(response.json())
+    else:
+        print("Request failed with status code:", response.status_code)
+        print("Response:")
+        print(response.text)
 
 ''' choose ripple frames (send to linebot)'''
 def storeRippleFrames():
