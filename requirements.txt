@@ -41,7 +41,7 @@ numpy==1.24.4
 oauthlib==3.1.0
 packaging==23.2
 pexpect==4.6.0
-Pillow==10.1.0
+Pillow==10.2.0
 pyasn1==0.4.2
 pyasn1-modules==0.2.1
 PyHamcrest==1.9.0
