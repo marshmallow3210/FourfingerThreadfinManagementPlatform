@@ -4,7 +4,7 @@ import hmac
 import io
 import json
 import uuid
-from flask import Flask, jsonify, render_template, request, redirect, url_for, session
+from flask import Flask, jsonify, make_response, render_template, request, redirect, url_for, session
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user
 from flask_cors import CORS
 import pymysql
@@ -698,6 +698,7 @@ def send_data():
     current_time = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
     date = convert_to_unix_timestamp(current_time)
     
+    # get data from database
     global connection
     cursor = connection.cursor()
     sql = "use " + databaseName + ";"
@@ -751,17 +752,11 @@ def send_data():
                     }
                 ]
             }
-        },
-        "name": "configure_journal_feeding",
-        "version": 1
+        }
     }
-
-    request_body = str(data)
-    
+    request_body = json.dumps(data, separators=(',', ':'), ensure_ascii=False)
     nonce = str(uuid.uuid4()) # 動態生成 nonce  
-
     signature = generate_signature(api_key, api_endpoint, request_body, nonce)
-    print(f"signature: {signature}, {type(signature)}")
     
     headers = {
         'x-ekoral-memberid': member_id,
@@ -770,17 +765,22 @@ def send_data():
         'Content-Type': 'application/json'
     }
 
-    response = requests.post(url+api_endpoint, headers=headers, json=data)
-    response.raise_for_status()  # 如果請求不成功，引發異常
-    
-    if response.status_code == 200:
-        print("Request successful!")
-        print("Response:")
-        print(response.json())
-    else:
-        print("Request failed with status code:", response.status_code)
-        print("Response:")
-        print(response.text)
+    try:
+        response = requests.post(url + api_endpoint, headers=headers, json=data)
+        response.raise_for_status()  # Raises an exception for non-2xx status codes
+
+        if response.status_code == 200:
+            print("Request successful!")
+            print("Response:")
+            print(response.json())
+        else:
+            print("Unexpected status code:", response.status_code)
+            print("Response:")
+            print(response.text)
+        return make_response("OK", 200)
+    except requests.exceptions.RequestException as e:
+        print("Request failed:", e)
+        return make_response("Error", 500)
 
 ''' choose ripple frames (send to linebot)'''
 def storeRippleFrames():
