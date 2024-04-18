@@ -36,7 +36,7 @@ connection = pymysql.connect(host='127.0.0.1',
 
 # change me!
 databaseName = "ar3DB"
-port = 3030
+port = 5030
 fieldName = "嘉義鍾XX"
 fieldManager = "鍾XX"
 contact = "0988776655"
@@ -860,7 +860,7 @@ def choose_ripple_frames():
         connection.commit()
         ripple_frames = getRippleFrames()
         
-        sql = "select segformer_url from cloud_config"
+        sql = "SELECT hub_url FROM cloud_config WHERE id=1;"
         cursor.execute(sql)
         url = cursor.fetchone()[0]
 

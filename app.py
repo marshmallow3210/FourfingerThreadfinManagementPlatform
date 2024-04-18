@@ -691,6 +691,7 @@ def convert_to_unix_timestamp(datetime_str):
 def generate_signature(api_key, api_endpoint, request_body, nonce):
     message = api_key + api_endpoint + request_body + nonce # according to API Authentication from API key document
     signature = hmac.new(bytes(api_key,'utf-8'), bytes(message,'utf-8'), hashlib.sha256).hexdigest().encode('utf-8')
+    print("Signature:", signature)
     return base64.b64encode(signature).decode('utf-8')
 
 @app.route('/send_data')
@@ -723,7 +724,6 @@ def send_data():
     api_key = 'WSGS4kmccIGadre9Cr3PgksaUeR4umR1'  # from ekoral
     api_endpoint = '/api/configure_journal_feeding' # from ekoral
     member_id = '30095'  # from ekoral
-
     data = {
         "parm": {
             "journal": {
@@ -883,7 +883,7 @@ def choose_ripple_frames():
         connection.commit()
         ripple_frames = getRippleFrames()
         
-        sql = "select segformer_url from cloud_config"
+        sql = "SELECT hub_url FROM cloud_config WHERE id=1;"
         cursor.execute(sql)
         url = cursor.fetchone()[0]
 

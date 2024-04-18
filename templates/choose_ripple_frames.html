@@ -62,8 +62,8 @@
 var button = document.getElementById('submit');
 button.addEventListener('click', function() {
     var xhr = new XMLHttpRequest();
-    // var notify_url= {{ url_from_db }}+"/set_ripple_threshold"
-    var notify_url = "https://segformer-test-xzfbysibua-de.a.run.app"
+    var notify_url= {{ url_from_db }}+"/set_ripple_threshold"
+    // var notify_url = "https://segformer-test-xzfbysibua-de.a.run.app"
     xhr.open("GET", notify_url, true);
     xhr.onreadystatechange = function() {
       if (xhr.readyState == 4 && xhr.status == 200) {

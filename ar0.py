@@ -861,7 +861,7 @@ def choose_ripple_frames():
         connection.commit()
         ripple_frames = getRippleFrames()
         
-        sql = "select segformer_url from cloud_config"
+        sql = "SELECT hub_url FROM cloud_config WHERE id=1;"
         cursor.execute(sql)
         url = cursor.fetchone()[0]
 
