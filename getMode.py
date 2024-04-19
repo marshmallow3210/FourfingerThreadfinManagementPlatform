@@ -17,43 +17,62 @@ connection = pymysql.connect(host='127.0.0.1',
 
 databaseName = "fishDB"
 mode = 0
-switchMode = 0
+switchMode = 1
+start_time_fromESP32 = None
+start_time_temp = None
 
 def getMode():
     global databaseName
     global mode
     global switchMode
+    global start_time_fromESP32
+    global start_time_temp
     global connection
     cursor = connection.cursor()
-    sql = "use " + databaseName + ";"
-    cursor.execute(sql)
+    cursor.execute("USE {};".format(databaseName))
+
+    global cnt 
+    cnt = 0
 
     # check if feeding
     while True:
+        cnt += 1
+        print(cnt)
         cursor.execute("SELECT mode FROM decision")
         result = cursor.fetchone()
+        
         if result is not None:
             with lock:  # 使用 Lock 來保護全局變數
-                mode = result[0]
-            print(mode)
+                mode = int(result[0])
+            print(f'mode: {mode} switchMode: {switchMode}')
 
-        if mode == 0:
-            getDataFromESP32(start_time)
-            with lock: 
-                switchMode = 1
-            print("dispensers are not feeding, getDataFromESP32")
-        else:
-            start_time = getStartTime()
-            with lock: 
-                switchMode = 0
-            print("dispensers are feeding, getStartTime:", start_time)
+            if mode != 0 and switchMode == 1: # 開啟投餌機時
+                start_time_temp = getStartTime()
+                with lock: 
+                    switchMode = 0
 
-        time.sleep(600)  # 600 sec = 10 min
+                if start_time_fromESP32 is None:
+                    start_time_fromESP32 = start_time_temp
+
+                print("dispenser is feeding, getStartTime:", start_time_fromESP32)
+
+            elif mode == 0 and switchMode == 0: # 結束投餌時
+                getDataFromESP32(start_time_fromESP32)
+                with lock: 
+                    switchMode = 1
+
+                print("dispenser finished feeding, getDataFromESP32")
+
+        time.sleep(10)  # 600 sec = 10 min
 
 def getStartTime():
-    global switchMode # 確保 switchMode 在函數中被識別為一個 global variable
+    global mode
+    global switchMode
+    global start_time_fromESP32
+    global start_time_temp
+
     with lock:
-        if mode != 0 and switchMode == 1:
+        if mode != 0 and switchMode == 1: # 開啟投餌機時
             cursor = connection.cursor()
             sql = "use " + databaseName + ";"
             cursor.execute(sql)
@@ -68,9 +87,15 @@ def getStartTime():
             return start_time
 
 def getDataFromESP32(start_time):
-    global switchMode # 確保 switchMode 在函數中被識別為一個 global variable
+    global databaseName
+    global mode
+    global switchMode
+    global start_time_fromESP32
+    global start_time_temp
+    global connection
+    
     with lock:
-        if mode == 0 and switchMode == 0:
+        if mode == 0 and switchMode == 0: # 結束投餌時
             cursor = connection.cursor()
             sql = "use " + databaseName + ";"
             cursor.execute(sql)
@@ -85,31 +110,36 @@ def getDataFromESP32(start_time):
             use_time = end_time - start_time
             use_time = use_time.total_seconds() / 60
             use_time = round(use_time, 2)
-            print('use_time:', use_time)
+            print(f'use_time: {use_time} min')
 
             # counting feeding_amount
-            sql = "SELECT COUNT(*) AS feeding_count FROM ESP32 WHERE CONCAT(date, ' ', time) >= " + start_time + "AND CONCAT(date, ' ', time) <= " + end_time + ";"
+            
+            sql = f"SELECT COUNT(*) AS feeding_count FROM ESP32 WHERE CONCAT(date, ' ', time) >= '{str(start_time)}' AND CONCAT(date, ' ', time) <= '{str(end_time)}';"
             cursor.execute(sql)
             feeding_count = list(cursor.fetchall())
             feeding_count = int(feeding_count[0][0])
 
-            sql = "SELECT weight FROM ESP32 WHERE CONCAT(date, ' ', time) >= " + start_time + "AND CONCAT(date, ' ', time) <= " + end_time + ";"
+            sql = f"SELECT weight FROM ESP32 WHERE CONCAT(date, ' ', time) >= '{str(start_time)}' AND CONCAT(date, ' ', time) <= '{str(end_time)}';"
             cursor.execute(sql)
             weight = list(cursor.fetchall())
-            
+            print(weight)
+
             feeding_amount = 0
             feeding_benchmark = weight[0][0]
-            for i in range(0, feeding_count):
-                if weight[i][0] < feeding_benchmark:
-                    feeding_amount = feeding_amount + (feeding_benchmark - weight[i][0])
+            for i in range(1, feeding_count):
+                if weight[i][0] <= weight[i-1][0] and weight[i][0] <= feeding_benchmark:
+                    feeding_amount = feeding_amount + (weight[i-1][0] - weight[i][0])
                 else:
                     feeding_benchmark = weight[i][0]
+            print('feeding_benchmark:', feeding_benchmark)
             print('feeding_amount:', feeding_amount)
 
-            sql = 'insert into feeding_logs (start_time, use_time, feeding_amount) values("{}", {}, {});'.format(start_time, use_time, feeding_amount)
+            
+            sql = f"INSERT INTO feeding_logs (start_time, use_time, feeding_amount) VALUES ('{str(start_time)}', {use_time}, {feeding_amount});"
             cursor.execute(sql)
 
             switchMode = 1
+            start_time_fromESP32 = None
 
 if __name__ == "__main__":
     background_thread = threading.Thread(target=getMode)
