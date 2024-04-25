@@ -174,7 +174,7 @@
           <div style="padding:20px;">
             <form action="{{ url_for("feeding_logs")}}" method="post">
             <label id="date_label">選擇欲查詢日期: 
-              <input type="date" class="input-group-text" id="feeding_logs_date" name="feeding_logs_date" required />
+              <input type="date" class="input-group-text" id="feeding_logs_date" name="feeding_logs_date"/>
               <span class="validity"></span>
             </label>
             <br>
@@ -184,19 +184,24 @@
             </label>
             <br>
             <br>
-            <button id="send_date" class="btn btn-outline-secondary" type="submit">送出</button>
+            <button id="send_date_btn" class="btn btn-outline-secondary" type="submit">送出</button>
+            <br>
+            <br>
+            <input type="text" class="input-group-text" id="all_records" name="all_records" style="display:none"/>
+            <button id="all_records_btn" name="all_records_btn" class="btn btn-outline-secondary" type="submit">查看所有紀錄</button>
           </div>
           
           <br>
 
-          {% if feeding_data is not none%}
+          {% if base64_img %}
           <h2>投餌時間表</h2>
           <div style="padding:20px;">
             <img id="feeding_record_img" src="data:image/png;base64,{{ base64_img }}" alt="{{ base64_img }}">
           </div>
-
+          {% endif %}
           <br>
 
+          {% if feeding_data is not none %}
           <h2>投餌紀錄</h2>
           <!--
           <div id="feeding_logs" class="feeding_logs"></div>
@@ -695,11 +700,13 @@
 
   var DateofToday = new Date().toISOString().split('T')[0];
 
-  document.getElementById('feeding_logs_date').setAttribute('min', '2024-04-04');
+  document.getElementById('feeding_logs_date').setAttribute('min', '2023-01-01');
   document.getElementById('feeding_logs_date').setAttribute('max', DateofToday);
-
-  var button = document.getElementById('send_date');
  
+  document.getElementById('all_records_btn').addEventListener('click', function() {
+    document.getElementById('all_records').value = true;
+  });
+
 </script>
 
 
