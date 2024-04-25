@@ -589,32 +589,32 @@ def feeding_logs():
         
         if request.method == "POST":  
             feeding_logs_date = request.form.get("feeding_logs_date")
-            print(feeding_logs_date)
             selected_date = datetime.datetime.strptime(feeding_logs_date, "%Y-%m-%d")
+            next_day = selected_date + timedelta(days=1)
             one_week_ago = selected_date - timedelta(days=7)
-            time_range = [one_week_ago + timedelta(days=i) for i in range(8)] 
+            time_range = [one_week_ago + timedelta(days=i) for i in range(9)] 
 
             global connection
             cursor = connection.cursor()
             sql = "use " + databaseName + ";"
             cursor.execute(sql)
 
-            sql = "select * from feeding_logs where start_time between %s and %s"
-            cursor.execute(sql, (one_week_ago, selected_date))
+            sql = "SELECT * FROM feeding_logs WHERE start_time BETWEEN %s AND %s"
+            cursor.execute(sql, (one_week_ago, next_day))
             feeding_data = list(cursor.fetchall())
 
 
-            # start_times = [row[2] for row in feeding_data]  
-            # use_times = [row[3] for row in feeding_data]   
+            start_times = [row[2] for row in feeding_data]  
+            use_times = [row[3] for row in feeding_data]   
 
-            # 模擬數據
-            start_times = [datetime.datetime(2024, 4, 22, 8, 0), datetime.datetime(2024, 4, 22, 14, 0), datetime.datetime(2024, 4, 23, 10, 0), datetime.datetime(2024, 4, 24, 12, 0)]
-            use_times = [120, 30, 180, 90]  # 使用時間（分鐘）
+            # 測資
+            # start_times = [datetime.datetime(2024, 4, 22, 8, 0), datetime.datetime(2024, 4, 22, 14, 0), datetime.datetime(2024, 4, 23, 10, 0), datetime.datetime(2024, 4, 24, 12, 0)]
+            # use_times = [120, 30, 180, 90]  # 使用時間（分鐘）
 
             plt.figure(figsize=(10, 6))
 
             plt.xlim(time_range[0], time_range[-1])
-            plt.xticks(time_range, rotation=60)
+            plt.xticks(time_range[1:-1], rotation=60)
             plt.gca().xaxis.set_ticks_position('top')
             plt.gca().xaxis.set_label_position('top')
             
@@ -628,7 +628,7 @@ def feeding_logs():
                 print(f'{start_time} is same as {24-(1440-start_y-use_time)/60}')
                 plt.bar(start_time, use_time, width=0.1, bottom=(1440-start_y-use_time), color='#009999')
 
-            plt.xlabel('date')
+            plt.xlabel('date', labelpad=10)
             plt.ylabel('feeding time')
 
             plt.tight_layout()

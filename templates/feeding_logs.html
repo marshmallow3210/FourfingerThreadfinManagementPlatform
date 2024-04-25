@@ -189,6 +189,7 @@
           
           <br>
 
+          {% if feeding_data is not none%}
           <h2>投餌時間表</h2>
           <div style="padding:20px;">
             <img id="feeding_record_img" src="data:image/png;base64,{{ base64_img }}" alt="{{ base64_img }}">
@@ -196,7 +197,6 @@
 
           <br>
 
-          {% if feeding_data is not none%}
           <h2>投餌紀錄</h2>
           <!--
           <div id="feeding_logs" class="feeding_logs"></div>
@@ -699,9 +699,7 @@
   document.getElementById('feeding_logs_date').setAttribute('max', DateofToday);
 
   var button = document.getElementById('send_date');
-  button.addEventListener('click', function() {
-      alert(DateofToday);
-  });
+ 
 </script>
 
 
