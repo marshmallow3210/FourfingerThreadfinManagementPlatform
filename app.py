@@ -5,6 +5,7 @@ import io
 import json
 import uuid
 from flask import Flask, jsonify, make_response, render_template, request, redirect, url_for, session
+from matplotlib import pyplot as plt
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user
 from flask_cors import CORS
 import pymysql
@@ -375,7 +376,7 @@ def field_view():
         return redirect(url_for('login'))
 
 
-''' feeding_logs function '''
+''' field_logs function '''
 @app.route('/field_logs', methods=["GET", "POST"])
 def field_logs():
     if 'username' in session:
@@ -585,16 +586,63 @@ def update():
 @app.route('/feeding_logs', methods=["GET", "POST"])
 def feeding_logs():
     if 'username' in session:
-        global connection
-        cursor = connection.cursor()
-        sql = "use " + databaseName + ";"
-        cursor.execute(sql)
+        
+        if request.method == "POST":  
+            feeding_logs_date = request.form.get("feeding_logs_date")
+            print(feeding_logs_date)
+            selected_date = datetime.datetime.strptime(feeding_logs_date, "%Y-%m-%d")
+            one_week_ago = selected_date - timedelta(days=7)
+            time_range = [one_week_ago + timedelta(days=i) for i in range(8)] 
 
-        sql = "select * from feeding_logs"
-        cursor.execute(sql)
-        feeding_data = list(cursor.fetchall())
+            global connection
+            cursor = connection.cursor()
+            sql = "use " + databaseName + ";"
+            cursor.execute(sql)
 
-        return render_template('feeding_logs.html', feeding_data=feeding_data, species=species, species_logo_url=species_logo_url) 
+            sql = "select * from feeding_logs where start_time between %s and %s"
+            cursor.execute(sql, (one_week_ago, selected_date))
+            feeding_data = list(cursor.fetchall())
+
+
+            # start_times = [row[2] for row in feeding_data]  
+            # use_times = [row[3] for row in feeding_data]   
+
+            # 模擬數據
+            start_times = [datetime.datetime(2024, 4, 22, 8, 0), datetime.datetime(2024, 4, 22, 14, 0), datetime.datetime(2024, 4, 23, 10, 0), datetime.datetime(2024, 4, 24, 12, 0)]
+            use_times = [120, 30, 180, 90]  # 使用時間（分鐘）
+
+            plt.figure(figsize=(10, 6))
+
+            plt.xlim(time_range[0], time_range[-1])
+            plt.xticks(time_range, rotation=60)
+            plt.gca().xaxis.set_ticks_position('top')
+            plt.gca().xaxis.set_label_position('top')
+            
+            plt.ylim(0, 24*60)
+            plt.yticks(range(24*60, 0, -60), [f"{h:02d}:00" for h in range(0, 24)])
+            plt.grid(axis='y', linestyle='--', color='gray')
+
+            # 將每個 start_time 根據 y 軸(00:00 到 23:59，間隔1小時)開始往下，並根據 use_time(分鐘) 來繪製長條
+            for start_time, use_time in zip(start_times, use_times):
+                start_y = (start_time.hour * 60 + start_time.minute)  
+                print(f'{start_time} is same as {24-(1440-start_y-use_time)/60}')
+                plt.bar(start_time, use_time, width=0.1, bottom=(1440-start_y-use_time), color='#009999')
+
+            plt.xlabel('date')
+            plt.ylabel('feeding time')
+
+            plt.tight_layout()
+
+            img_data = io.BytesIO()
+            plt.savefig(img_data, format='png')
+            img_data.seek(0)
+            base64_img = base64.b64encode(img_data.getvalue()).decode()
+
+        else:
+            feeding_data = None
+            base64_img = ''
+
+        return render_template('feeding_logs.html', feeding_data=feeding_data, base64_img=base64_img, species=species, species_logo_url=species_logo_url) 
     else:
         return redirect(url_for('login'))   
 

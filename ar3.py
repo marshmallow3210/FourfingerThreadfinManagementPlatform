@@ -370,7 +370,7 @@ def field_view():
         return redirect(url_for('login'))
 
 
-''' feeding_logs function '''
+''' field_logs function '''
 @app.route('/field_logs', methods=["GET", "POST"])
 def field_logs():
     if 'username' in session:

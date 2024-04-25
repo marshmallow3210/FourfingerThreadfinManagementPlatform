@@ -170,14 +170,39 @@
       <!--main-page-->
       <div class="row">
         <div class="main-page">
+          
+          <div style="padding:20px;">
+            <form action="{{ url_for("feeding_logs")}}" method="post">
+            <label id="date_label">選擇欲查詢日期: 
+              <input type="date" class="input-group-text" id="feeding_logs_date" name="feeding_logs_date" required />
+              <span class="validity"></span>
+            </label>
+            <br>
+            <br>
+            <label>
+              將顯示從查詢日期開始往前一週的紀錄
+            </label>
+            <br>
+            <br>
+            <button id="send_date" class="btn btn-outline-secondary" type="submit">送出</button>
+          </div>
+          
+          <br>
 
+          <h2>投餌時間表</h2>
+          <div style="padding:20px;">
+            <img id="feeding_record_img" src="data:image/png;base64,{{ base64_img }}" alt="{{ base64_img }}">
+          </div>
+
+          <br>
+
+          {% if feeding_data is not none%}
           <h2>投餌紀錄</h2>
           <!--
           <div id="feeding_logs" class="feeding_logs"></div>
           <hr>
           -->
-
-          <div>
+          <div style="padding:20px;">
             <span height="5"></span>
             <table style="border:3px #cccccc solid;" cellpadding="10" border='1'>
               <thead>
@@ -195,18 +220,21 @@
                   <td>投餌量(公斤)</td>
                 </tr>
               </thead>
-              {% for value in feeding_data %}
-              <tr>
-                <td>{{value.0}}</td>
-                <td>{{value.1}}</td>
-                <td>{{value.2}}</td>
-                <td>{{value.3}}</td>
-                <td>{{value.4}}</td>
-                <td>{{value.5}}</td>
-              </tr>
-              {% endfor %}
+                {% for value in feeding_data %}
+                <tr>
+                  <td>{{value.0}}</td>
+                  <td>{{value.1}}</td>
+                  <td>{{value.2}}</td>
+                  <td>{{value.3}}</td>
+                  <td>{{value.4}}</td>
+                  <td>{{value.5}}</td>
+                </tr>
+                {% endfor %}
             </table> 
           </div> 
+          {% endif %}
+
+          <!-- -->
         </div>
     </div>
   </div>
@@ -645,6 +673,37 @@
   });
 
 </script>
+
+<!-- feeding record img  -->
+<script>
+  Date.prototype.toISOString = function () {
+    let pad =(n)=>(n < 10)?'0' + n:n;
+    let hours_offset = this.getTimezoneOffset() / 60;
+    let offset_date = this.setHours(this.getHours() - hours_offset);
+    let symbol = (hours_offset >= 0) ? "-" : "+";
+    let time_zone = symbol+pad(Math.abs(hours_offset))+ ":00";
+    
+    return this.getUTCFullYear() +
+        '-' + pad(this.getUTCMonth() + 1) +
+        '-' + pad(this.getUTCDate()) +
+        'T' + pad(this.getUTCHours()) +
+        ':' + pad(this.getUTCMinutes()) +
+        ':' + pad(this.getUTCSeconds()) +
+        '.' + (this.getUTCMilliseconds() / 1000).toFixed(3).slice(2, 5) +
+        time_zone;
+  };
+
+  var DateofToday = new Date().toISOString().split('T')[0];
+
+  document.getElementById('feeding_logs_date').setAttribute('min', '2024-04-04');
+  document.getElementById('feeding_logs_date').setAttribute('max', DateofToday);
+
+  var button = document.getElementById('send_date');
+  button.addEventListener('click', function() {
+      alert(DateofToday);
+  });
+</script>
+
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.4/jquery.min.js"></script>
