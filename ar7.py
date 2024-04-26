@@ -608,8 +608,8 @@ def feeding_logs():
                 one_week_ago = selected_date - timedelta(days=7)
                 time_range = [one_week_ago + timedelta(days=i) for i in range(9)] 
 
-                sql = "SELECT * FROM feeding_logs WHERE start_time BETWEEN %s AND %s"
-                cursor.execute(sql, (one_week_ago, next_day))
+                sql = "SELECT * FROM feeding_logs WHERE start_time between %s AND %s"
+                cursor.execute(sql, (one_week_ago + timedelta(days=1), next_day))
                 feeding_data = list(cursor.fetchall())
 
                 start_times = [row[2] for row in feeding_data]  
@@ -633,8 +633,8 @@ def feeding_logs():
                 # 將每個 start_time 根據 y 軸(00:00 到 23:59，間隔1小時)開始往下，並根據 use_time(分鐘) 來繪製長條
                 for start_time, use_time in zip(start_times, use_times):
                     start_y = (start_time.hour * 60 + start_time.minute)  
-                    print(f'{start_time} is same as {24-(1440-start_y-use_time)/60}')
-                    plt.bar(start_time, use_time, width=0.1, bottom=(1440-start_y-use_time), color='#009999')
+                    print(f'part of {start_time} is same as {24-(1440-start_y-use_time)/60}')
+                    plt.bar(start_time.date(), use_time, width=0.2, bottom=(1440-start_y-use_time), color='#009999')
 
                 plt.xlabel('date', labelpad=10)
                 plt.ylabel('feeding time', labelpad=10)
