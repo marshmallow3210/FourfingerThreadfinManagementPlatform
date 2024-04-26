@@ -41,9 +41,9 @@ connection = pymysql.connect(host='127.0.0.1',
 # change me!
 databaseName = "ar6DB"
 port = 5060
-fieldName = "屏東李XX"
-fieldManager = "李XX"
-contact = "0908080808"
+fieldName = "屏東李學長"
+fieldManager = "李學長"
+contact = "0900000000"
 species = "午仔魚"
 species_logo_url = "https://github.com/marshmallow3210/FourfingerThreadfinManagementPlatform/blob/main/images/IMG_1676.png?raw=true"
 users = {
