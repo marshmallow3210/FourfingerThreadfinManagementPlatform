@@ -39,16 +39,16 @@ connection = pymysql.connect(host='127.0.0.1',
                              autocommit=True)
 
 # change me!
-databaseName = "ar0DB"
-port = 5000
-fieldName = "屏東張XX"
-fieldManager = "張XX"
-contact = "0988888888"
-species = "午仔魚"
+databaseName = "ar4DB"
+port = 5040
+fieldName = "屏東顏XX"
+fieldManager = "顏XX"
+contact = "0988776655"
+species = "鱸魚"
 species_logo_url = "https://github.com/marshmallow3210/FourfingerThreadfinManagementPlatform/blob/main/images/IMG_1676.png?raw=true"
 users = {
-    'ar0DB': 'ar0DB',
-    'admin0': 'admin0',
+    'ar4DB': 'ar4DB',
+    'admin4': 'admin4',
 }
 
 
@@ -111,7 +111,6 @@ def utc8(utc, p):
 # change me!
 def preidict_weights(age, total_fish_number):
     # 鱸魚
-    '''
     days= 210 # 0 to 210 days
     step = 30 # interval 30 days
     phase = days//step + 1 # phase = 8
@@ -121,15 +120,17 @@ def preidict_weights(age, total_fish_number):
         x_set = np.append(x_set, x)
     y_set = np.array([16, 27, 66, 188, 368, 625, 856, 1077, 16, 27, 77, 208, 379, 606, 862, 1102, 16, 48, 108, 246, 425, 717, 904, 1180, 16, 42, 106, 276, 477, 754, 991, 1202])
     y_set = y_set * 800 / 1336
-    '''
+
     # 午仔魚
     # 9 months
+    '''
     date1 = datetime.date(2015,4,1)
     date2 = datetime.date(2015,12,31)
     days_count = (date2-date1).days
     x_set = np.linspace(0, days_count, 10)
     y_set = np.array([0, 2, 15, 47, 73, 81, 116, 157, 178, 193]) #, 190, 195, 199, 202, 208, 215, 230, 238, 250, 260])
     y_set = y_set * 600 / 328
+    '''
 
     # KNN Regression
     k = 3
@@ -148,15 +149,16 @@ def preidict_weights(age, total_fish_number):
 def preidict_date(latest_weight):
     # 午仔魚
     # 17 months, 2015/4~2016/8
+    '''
     x_set = np.array([0, 2, 15, 47, 73, 81, 116, 157, 178, 193, 190, 195, 199, 202, 208, 215, 230]) #, 238, 250, 260])
     x_set = x_set * 600 / 328
     date1 = datetime.date(2015,4,1)
     date2 = datetime.date(2016,8,31)
     days_count = (date2-date1).days
     y_set = np.linspace(0, days_count, 18)
+    '''
     
     # 鱸魚
-    '''
     days= 210 # 0 to 210 days
     step = 30 # interval 30 days
     phase = days//step + 1 # phase = 8
@@ -166,7 +168,6 @@ def preidict_date(latest_weight):
         x_set = np.append(x_set, x)
     y_set = np.array([16, 27, 66, 188, 368, 625, 856, 1077, 16, 27, 77, 208, 379, 606, 862, 1102, 16, 48, 108, 246, 425, 717, 904, 1180, 16, 42, 106, 276, 477, 754, 991, 1202])
     y_set = y_set * 800 / 1336
-    '''
 
     # KNN Regression
     knn = KNeighborsRegressor(n_neighbors=3)

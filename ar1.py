@@ -39,16 +39,16 @@ connection = pymysql.connect(host='127.0.0.1',
                              autocommit=True)
 
 # change me!
-databaseName = "ar0DB"
-port = 5000
-fieldName = "屏東張XX"
-fieldManager = "張XX"
-contact = "0988888888"
+databaseName = "ar1DB"
+port = 5010
+fieldName = "屏東李XX"
+fieldManager = "李XX"
+contact = "0908080808"
 species = "午仔魚"
 species_logo_url = "https://github.com/marshmallow3210/FourfingerThreadfinManagementPlatform/blob/main/images/IMG_1676.png?raw=true"
 users = {
-    'ar0DB': 'ar0DB',
-    'admin0': 'admin0',
+    'ar1DB': 'ar1DB',
+    'admin1': 'admin1',
 }
 
 

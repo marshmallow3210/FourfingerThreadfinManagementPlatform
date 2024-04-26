@@ -6,7 +6,7 @@ import json
 import uuid
 from flask import Flask, jsonify, make_response, render_template, request, redirect, url_for, session
 from matplotlib import pyplot as plt
-from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user
+from flask_login import LoginManager, UserMixin, login_user, logout_user
 from flask_cors import CORS
 import pymysql
 import datetime
