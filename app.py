@@ -587,6 +587,7 @@ def update():
 def feeding_logs():
     if 'username' in session:
         feeding_data = None
+        original_feeding_data = None
         base64_img = ''
 
         global connection
@@ -600,6 +601,9 @@ def feeding_logs():
                 sql = "SELECT * FROM feeding_logs"
                 cursor.execute(sql)
                 feeding_data = list(cursor.fetchall())
+                sql = "SELECT * FROM original_feeding_logs"
+                cursor.execute(sql)
+                original_feeding_data = list(cursor.fetchall())
                 all_records = ''
             else:
                 feeding_logs_date = request.form.get("feeding_logs_date")
@@ -608,24 +612,25 @@ def feeding_logs():
                 one_week_ago = selected_date - timedelta(days=7)
                 time_range = [one_week_ago + timedelta(days=i) for i in range(9)] 
 
-                sql = "SELECT * FROM feeding_logs WHERE start_time between %s AND %s"
+                sql = "select * from feeding_logs where start_time between %s and %s"
                 cursor.execute(sql, (one_week_ago + timedelta(days=1), next_day))
                 feeding_data = list(cursor.fetchall())
-
                 start_times = [row[2] for row in feeding_data]  
-                use_times = [row[3] for row in feeding_data]   
+                use_times = [row[3] for row in feeding_data]  
 
-                # 測資
-                # start_times = [datetime.datetime(2024, 4, 22, 8, 0), datetime.datetime(2024, 4, 22, 14, 0), datetime.datetime(2024, 4, 23, 10, 0), datetime.datetime(2024, 4, 24, 12, 0)]
-                # use_times = [120, 30, 180, 90]  # 使用時間（分鐘）
+                sql = "select * from original_feeding_logs where start_time between %s and %s"
+                cursor.execute(sql, (one_week_ago + timedelta(days=1), next_day))
+                original_feeding_data = list(cursor.fetchall())
+                original_start_times = [row[2] for row in original_feeding_data]  
+                original_use_times = [row[3] for row in original_feeding_data]  
 
-                plt.figure(figsize=(10, 8))
+                plt.figure(figsize=(14, 8))
 
                 plt.xlim(time_range[0], time_range[-1])
                 plt.xticks(time_range[1:-1], rotation=60)
                 plt.gca().xaxis.set_ticks_position('top')
                 plt.gca().xaxis.set_label_position('top')
-                
+
                 plt.ylim(0, 24*60)
                 plt.yticks(range(24*60, 0, -60), [f"{h:02d}:00" for h in range(0, 24)])
                 plt.grid(axis='y', linestyle='--', color='gray')
@@ -634,11 +639,23 @@ def feeding_logs():
                 for start_time, use_time in zip(start_times, use_times):
                     start_y = (start_time.hour * 60 + start_time.minute)  
                     print(f'part of {start_time} is same as {24-(1440-start_y-use_time)/60}')
-                    plt.bar(start_time.date(), use_time, width=0.2, bottom=(1440-start_y-use_time), color='#009999')
+                    midday = datetime.datetime(start_time.year, start_time.month, start_time.day, 22, 0) - timedelta(days=1)
+                    plt.bar(midday, use_time, width=0.17, bottom=(1440-start_y-use_time), color='#009999')
+
+                for start_time, use_time in zip(original_start_times, original_use_times):
+                    start_y = (start_time.hour * 60 + start_time.minute)  
+                    print(f'part of {start_time} is same as {24-(1440-start_y-use_time)/60}')
+                    midday = datetime.datetime(start_time.year, start_time.month, start_time.day, 2, 0)
+                    plt.bar(midday, use_time, width=0.17, bottom=(1440-start_y-use_time), color='#ee8822')
+
+                legend_labels = {'#009999': 'smart', '#ee8822': 'original'}
+                legend_handles = []
+                for color, label in legend_labels.items():
+                    legend_handles.append(plt.Rectangle((0,0),1,1, color=color, label=label))
+                plt.legend(handles=legend_handles)
 
                 plt.xlabel('date', labelpad=10)
                 plt.ylabel('feeding time', labelpad=10)
-
                 plt.tight_layout()
 
                 img_data = io.BytesIO()
@@ -646,7 +663,7 @@ def feeding_logs():
                 img_data.seek(0)
                 base64_img = base64.b64encode(img_data.getvalue()).decode()
 
-        return render_template('feeding_logs.html', feeding_data=feeding_data, base64_img=base64_img, species=species, species_logo_url=species_logo_url) 
+        return render_template('feeding_logs.html', feeding_data=feeding_data, original_feeding_data=original_feeding_data, base64_img=base64_img, species=species, species_logo_url=species_logo_url) 
     else:
         return redirect(url_for('login'))   
 

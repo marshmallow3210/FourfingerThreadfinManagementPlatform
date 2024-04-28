@@ -202,11 +202,7 @@
           <br>
 
           {% if feeding_data is not none %}
-          <h2>投餌紀錄</h2>
-          <!--
-          <div id="feeding_logs" class="feeding_logs"></div>
-          <hr>
-          -->
+          <h2>投餌紀錄(smart)</h2>
           <div style="padding:20px;">
             <span height="5"></span>
             <table style="border:3px #cccccc solid;" cellpadding="10" border='1'>
@@ -239,7 +235,39 @@
           </div> 
           {% endif %}
 
-          <!-- -->
+          {% if original_feeding_data is not none %}
+          <h2>投餌紀錄(original)</h2>
+          <div style="padding:20px;">
+            <span height="5"></span>
+            <table style="border:3px #cccccc solid;" cellpadding="10" border='1'>
+              <thead>
+                <!--
+                <tr>
+                  <th colspan="9">投餌紀錄</th>
+                </tr>
+                -->
+                <tr>
+                  <td>魚池編號</td>
+                  <td>投餌機編號</td>
+                  <td>投餌時間</td>
+                  <td>耗時(分鐘)</td>
+                  <td>投餌料號</td>
+                  <td>投餌量(公斤)</td>
+                </tr>
+              </thead>
+                {% for value in original_feeding_data %}
+                <tr>
+                  <td>{{value.0}}</td>
+                  <td>{{value.1}}</td>
+                  <td>{{value.2}}</td>
+                  <td>{{value.3}}</td>
+                  <td>{{value.4}}</td>
+                  <td>{{value.5}}</td>
+                </tr>
+                {% endfor %}
+            </table> 
+          </div> 
+          {% endif %}
         </div>
     </div>
   </div>
@@ -703,6 +731,14 @@
   document.getElementById('feeding_logs_date').setAttribute('min', '2023-01-01');
   document.getElementById('feeding_logs_date').setAttribute('max', DateofToday);
  
+  document.getElementById('send_date_btn').addEventListener('click', function(event) {
+    var selectedDate = document.getElementById('feeding_logs_date').value;
+    if (!selectedDate) {
+      alert('請選擇日期後再按送出！');
+      event.preventDefault();
+    }
+  });
+
   document.getElementById('all_records_btn').addEventListener('click', function() {
     document.getElementById('all_records').value = true;
   });
