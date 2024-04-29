@@ -33,7 +33,7 @@ def generate_data():
     data = {
         'weight': current_weight,
         'laser': 10.50,
-        'blower_state': 60,
+        'blower_state': 'on',
         'angle_state': 60,
         'speed_level': 600,
         'system_mode': 1,

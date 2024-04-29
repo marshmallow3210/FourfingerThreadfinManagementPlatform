@@ -307,24 +307,18 @@ CREATE TABLE `ripple_frames` (
 -- tables of database to copy: 
 -- feeding_logs, feeding_records, field_logs, ripple_frames
 
--- 複製 feeding_logs 表格結構
+-- 複製表格結構
 CREATE TABLE ar0DB.feeding_logs LIKE fishDB.feeding_logs;
-
--- 複製 feeding_records 表格結構
 CREATE TABLE ar0DB.feeding_records LIKE fishDB.feeding_records;
-
--- 複製 field_logs 表格結構
 CREATE TABLE ar0DB.field_logs LIKE fishDB.field_logs;
-
--- 複製 ripple_frames 表格結構
 CREATE TABLE ar0DB.ripple_frames LIKE fishDB.ripple_frames;
 
 update decision set mode=1;
-
-INSERT INTO `ESP32` VALUES (10.50,10.50,'60','60','600','1','16:50:00','2024-04-19',1);
-INSERT INTO `ESP32` VALUES (10.50,10.50,'60','60','600','1','16:50:30','2024-04-19',1);
 
 SELECT * FROM ESP32 ORDER BY CONCAT(date, ' ', time) DESC LIMIT 5;
 delete FROM ESP32 ORDER BY CONCAT(date, ' ', time) DESC LIMIT 5;
 
 select * from feeding_logs order by start_time desc limit 5;
+
+SELECT blower_state FROM fishDB.ESP32 ORDER BY CONCAT(date, ' ', time) DESC LIMIT 1;
+UPDATE fishDB.ESP32 SET blower_state = 'off' ORDER BY CONCAT(date, ' ', time) DESC LIMIT 1;
