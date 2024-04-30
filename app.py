@@ -774,24 +774,42 @@ def send_data():
     # get data from database
     global connection
     cursor = connection.cursor()
-    sql = "use " + databaseName + ";"
-    cursor.execute(sql)
-
-    sql = "select pool_ID, start_time, use_time, food_ID, feeding_amount from feeding_logs order by start_time desc limit 1;"
+    
+    databaseName = "fishDB"
+    sql = "select journal_id, pool_id, start_time, use_time, food_id, food_name, food_unit, feeding_amount, left_amount, status, description from " + databaseName + ".new_feeding_logs order by start_time desc limit 1;"
     cursor.execute(sql)
     feeding_logs = list(cursor.fetchall())
-    start_time = utc8(feeding_logs, 1)
-    start_time = start_time[0]
-    start_time = start_time[1]
-    feedingTime = convert_to_unix_timestamp(start_time)
-    feeding_logs = feeding_logs[0]
-    # aquarium_id = feeding_logs[0]
-    period = int(feeding_logs[2])
-    # food_ID = feeding_logs[3]
-    weight = float(feeding_logs[4])
+    print(feeding_logs)
 
+    aquarium_id = str(feeding_logs[0][1])      # "84"
+    action = "create"                          # "create" or "update"
+    if action == "create":
+        journal_id = 0                         # 0 or other number
+    else:
+        journal_id = int(feeding_logs[0][0])
+
+    food_id = str(feeding_logs[0][4])          # "19"
+    feeding_amount = feeding_logs[0][7]        # 5
+    food_unit = str(feeding_logs[0][6])        # "catty"
+    food_name = str(feeding_logs[0][5])        # "A牌"
+
+    start_time = utc8(feeding_logs, 2) 
+    start_time = start_time[0]
+    start_time = start_time[2]
+    start_time = convert_to_unix_timestamp(start_time) # 1693877520000
     
-    # 參數們
+    use_time = int(feeding_logs[0][3])         # 35
+    status = str(feeding_logs[0][9])           # "normal"
+    left_amount = feeding_logs[0][8]           # ""
+    description = str(feeding_logs[0][10])     # "吃很久"
+
+    sql = "select distinct food_id from " + databaseName + ".new_feeding_logs;"
+    cursor.execute(sql)
+    checkedList = list(cursor.fetchall())
+    checkedList = [str(food_id[0]) for food_id in checkedList] # ["19"]
+    print(checkedList)                       
+    
+    # params
     url = 'https://api.ekoral.io' 
     api_key = 'WSGS4kmccIGadre9Cr3PgksaUeR4umR1'  # from ekoral
     api_endpoint = '/api/configure_journal_feeding' # from ekoral
@@ -799,33 +817,34 @@ def send_data():
     data = {
         "parm": {
             "journal": {
-                "aquarium_id": "144",
-                "journal_id": 0,
-                "action": "create",
+                "aquarium_id": aquarium_id,
+                "journal_id": journal_id,
+                "action": action,
                 "date": date,
                 "feeding": [
                     {
                         "food": [
                             {
-                                "id": "19",
-                                "weight": weight,
-                                "unit": "catty",
-                                "name": "A牌"
+                                "id": food_id,
+                                "weight": feeding_amount,
+                                "unit": food_unit,
+                                "name": food_name
                             }
                         ],
-                        "feedingTime": feedingTime,
-                        "period": period,
-                        "status": "normal",
-                        "left": "",
-                        "description": "吃很久",
-                        "checkedList": [
-                            "19"
-                        ]
+                        "feedingTime": start_time,
+                        "period": use_time,
+                        "status": status,
+                        "left": left_amount,
+                        "description": description,
+                        "checkedList": checkedList
                     }
                 ]
             }
         }
     }
+
+    print(data)
+    
     request_body = json.dumps(data, separators=(',', ':'), ensure_ascii=False)
     nonce = str(uuid.uuid4()) # 動態生成 nonce  
     signature = generate_signature(api_key, api_endpoint, request_body, nonce)
@@ -853,6 +872,7 @@ def send_data():
     except requests.exceptions.RequestException as e:
         print("Request failed:", e)
         return make_response("Error", 500)
+
 
 ''' choose ripple frames (send to linebot)'''
 def storeRippleFrames():

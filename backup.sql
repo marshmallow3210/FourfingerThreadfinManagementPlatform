@@ -21,7 +21,7 @@
 DROP TABLE IF EXISTS `field_logs`;
 --
 CREATE TABLE `field_logs` (
-  `pool_ID` int(11) NOT NULL,
+  `pool_id` int(11) NOT NULL,
   `spec` float DEFAULT NULL,
   `record_weights` float DEFAULT NULL,
   `estimated_weights` float DEFAULT NULL,
@@ -46,83 +46,28 @@ INSERT INTO `field_logs` VALUES (3,145.0,500.0,500.0,'-',0,'2023-03-03 12:45:00'
 UNLOCK TABLES;
 
 UPDATE field_logs SET fcr='-';
---
--- Table structure for table `ESP32`
---
-DROP TABLE IF EXISTS `ESP32`;
---
-CREATE TABLE `ESP32` (
-  `pool_ID` int(11) DEFAULT NULL,
-  `dispenser_ID` int(11) NOT NULL default '1',
-  `weight` float(10,2) DEFAULT NULL,
-  `laser` float(10,2) DEFAULT NULL,
-  `blower_state` varchar(255) DEFAULT NULL,
-  `angle_state` varchar(255) DEFAULT NULL,
-  `speed_level` varchar(255) DEFAULT NULL,
-  `system_mode` varchar(255) DEFAULT NULL,
-  `time` time DEFAULT NULL,
-  `date` date DEFAULT NULL
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
---
-
---
--- Dumping data for table `ESP32`
---
-LOCK TABLES `ESP32` WRITE;
---
-INSERT INTO `ESP32` VALUES 
-(1,1,22.46,0.00,'off','0','600','0','15:46:35','2023-10-05'), 
-(1,1,23.16,0.00,'off','0','600','0','15:46:40','2023-10-05'), 
-
-(1,1,23.27,0.00,'off','0','600','0','15:46:45','2023-10-05'),
-(1,1,23.56,0.00,'off','0','600','0','15:46:50','2023-10-05'), 
-(1,1,23.57,0.00,'off','0','600','0','15:46:55','2023-10-05'),
-(1,1,23.45,0.00,'off','0','600','0','15:47:00','2023-10-05'),
-(1,1,23.52,0.00,'off','0','600','0','15:47:05','2023-10-05'),
-(1,1,23.54,0.00,'off','0','600','0','15:47:10','2023-10-05'),
-(1,1,24.98,0.00,'off','0','600','0','15:47:15','2023-10-05'),
-(1,1,25.12,0.00,'off','0','600','0','15:47:20','2023-10-05'),
-(1,1,26.32,0.00,'off','0','600','0','15:47:25','2023-10-05'),
-(1,1,23.99,0.00,'off','0','600','0','15:47:30','2023-10-05'),
-(1,1,24.18,0.00,'off','0','600','0','15:47:35','2023-10-05'),
-(1,1,22.72,0.00,'off','0','600','0','15:47:40','2023-10-05'),
-(1,1,22.52,0.00,'off','0','600','0','15:47:45','2023-10-05'),
-(1,1,22.50,0.00,'off','0','600','0','15:47:50','2023-10-05'),
-(1,1,22.68,0.00,'off','0','600','0','15:47:55','2023-10-05'),
-
-(1,1,22.57,0.00,'off','0','600','0','15:48:00','2023-10-05'),
-(1,1,22.56,0.00,'off','0','600','0','15:48:05','2023-10-05'),
-(1,1,22.57,0.00,'off','0','600','0','15:48:10','2023-10-05'),
-(1,1,22.57,0.00,'off','0','600','0','15:48:15','2023-10-05'),
-(1,1,22.56,0.00,'off','0','600','0','15:48:20','2023-10-05'),
-(1,1,22.56,0.00,'off','0','600','0','15:48:25','2023-10-05'),
-(1,1,22.69,0.00,'off','0','600','0','15:48:30','2023-10-05'),
-(1,1,22.66,0.00,'off','0','600','0','15:48:35','2023-10-05'),
-(1,1,22.73,0.00,'off','0','600','0','15:48:40','2023-10-05'),
-(1,1,22.53,0.00,'off','0','600','0','15:48:45','2023-10-05'),
-(1,1,22.65,0.00,'off','0','600','0','15:48:50','2023-10-05'),
-(1,1,22.71,0.00,'off','0','600','0','15:48:55','2023-10-05'),
-
-(1,1,22.66,0.00,'off','0','600','0','17:00:00','2023-10-06'),
-(1,1,25.00,0.00,'off','0','600','0','17:17:17','2023-10-07');
---
-UNLOCK TABLES;
 
 --
 -- Table structure for table `feeding_logs`
 --
-UPDATE feeding_logs SET pool_ID = 1 WHERE dispenser_ID = 1;
+UPDATE feeding_logs SET pool_id = 1 WHERE dispenser_id = 1;
 
-DROP TABLE IF EXISTS `feeding_logs`;
+DROP TABLE IF EXISTS `new_feeding_logs`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `feeding_logs` (
-  `pool_ID` int(11) DEFAULT NULL,
-  `dispenser_ID` int(11) NOT NULL default '1',
+CREATE TABLE `new_feeding_logs` (
+  `journal_id` int(11) NOT NULL default '1',
+  `pool_id` int(11) NOT NULL default '1',
+  `dispenser_id` int(11) NOT NULL default '1',
   `start_time` datetime DEFAULT current_timestamp(),
   `use_time` float DEFAULT NULL,
-  `food_ID` varchar(255) DEFAULT NULL,
-  `feeding_amount` float DEFAULT NULL
+  `food_id` int(11) DEFAULT NULL,
+  `food_name` varchar(255) DEFAULT NULL,
+  `food_unit` varchar(255) DEFAULT 'kg',
+  `feeding_amount` float DEFAULT NULL,
+  `left_amount` float DEFAULT NULL,
+  `status` varchar(255) DEFAULT NULL,
+  `description` varchar(255) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 --
 
@@ -131,59 +76,29 @@ CREATE TABLE `feeding_logs` (
 --
 LOCK TABLES `feeding_logs` WRITE;
 --
-INSERT INTO `feeding_logs` VALUES 
-(6, 1,'2024-04-01 09:00:00',45, NULL,10),
-(6, 1,'2024-04-01 12:50:00',60, NULL,10),
-(6, 1,'2024-04-01 16:30:00',60, NULL,10),
-(6, 1,'2024-04-02 06:48:00',60, NULL,10),
-(6, 1,'2024-04-02 10:28:00',60, NULL,10),
-(6, 1,'2024-04-02 13:24:00',60, NULL,10),
-(6, 1,'2024-04-02 16:54:00',60, NULL,10),
-(6, 1,'2024-04-03 06:00:00',60, NULL,10),
-(6, 1,'2024-04-03 11:00:00',60, NULL,10),
-(6, 1,'2024-04-03 17:00:00',60, NULL,10),
-(6, 1,'2024-04-04 09:30:00',40, NULL,10),
-(6, 1,'2024-04-04 11:45:00',60, NULL,10),
-(6, 1,'2024-04-05 11:57:00',60, NULL,10),
-(6, 1,'2024-04-05 07:56:00',40, NULL,10),
-(6, 1,'2024-04-05 17:00:00',60, NULL,10),
-(6, 1,'2024-04-06 07:22:00',30, NULL,10),
-(6, 1,'2024-04-06 09:42:00',45, NULL,10),
-(6, 1,'2024-04-06 12:23:00',60, NULL,10),
-(6, 1,'2024-04-07 12:36:00',60, NULL,10),
-(6, 1,'2024-04-07 17:00:00',60, NULL,10),
-(6, 1,'2024-04-08 07:04:00',60, NULL,10),
-(6, 1,'2024-04-08 10:16:00',60, NULL,10),
-(6, 1,'2024-04-08 12:36:00',60, NULL,10),
-(6, 1,'2024-04-08 17:00:00',60, NULL,10),
-(6, 1,'2024-04-09 09:30:00',120, NULL,10),
-(6, 1,'2024-04-09 13:00:00',60, NULL,10),
-(6, 1,'2024-04-10 07:23:00',90, NULL,10),
-(6, 1,'2024-04-10 09:56:00',30, NULL,10),
-(6, 1,'2024-04-10 10:37:00',60, NULL,10),
+INSERT INTO `new_feeding_logs` VALUES 
+(1, 1, 1, '2024-04-29 06:42:00', 45, 1, '1號料', 'kg', 500, 20000, 'normal', '測試測試'),
+(2, 1, 1, '2024-04-29 08:04:00', 120, 1, '1號料', 'kg', 1600, 18400, 'normal', '測試測試'),
+(3, 1, 1, '2024-04-29 11:54:00', 72, 1, '1號料', 'kg', 950, 17450, 'good', '測試測試'),
+(4, 1, 1, '2024-04-29 14:01:00', 100, 1, '1號料', 'kg', 1435, 16015, 'normal', '測試測試'),
+(5, 1, 1, '2024-04-29 17:13:00', 108, 1, '1號料', 'kg', 960, 15055, 'bad', '測試測試'),
+(6, 1, 1, '2024-04-30 06:20:00', 30, 2, '2號料', 'kg', 450, 20050, 'normal', '測試測試'),
+(7, 1, 1, '2024-04-30 07:14:00', 76, 2, '2號料', 'kg', 960, 19090, 'good', '測試測試'),
+(8, 1, 1, '2024-04-30 08:45:00', 140, 2, '2號料', 'kg', 1865, 17225, 'good', '測試測試'),
+(9, 1, 1, '2024-04-30 12:00:00', 85, 2, '2號料', 'kg', 1125, 16100, 'good', '測試測試'),
+(10, 1, 1, '2024-04-30 14:14:00', 48, 2, '2號料', 'kg', 560, 15540, 'normal', '測試測試');
 
-
-(6, 1,'2023-10-11 10:37:00',60, NULL,11),
-(6, 1,'2023-10-12 12:36:00',60, NULL,11),
-(6, 1,'2023-10-13 13:04:00',60, NULL,11),
-(6, 1,'2023-10-14 11:57:00',60, NULL,11),
-(6, 1,'2023-10-15 10:37:00',60, NULL,11),
-(6, 1,'2023-10-16 12:36:00',60, NULL,11),
-(6, 1,'2023-10-17 11:57:00',60, NULL,11),
-(6, 1,'2023-10-18 11:45:00',60, NULL,11),
-(6, 1,'2023-10-19 13:04:00',60, NULL,11),
-(6, 1,'2023-10-20 10:37:00',60, NULL,11),
-
-(6, 1,'2023-10-21 12:36:00',60, NULL,12),
-(6, 1,'2023-10-22 11:57:00',60, NULL,12),
-(6, 1,'2023-10-23 13:50:00',60, NULL,12),
-(6, 1,'2023-10-24 12:50:00',60, NULL,12),
-(6, 1,'2023-10-25 13:04:00',60, NULL,12),
-(6, 1,'2023-10-26 10:37:00',60, NULL,12),
-(6, 1,'2023-10-27 11:45:00',60, NULL,12),
-(6, 1,'2023-10-28 11:57:00',60, NULL,12),
-(6, 1,'2023-10-29 13:50:00',60, NULL,12),
-(6, 1,'2023-10-30 12:50:00',60, NULL,12);
+INSERT INTO `new_feeding_logs` VALUES 
+(1, 1, 1, '2024-05-01 06:42:00', 45, 1, '1號料', 'kg', 500, 20000, 'normal', '測試測試'),
+(2, 1, 1, '2024-05-01 08:04:00', 120, 1, '1號料', 'kg', 1600, 18400, 'normal', '測試測試'),
+(3, 1, 1, '2024-05-01 11:54:00', 72, 1, '1號料', 'kg', 950, 17450, 'good', '測試測試'),
+(4, 1, 1, '2024-05-01 14:01:00', 100, 1, '1號料', 'kg', 1435, 16015, 'normal', '測試測試'),
+(5, 1, 1, '2024-05-01 17:13:00', 108, 1, '1號料', 'kg', 960, 15055, 'bad', '測試測試'),
+(6, 1, 1, '2024-05-02 06:20:00', 30, 2, '2號料', 'kg', 450, 20050, 'normal', '測試測試'),
+(7, 1, 1, '2024-05-02 07:14:00', 76, 2, '2號料', 'kg', 960, 19090, 'good', '測試測試'),
+(8, 1, 1, '2024-05-02 08:45:00', 140, 2, '2號料', 'kg', 1865, 17225, 'good', '測試測試'),
+(9, 1, 1, '2024-05-02 12:00:00', 85, 2, '2號料', 'kg', 1125, 16100, 'good', '測試測試'),
+(10, 1, 1, '2024-05-02 14:14:00', 48, 2, '2號料', 'kg', 560, 15540, 'normal', '測試測試');
 --
 UNLOCK TABLES;
 --
@@ -191,105 +106,6 @@ UPDATE feeding_logs SET food_ID='2號料' WHERE food_ID='test';
 --
 UPDATE feeding_logs SET food_ID='鱸魚3號';
 UPDATE feeding_logs SET feeding_amount='170.5' WHERE start_time = '2023-10-25 13:04:00';
-
---
--- Table structure for table `decision`
---
-DROP TABLE IF EXISTS `decision`;
--- 
-CREATE TABLE `decision` (
-  `id` varchar(1) NOT NULL PRIMARY KEY,
-  `mode` varchar(1) DEFAULT NULL,
-  `angle` varchar(3) DEFAULT NULL,
-  `period` varchar(3) DEFAULT NULL,
-  `amount` varchar(3) DEFAULT NULL,
-  `fetch_interval` varchar(3) DEFAULT NULL
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
---
-
---
--- Table structure for table `frames`
---
-DROP TABLE IF EXISTS `frames`;
--- 
-CREATE TABLE `frames` (
-    `id` INT(11) NOT NULL PRIMARY KEY,
-    `name` VARCHAR(255) DEFAULT NULL,
-    `update_time` datetime DEFAULT current_timestamp() ON UPDATE current_timestamp(),
-    `data` LONGBLOB DEFAULT NULL
-);
-
-+-------+--------------+------+-----+---------+-------+
-| Field | Type         | Null | Key | Default | Extra |
-+-------+--------------+------+-----+---------+-------+
-| id    | int(11)      | NO   | PRI | NULL    |       |
-| name  | varchar(255) | YES  |     | NULL    |       |
-| data  | longblob     | YES  |     | NULL    |       |
-+-------+--------------+------+-----+---------+-------+
-
-CREATE TABLE feeding_records (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    aquarium_id INT,
-    journal_id INT,
-    action VARCHAR(255),
-    date BIGINT,
-    food_id INT,
-    food_weight INT,
-    food_unit VARCHAR(255),
-    food_name VARCHAR(255),
-    feeding_time BIGINT,
-    period INT,
-    status VARCHAR(255),
-    left_amount VARCHAR(255),
-    description TEXT,
-    checked_list VARCHAR(255),
-    name VARCHAR(255),
-    version INT
-);
-
-INSERT INTO feeding_records (
-    aquarium_id,
-    journal_id,
-    action,
-    date,
-    food_id,
-    food_weight,
-    food_unit,
-    food_name,
-    feeding_time,
-    period,
-    status,
-    left_amount,
-    description,
-    checked_list,
-    name,
-    version
-) VALUES (
-    '84',
-    '0',
-    'create',
-    '1693877576891',
-    '19',
-    '5',
-    'catty',
-    'A牌',
-    '1693877520000',
-    '35',
-    'normal',
-    '',
-    '吃很久',
-    '19',
-    'configure_journal_feeding',
-    '1'
-);
-
-ERROR 1366 (HY000): Incorrect string value, 資料庫字符集和校對(collation)不支援存儲這個特定的 Unicode 字符
-solution
-更改資料庫字符集和校對: 將字符集設定為 'utf8mb4'，並選擇一個適當的校對，如 'utf8mb4_unicode_ci'
-ALTER DATABASE your_database_name CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-更改表格的字符集和校對
-ALTER TABLE your_table_name CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-
 
 --
 -- Table structure for table `ripple_frames`
