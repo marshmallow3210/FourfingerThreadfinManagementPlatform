@@ -6,6 +6,7 @@ import json
 import uuid
 from flask import Flask, jsonify, make_response, render_template, request, redirect, url_for, session
 from matplotlib import pyplot as plt
+from matplotlib.font_manager import FontProperties
 from flask_login import LoginManager, UserMixin, login_user, logout_user
 from flask_cors import CORS
 import pymysql
@@ -594,7 +595,7 @@ def feeding_logs():
         cursor = connection.cursor()
         sql = "use " + databaseName + ";"
         cursor.execute(sql)
-        
+
         if request.method == "POST": 
             all_records = request.form.get("all_records")
             if all_records == 'true' or all_records == '1':
@@ -624,15 +625,17 @@ def feeding_logs():
                 original_start_times = [row[2] for row in original_feeding_data]  
                 original_use_times = [row[3] for row in original_feeding_data]  
 
+                font_path = '/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc'
+                font_prop = FontProperties(fname=font_path)
                 plt.figure(figsize=(14, 8))
 
                 plt.xlim(time_range[0], time_range[-1])
-                plt.xticks(time_range[1:-1], rotation=60)
+                plt.xticks(time_range[1:-1], rotation=60, fontproperties=font_prop) 
                 plt.gca().xaxis.set_ticks_position('top')
                 plt.gca().xaxis.set_label_position('top')
 
                 plt.ylim(0, 24*60)
-                plt.yticks(range(24*60, 0, -60), [f"{h:02d}:00" for h in range(0, 24)])
+                plt.yticks(range(24*60, 0, -60), [f"{h:02d}:00" for h in range(0, 24)], fontproperties=font_prop)  
                 plt.grid(axis='y', linestyle='--', color='gray')
 
                 # 將每個 start_time 根據 y 軸(00:00 到 23:59，間隔1小時)開始往下，並根據 use_time(分鐘) 來繪製長條
@@ -648,14 +651,14 @@ def feeding_logs():
                     midday = datetime.datetime(start_time.year, start_time.month, start_time.day, 2, 0)
                     plt.bar(midday, use_time, width=0.17, bottom=(1440-start_y-use_time), color='#ee8822')
 
-                legend_labels = {'#009999': 'smart', '#ee8822': 'original'}
+                legend_labels = {'#009999': '新料桶', '#ee8822': '舊料桶'}
                 legend_handles = []
                 for color, label in legend_labels.items():
                     legend_handles.append(plt.Rectangle((0,0),1,1, color=color, label=label))
-                plt.legend(handles=legend_handles)
+                plt.legend(handles=legend_handles, prop=font_prop) 
 
-                plt.xlabel('date', labelpad=10)
-                plt.ylabel('feeding time', labelpad=10)
+                plt.xlabel('date', labelpad=10, fontproperties=font_prop)  
+                plt.ylabel('feeding time', labelpad=10, fontproperties=font_prop) 
                 plt.tight_layout()
 
                 img_data = io.BytesIO()
