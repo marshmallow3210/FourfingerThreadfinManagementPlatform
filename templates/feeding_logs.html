@@ -180,7 +180,7 @@
             <br>
             <br>
             <label>
-              將顯示從查詢日期開始往前一週的紀錄
+              將顯示從查詢日期開始往前一週(7天)的紀錄
             </label>
             <br>
             <br>
@@ -201,37 +201,77 @@
           {% endif %}
           <br>
 
-          {% if feeding_data is not none %}
+          {% if new_feeding_data is not none %}
           <h2>投餌紀錄(新料桶)</h2>
           <div style="padding:20px;">
             <span height="5"></span>
             <table style="border:3px #cccccc solid;" cellpadding="10" border='1'>
               <thead>
-                <!--
                 <tr>
-                  <th colspan="9">投餌紀錄</th>
-                </tr>
-                -->
-                <tr>
+                  <td>紀錄編號</td>
                   <td>魚池編號</td>
                   <td>投餌機編號</td>
+                  <td>飼料編號(不需顯示)</td>
+                  <td>飼料品牌</td>
                   <td>投餌時間</td>
                   <td>耗時(分鐘)</td>
-                  <td>投餌料號</td>
-                  <td>投餌量(公斤)</td>
+                  <td>投餌量</td>
+                  <td>剩餘飼料量</td>
+                  <td>投餌單位</td>
+                  <td>餵食狀況</td>
+                  <td>備註</td>
                 </tr>
               </thead>
-                {% for value in feeding_data %}
+                {% for value in new_feeding_data %}
                 <tr>
-                  <td>{{value.0}}</td>
-                  <td>{{value.1}}</td>
-                  <td>{{value.2}}</td>
-                  <td>{{value.3}}</td>
-                  <td>{{value.4}}</td>
-                  <td>{{value.5}}</td>
+                  <td>{{value.0}}</td> <!--journal_id-->
+                  <td>{{value.1}}</td> <!--pool_id-->
+                  <td>{{value.2}}</td> <!--dispenser_id-->
+                  <td>{{value.5}}</td> <!--food_id-->
+                  <td>{{value.6}}</td> <!--food_name-->
+                  <td>{{value.3}}</td> <!--start_time-->
+                  <td>{{value.4}}</td> <!--use_time-->
+                  <td>{{value.8}}</td> <!--feeding_amount-->
+                  <td>{{value.9}}</td> <!--left_amount-->
+                  <td>{{value.7}}</td> <!--food_unit-->
+                  <td>{{value.10}}</td> <!--status-->
+                  <td>{{value.11}}</td> <!--description-->
                 </tr>
                 {% endfor %}
             </table> 
+            <br>
+
+            <h4>更新投餌紀錄(新料桶)</h4>
+            <form action="{{ url_for("feeding_logs")}}" method="post" onsubmit="return validateForm()">
+              <label id="journal_id_label" style="display: inline-block;">
+                欲更新之紀錄編號:  起始編號 <input style="display: inline-block; width: 80px;" class="input-group-text" type="number" id="journal_id1" name="journal_id1" required> 到 結束編號 <input style="display: inline-block; width: 80px;" class="input-group-text" type="number" id="journal_id2" name="journal_id2" required>
+              </label>
+              <br>
+              <br>
+              <label id="food_name_label">飼料品牌:</label>
+              <input style="display: inline-block;" class="input-group-text" type="text" id="food_name" name="food_name" required>
+              <br>
+              <br>
+              <div style="display: inline-block; white-space: nowrap;">
+                <label style="display: inline-block;" id="status_label">餵食狀況:</label>
+                <select style="display: inline-block;" class="form-select mb-3" id="opts" name="opts" required>
+                  <option disabled selected value="">選擇餵食狀況</option>
+                  <option class="dropdown-item" value="opt1">良好</option>
+                  <option class="dropdown-item" value="opt2">普通</option>
+                  <option class="dropdown-item" value="opt3">差</option>
+                </select>
+                <input type="hidden" id="status" name="status">
+              </div>
+              <br>
+              <br>
+              <label id="description_label">備註:</label>
+              <input style="display: inline-block;" class="input-group-text" type="text" id="description" name="description">
+              <br>
+              <input type="text" class="input-group-text" id="update_logs" name="update_logs" style="display:none"/>
+              <br>
+              <button id="update_logs_btn" class="btn btn-outline-secondary" type="submit">更新紀錄</button>
+              <br>
+              <br>
           </div> 
           {% endif %}
 
@@ -241,18 +281,13 @@
             <span height="5"></span>
             <table style="border:3px #cccccc solid;" cellpadding="10" border='1'>
               <thead>
-                <!--
-                <tr>
-                  <th colspan="9">投餌紀錄</th>
-                </tr>
-                -->
                 <tr>
                   <td>魚池編號</td>
                   <td>投餌機編號</td>
                   <td>投餌時間</td>
                   <td>耗時(分鐘)</td>
                   <td>投餌料號</td>
-                  <td>投餌量(公斤)</td>
+                  <td>投餌量(公斤)(不需顯示)</td>
                 </tr>
               </thead>
                 {% for value in original_feeding_data %}
@@ -274,437 +309,41 @@
 
 </body>
 
-
-<!-- fields filter -->
-<script type="text/javascript">
-  fields_data=[]
-  $(document).ready(function(){
-    $('#field_ID').change(
-    function(){
-      var selected = document.getElementById("field_ID").value;
-      var newFieldsData = document.getElementById("fields_tbody");
-      console.log("field_ID="+selected);
-      var data = {
-        "field_ID": selected,
-        "fields_data": fields_data
-      }
-      console.log("data="+JSON.stringify(data));
-      $.ajax({
-        url : 'http://127.0.0.1/show/',
-        type : 'POST', 
-        data : JSON.stringify(data),
-        contentType : 'application/json; charset=utf-8', // 要送到server的資料型態
-        dataType : 'json', // 預期從server接收的資料型態
-        success : function(data) {
-          console.log("傳送成功" + JSON.stringify(data));
-          var colCount = $("#fields_tbody tr").length;
-          for (var i=0; i<colCount;i++){
-            newFieldsData.deleteRow(0);
-          }
-          newFieldsData.insertRow(0);
-          var dataArray = Object.values(data);
-          var fields_data = dataArray[1];
-          var r = fields_data.length;
-          var c = fields_data[0].length;
-          for (var i=0; i<r; i++){
-            var newRow = newFieldsData.insertRow(i+1);
-            for (var j=0; j<c; j++){
-              var newCell = newFieldsData.rows[i+1].insertCell(j);
-              newCell.innerHTML = fields_data[i][j];
-            }
-          }
-        },
-        error: function (xhr, type){
-          console.log("傳送失敗" + xhr + type);
-        }
-      });
-    })
-  })
-</script>
-
+<!-- feeding record update  -->
 <script>
-  var dataset = [
-      { 
-        "場域編號": "1",
-        "規格<br>(尾/公斤)": 100.0,
-        "紀錄魚群總重<br>(公斤)": 300.0, 
-        "預估魚群總重<br>(公斤)": 300.0, 
-        "換肉率": 0.0, 
-        "死亡數量": 0, 
-        "更新時間": "2023-03-01 12:30:00" 
-      },
-      { 
-        "場域編號": "1",
-        "規格<br>(尾/公斤)": 50.0,
-        "紀錄魚群總重<br>(公斤)": 600.0, 
-        "預估魚群總重<br>(公斤)": 600.0, 
-        "換肉率": 2.0,
-        "死亡數量": 100,
-        "更新時間": "2023-04-01 12:30:00" 
-      },
-      { 
-        "場域編號": "2",
-        "規格<br>(尾/公斤)": 120.0,
-        "紀錄魚群總重<br>(公斤)": 300.0, 
-        "預估魚群總重<br>(公斤)": 300.0, 
-        "換肉率": 0.0, 
-        "死亡數量": 0, 
-        "更新時間": "2023-03-01 12:30:00" 
-      },
-      { 
-        "場域編號": "2",
-        "規格<br>(尾/公斤)": 100.0,
-        "紀錄魚群總重<br>(公斤)": 400.0, 
-        "預估魚群總重<br>(公斤)": 400.0, 
-        "換肉率": 1.5, 
-        "死亡數量": 100, 
-        "更新時間": "2023-03-10 12:30:00" 
-      },
-      { 
-        "場域編號": "2",
-        "規格<br>(尾/公斤)": 100.0,
-        "紀錄魚群總重<br>(公斤)": 600.0, 
-        "預估魚群總重<br>(公斤)": 600.0, 
-        "換肉率": 1.1, 
-        "死亡數量": 100, 
-        "更新時間": "2023-04-01 12:30:00" 
-      }
-  ];
-
-  var feeding_logs_dataset = [
-      { "場域編號": "1",
-        "投餌機編號": "1",
-        "投餌時間": "2023-04-01 13:00:00", 
-        "耗時(分鐘)": 30.0, 
-        "投餌料號": "test", 
-        "投餌量(公克)": 100000 
-      },
-      { "場域編號": "1",
-        "投餌機編號": "2",
-        "投餌時間": "2023-04-02 13:00:00", 
-        "耗時(分鐘)": 30.0, 
-        "投餌料號": "test", 
-        "投餌量(公克)": 100000 
-      },
-      { "場域編號": "1",
-        "投餌機編號": "1",
-        "投餌時間": "2023-04-03 13:00:00", 
-        "耗時(分鐘)": 30.0, 
-        "投餌料號": "test", 
-        "投餌量(公克)": 100000 
-      },
-      { "場域編號": "1",
-        "投餌機編號": "1",
-        "投餌時間": "2023-04-04 13:00:00", 
-        "耗時(分鐘)": 30.0, 
-        "投餌料號": "test", 
-        "投餌量(公克)": 100000 
-      },
-      { "場域編號": "1",
-        "投餌機編號": "1",
-        "投餌時間": "2023-04-05 13:00:00", 
-        "耗時(分鐘)": 30.0, 
-        "投餌料號": "test", 
-        "投餌量(公克)": 100000 
-      },
-      { "場域編號": "1",
-        "投餌機編號": "2",
-        "投餌時間": "2023-04-06 13:00:00", 
-        "耗時(分鐘)": 30.0, 
-        "投餌料號": "test", 
-        "投餌量(公克)": 100000 
-      }
-  ];
-
-  /*
-  $("#jsGrid").jsGrid({
-      width: "80%",
-      height: "400px",
-      
-      inserting: true,
-      editing: true,
-      sorting: true,
-      paging: true,
-      autoload: true,
-      data: dataset,
-      /*
-      controller: {
-          loadData: function() {
-              var d = $.Deferred();
-              $.ajax({
-                url : '/api/database/',
-                type : 'GET', 
-                dataType : 'json', // 預期從server接收的資料型態
-                success : function(response) {
-                  console.log("傳送成功" + JSON.stringify(response));
-                  d.resolve(response);
-                },
-                error: function (xhr, type){
-                  console.log("傳送失敗" + xhr + type);
-                }
-              });
-              return d.promise();
-          },
-      },
-
-      fields: [
-          { name: "場域編號", 
-            type: "text", 
-            width: 40, 
-            validate: "required" 
-          },
-          { name: "規格<br>(尾/公斤)",
-            type: "number",
-            width: 40 
-          },
-          { name: "紀錄魚群總重<br>(公斤)",
-            type: "number",
-            width: 40 
-          },
-          { name: "預估魚群總重<br>(公斤)", 
-            type: "number", 
-            width: 40 
-          },
-          { name: "換肉率", 
-            type: "number", 
-            width: 30 
-          },
-          { name: "死亡數量", 
-            type: "number", 
-            width: 30 
-          },
-          { name: "更新時間", 
-            type: "text", 
-            width: 60,
-            sorting: true
-          },
-          { type: "control", 
-            width: 20 
-          }
-      ]
-
+  document.getElementById('opts').addEventListener('change', function() {
+    var selectedOption = this.value;
+    if (selectedOption === 'opt1') {
+      document.getElementById('status').value = 'good';
+    }
+    else if (selectedOption === 'opt2') {
+      document.getElementById('status').value = 'normal';
+    }
+    else if (selectedOption === 'opt3') {
+      document.getElementById('status').value = 'bad';
+    }
   });
 
-  */
-
-  // field logs
-  $("#field_logs").jsGrid({
-      width: "100%",
-      height: "400px",
-
-      inserting: true,
-      editing: true,
-      sorting: true,
-      paging: true,
-      autoload: true,
-      controller: {
-          loadData: function() {
-              var d = $.Deferred();
-              $.ajax({
-                  url: "/api/database",
-                  dataType: "json",
-                  type: "GET"
-              }).done(function(response) {
-                  d.resolve(response);
-              });
-
-              return d.promise();
-          },
-          updateItem: function(item) {
-              var d = $.Deferred();
-              console.log(item);
-              $.ajax({
-                  url: "/api/database",
-                  data: JSON.stringify(item),
-                  type: "PUT",
-                  dataType: "json",
-                  contentType: "application/json",
-              }).done(function(response) {
-                  d.resolve(response);
-              });
-              return d.promise();
-          },
-          deleteItem: function(item) {
-              var d = $.Deferred();
-              $.ajax({
-                  url: "/api/database",
-                  data: item,
-                  type: "DELETE",
-              }).done(function(response) {
-                  d.resolve(response);
-              });
-              return d.promise();
-          },
-          insertItem: function(item) {
-              var d = $.Deferred();
-              $.ajax({
-                  url: "/api/database",
-                  data: JSON.stringify(item),
-                  dataType: "json",
-                  contentType: "application/json",
-                  type: "POST",
-              }).done(function(response) {
-                  d.resolve(response);
-              });
-              return d.promise();
-          },
-
-
-        },
-
-        fields: [
-            { 
-              name: "場域編號", 
-              type: "text", 
-              width: 40, 
-              validate: "required" 
-            },
-            { 
-              name: "規格<br>(尾/公斤)",
-              type: "number",
-              width: 40 
-            },
-            { name: "紀錄魚群總重<br>(公斤)",
-              type: "number",
-              width: 40 
-            },
-            { 
-              name: "預估魚群總重<br>(公斤)", 
-              type: "number", 
-              width: 40 
-            },
-            { 
-              name: "換肉率", 
-              type: "number", 
-              width: 30, 
-              itemTemplate: function(value) {
-                return value.toFixed(2);
-            },
-            },
-            { 
-              name: "死亡數量", 
-              type: "number", 
-              width: 30 
-            },
-            { 
-              name: "更新時間", 
-              type: "text", 
-              width: 60,
-              sorting: true
-            },
-            { 
-              type: "control", 
-              width: 20 
-            }
-        ]
+  document.getElementById('update_logs_btn').addEventListener('click', function() {
+    document.getElementById('update_logs').value = true;
+      alert('update_logs!');
+      window.location.reload();
   });
 
-  
-  // feeding logs
-  $("#feeding_logs").jsGrid({
-    width: "100%",
-    height: "400px",
-
-    inserting: true,
-    editing: true,
-    sorting: false,
-    paging: false,
-    autoload: true,
-    controller: {
-        loadData: function() {
-            var d = $.Deferred();
-            $.ajax({
-                url: "/api/feedingdatabase",
-                dataType: "json",
-                type: "GET"
-            }).done(function(response) {
-                d.resolve(response);
-            });
-
-            return d.promise();
-        },
-        updateItem: function(item) {
-            var d = $.Deferred();
-            console.log(item);
-            $.ajax({
-                url: "/api/feedingdatabase",
-                data: JSON.stringify(item),
-                type: "PUT",
-                dataType: "json",
-                contentType: "application/json",
-            }).done(function(response) {
-                d.resolve(response);
-            });
-            return d.promise();
-        },
-        deleteItem: function(item) {
-            var d = $.Deferred();
-            $.ajax({
-                url: "/api/feedingdatabase",
-                data: item,
-                type: "DELETE",
-            }).done(function(response) {
-                d.resolve(response);
-            });
-            return d.promise();
-        },
-        insertItem: function(item) {
-            var d = $.Deferred();
-            $.ajax({
-                url: "/api/feedingdatabase",
-                data: JSON.stringify(item),
-                dataType: "json",
-                contentType: "application/json",
-                type: "POST",
-            }).done(function(response) {
-                d.resolve(response);
-            });
-            return d.promise();
-        },
-
-
-      },
-      fields: [
-          { 
-            name: "場域編號", 
-            type: "text", 
-            width: 40, 
-            validate: "required" 
-          },
-          { 
-            name: "投餌機編號",
-            type: "text", 
-            width: 40 
-          },
-          { 
-            name: "投餌時間", 
-            type: "text", 
-            width: 60,
-            sorting: true
-          },
-          { name: "耗時(分鐘)",
-            type: "number",
-            width: 30 
-          },
-          { 
-            name: "投餌料號", 
-            type: "text", 
-            width: 40 
-          },
-          { 
-            name: "投餌量(公克)", 
-            type: "number", 
-            width: 30 
-          },
-          { 
-            type: "control", 
-            width: 20 
-          }
-      ]
-
-
-  });
-
+  function validateForm() {
+    var journal_id1 = document.getElementById("journal_id1").value;
+    if (journal_id1 <= 0) {
+        alert("起始編號請輸入大於0的數字！");
+        return false;
+    }
+    return true;
+    var journal_id2 = document.getElementById("journal_id2").value;
+    if (journal_id2 <= 0) {
+        alert("結束編號請輸入大於0的數字！");
+        return false;
+    }
+    return true;
+  }
 </script>
 
 <!-- feeding record img  -->
