@@ -206,7 +206,7 @@ def generate_signature(api_key, api_endpoint, request_body, nonce):
     print("Signature:", signature)
     return base64.b64encode(signature).decode('utf-8')
 
-def send_data():
+def send_data(journal_id1, journal_id2):
     print("\nstart to sending data")
     current_time = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
     date = convert_to_unix_timestamp(current_time)
@@ -215,100 +215,98 @@ def send_data():
     global connection
     cursor = connection.cursor()
     
-    sql = "select journal_id, pool_id, start_time, use_time, food_id, food_name, food_unit, feeding_amount, left_amount, status, description from " + databaseName + ".new_feeding_logs order by start_time desc limit 1;"
-    cursor.execute(sql)
-    feeding_logs = list(cursor.fetchall())
-    print('feeding_logs:', feeding_logs)
+    for journal_id in range(journal_id1, journal_id2+1): 
+        print('journal_id:', journal_id)
+        sql = f"select journal_id, pool_id, start_time, use_time, food_id, food_name, food_unit, feeding_amount, left_amount, status, description from {databaseName}.new_feeding_logs where journal_id={journal_id} limit 1;"
+        cursor.execute(sql)
+        feeding_logs = list(cursor.fetchall())
+        print('feeding_logs:', feeding_logs)
 
-    aquarium_id = str(feeding_logs[0][1])      # "84"
-    action = "update"                          # "create" or "update"
-    if action == "create":
-        journal_id = 0                         # 0 or other number
-    else:
-        journal_id = int(feeding_logs[0][0])
+        aquarium_id = str(feeding_logs[0][1])      # "84"
+        action = "update"                          # "create" or "update"
 
-    food_id = str(feeding_logs[0][4])          # "19"        NULL
-    feeding_amount = feeding_logs[0][7]        # 5
-    food_unit = str(feeding_logs[0][6])        # "catty"
-    food_name = str(feeding_logs[0][5])        # "A牌"       NULL
+        food_id = str(feeding_logs[0][4])          # "19"        NULL
+        feeding_amount = feeding_logs[0][7]        # 5
+        food_unit = str(feeding_logs[0][6])        # "catty"
+        food_name = str(feeding_logs[0][5])        # "A牌"       NULL
 
-    start_time = utc8(feeding_logs, 2) 
-    start_time = start_time[0]
-    start_time = start_time[2]
-    start_time = convert_to_unix_timestamp(start_time) # 1693877520000
-    
-    use_time = int(feeding_logs[0][3])         # 35
-    status = str(feeding_logs[0][9])           # "normal"    NULL
-    left_amount = feeding_logs[0][8]           # ""         
-    description = str(feeding_logs[0][10])     # "吃很久"     NULL
+        start_time = utc8(feeding_logs, 2) 
+        start_time = start_time[0]
+        start_time = start_time[2]
+        start_time = convert_to_unix_timestamp(start_time) # 1693877520000
+        
+        use_time = int(feeding_logs[0][3])         # 35
+        status = str(feeding_logs[0][9])           # "normal"    NULL
+        left_amount = feeding_logs[0][8]           # ""         
+        description = str(feeding_logs[0][10])     # "吃很久"     NULL
 
-    sql = "select distinct food_id from " + databaseName + ".new_feeding_logs WHERE food_id IS NOT NULL;"
-    cursor.execute(sql)
-    checkedList = list(cursor.fetchall())
-    checkedList = [str(food_id[0]) for food_id in checkedList] # ["19"]
-    print('checkedList:', checkedList)                       
-    
-    # params
-    url = 'https://api.ekoral.io' 
-    api_key = 'WSGS4kmccIGadre9Cr3PgksaUeR4umR1'  # from ekoral
-    api_endpoint = '/api/configure_journal_feeding' # from ekoral
-    member_id = '30095'  # from ekoral
-    data = {
-        "parm": {
-            "journal": {
-                "aquarium_id": aquarium_id,
-                "journal_id": journal_id,
-                "action": action,
-                "date": date,
-                "feeding": [
-                    {
-                        "food": [
-                            {
-                                "id": food_id, 
-                                "weight": feeding_amount,
-                                "unit": food_unit,
-                                "name": food_name
-                            }
-                        ],
-                        "feedingTime": start_time,
-                        "period": use_time,
-                        "status": status,
-                        "left": left_amount,
-                        "description": description,
-                        "checkedList": checkedList
-                    }
-                ]
+        sql = "select distinct food_id from " + databaseName + ".new_feeding_logs WHERE food_id IS NOT NULL;"
+        cursor.execute(sql)
+        checkedList = list(cursor.fetchall())
+        checkedList = [str(food_id[0]) for food_id in checkedList] # ["19"]
+        print('checkedList:', checkedList)                       
+        
+        # params
+        url = 'https://api.ekoral.io' 
+        api_key = 'WSGS4kmccIGadre9Cr3PgksaUeR4umR1'  # from ekoral
+        api_endpoint = '/api/configure_journal_feeding' # from ekoral
+        member_id = '30095'  # from ekoral
+        data = {
+            "parm": {
+                "journal": {
+                    "aquarium_id": aquarium_id,
+                    "journal_id": journal_id,
+                    "action": action,
+                    "date": date,
+                    "feeding": [
+                        {
+                            "food": [
+                                {
+                                    "id": food_id, 
+                                    "weight": feeding_amount,
+                                    "unit": food_unit,
+                                    "name": food_name
+                                }
+                            ],
+                            "feedingTime": start_time,
+                            "period": use_time,
+                            "status": status,
+                            "left": left_amount,
+                            "description": description,
+                            "checkedList": checkedList
+                        }
+                    ]
+                }
             }
         }
-    }
 
-    print(data)
-    
-    request_body = json.dumps(data, separators=(',', ':'), ensure_ascii=False)
-    nonce = str(uuid.uuid4()) # 動態生成 nonce  
-    signature = generate_signature(api_key, api_endpoint, request_body, nonce)
-    
-    headers = {
-        'x-ekoral-memberid': member_id,
-        'x-ekoral-authorization': signature,
-        'x-ekoral-authorization-nonce': nonce,
-        'Content-Type': 'application/json'
-    }
+        print(data)
+        
+        request_body = json.dumps(data, separators=(',', ':'), ensure_ascii=False)
+        nonce = str(uuid.uuid4()) # 動態生成 nonce  
+        signature = generate_signature(api_key, api_endpoint, request_body, nonce)
+        
+        headers = {
+            'x-ekoral-memberid': member_id,
+            'x-ekoral-authorization': signature,
+            'x-ekoral-authorization-nonce': nonce,
+            'Content-Type': 'application/json'
+        }
 
-    try:
-        response = requests.post(url + api_endpoint, headers=headers, json=data)
-        response.raise_for_status()  # Raises an exception for non-2xx status codes
+        try:
+            response = requests.post(url + api_endpoint, headers=headers, json=data)
+            response.raise_for_status()  # Raises an exception for non-2xx status codes
 
-        if response.status_code == 200:
-            print("Request successful!")
-            print("Response:")
-            print(response.json())
-        else:
-            print("Unexpected status code:", response.status_code)
-            print("Response:")
-            print(response.text)
-    except requests.exceptions.RequestException as e:
-        print("Request failed:", e)
+            if response.status_code == 200:
+                print("Request successful!")
+                print("Response:")
+                print(response.json())
+            else:
+                print("Unexpected status code:", response.status_code)
+                print("Response:")
+                print(response.text)
+        except requests.exceptions.RequestException as e:
+            print("Request failed:", e)
 
     return 
 
@@ -706,6 +704,7 @@ def update():
 @app.route('/feeding_logs', methods=["GET", "POST"])
 def feeding_logs():
     if 'username' in session:
+        global feeding_logs_date_temp
         new_feeding_data = None
         original_feeding_data = None
         base64_img = ''
@@ -748,8 +747,69 @@ def feeding_logs():
                 sql = f"UPDATE new_feeding_logs SET food_id = '{new_food_id}', food_name = '{food_name}', status = '{status}', description = '{description}' WHERE journal_id BETWEEN {journal_id1} AND {journal_id2};"
                 cursor.execute(sql)
                 send_data(journal_id1, journal_id2)
-                print('finished!')
-                update_logs = ''
+                print('send_data finished!')
+
+                # show feeding_logs update result 
+                feeding_logs_date = feeding_logs_date_temp
+                selected_date = datetime.datetime.strptime(feeding_logs_date, "%Y-%m-%d")
+                next_day = selected_date + timedelta(days=1)
+                one_week_ago = selected_date - timedelta(days=7)
+                time_range = [one_week_ago + timedelta(days=i) for i in range(9)] 
+
+                sql = "select * from new_feeding_logs where start_time between %s and %s"
+                cursor.execute(sql, (one_week_ago + timedelta(days=1), next_day))
+                new_feeding_data = list(cursor.fetchall())
+                start_times = [row[3] for row in new_feeding_data]  
+                use_times = [row[4] for row in new_feeding_data]  
+
+                sql = "select * from original_feeding_logs where start_time between %s and %s"
+                cursor.execute(sql, (one_week_ago + timedelta(days=1), next_day))
+                original_feeding_data = list(cursor.fetchall())
+                original_start_times = [row[2] for row in original_feeding_data]  
+                original_use_times = [row[3] for row in original_feeding_data]  
+
+                font_path = '/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc'
+                font_prop = FontProperties(fname=font_path)
+                plt.figure(figsize=(14, 8))
+
+                plt.xlim(time_range[0], time_range[-1])
+                plt.xticks(time_range[1:-1], rotation=60, fontproperties=font_prop) 
+                plt.gca().xaxis.set_ticks_position('top')
+                plt.gca().xaxis.set_label_position('top')
+
+                plt.ylim(0, 24*60)
+                plt.yticks(range(24*60, 0, -60), [f"{h:02d}:00" for h in range(0, 24)], fontproperties=font_prop)  
+                plt.grid(axis='y', linestyle='--', color='gray')
+
+                # 將每個 start_time 根據 y 軸(00:00 到 23:59，間隔1小時)開始往下，並根據 use_time(分鐘) 來繪製長條
+                for start_time, use_time in zip(start_times, use_times):
+                    start_y = (start_time.hour * 60 + start_time.minute)  
+                    print(f'part of {start_time} is same as {24-(1440-start_y-use_time)/60}')
+                    midday = datetime.datetime(start_time.year, start_time.month, start_time.day, 22, 0) - timedelta(days=1)
+                    plt.bar(midday, use_time, width=0.17, bottom=(1440-start_y-use_time), color='#009999')
+
+                for start_time, use_time in zip(original_start_times, original_use_times):
+                    start_y = (start_time.hour * 60 + start_time.minute)  
+                    print(f'part of {start_time} is same as {24-(1440-start_y-use_time)/60}')
+                    midday = datetime.datetime(start_time.year, start_time.month, start_time.day, 2, 0)
+                    plt.bar(midday, use_time, width=0.17, bottom=(1440-start_y-use_time), color='#ee8822')
+
+                legend_labels = {'#009999': '新料桶', '#ee8822': '舊料桶'}
+                legend_handles = []
+                for color, label in legend_labels.items():
+                    legend_handles.append(plt.Rectangle((0,0),1,1, color=color, label=label))
+                plt.legend(handles=legend_handles, prop=font_prop) 
+
+                plt.xlabel('date', labelpad=10, fontproperties=font_prop)  
+                plt.ylabel('feeding time', labelpad=10, fontproperties=font_prop) 
+                plt.tight_layout()
+
+                img_data = io.BytesIO()
+                plt.savefig(img_data, format='png')
+                img_data.seek(0)
+                base64_img = base64.b64encode(img_data.getvalue()).decode()
+                update_logs = '' 
+                feeding_logs_date_temp = '' 
             else: # 不填寫紀錄 => 查看紀錄
                 all_records = request.form.get("all_records")
                 if all_records == 'true' or all_records == '1': # 查看所有紀錄
@@ -819,6 +879,8 @@ def feeding_logs():
                     plt.savefig(img_data, format='png')
                     img_data.seek(0)
                     base64_img = base64.b64encode(img_data.getvalue()).decode()
+                    feeding_logs_date_temp = feeding_logs_date
+                    feeding_logs_date = ''
 
         return render_template('feeding_logs.html', new_feeding_data=new_feeding_data, original_feeding_data=original_feeding_data, base64_img=base64_img, species=species, species_logo_url=species_logo_url) 
     else:
