@@ -716,15 +716,10 @@ def feeding_logs():
 
         if request.method == "POST": 
             update_logs = request.form.get("update_logs")
-            print(update_logs)
             if update_logs == 'true' or update_logs == '1': # 填寫紀錄
                 journal_id1 = int(request.form.get("journal_id1"))
-                print(journal_id1)
                 journal_id2 = int(request.form.get("journal_id2"))
-                print(journal_id2)
-
                 food_name = request.form.get("food_name")
-                print(food_name)
                 sql = "SELECT food_name, food_id FROM new_feeding_logs"
                 cursor.execute(sql)
                 food_names_in_db = cursor.fetchall()
@@ -738,18 +733,18 @@ def feeding_logs():
                 if not food_name_exists:
                     max_food_id = max((food_id for _, food_id in food_names_in_db if food_id is not None), default=0)
                     new_food_id = max_food_id + 1
-                print("New food ID:", new_food_id)
+                print("new_food_id:", new_food_id)
 
                 status = request.form.get("status")
-                print(status)
                 description = request.form.get("description")
-                print(description)
                 sql = f"UPDATE new_feeding_logs SET food_id = '{new_food_id}', food_name = '{food_name}', status = '{status}', description = '{description}' WHERE journal_id BETWEEN {journal_id1} AND {journal_id2};"
                 cursor.execute(sql)
+
+                # update api data
                 send_data(journal_id1, journal_id2)
                 print('send_data finished!')
 
-                # show feeding_logs update result 
+                # show feeding_logs updated result 
                 feeding_logs_date = feeding_logs_date_temp
                 selected_date = datetime.datetime.strptime(feeding_logs_date, "%Y-%m-%d")
                 next_day = selected_date + timedelta(days=1)

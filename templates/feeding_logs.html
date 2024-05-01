@@ -173,22 +173,24 @@
           
           <div style="padding:20px;">
             <form action="{{ url_for("feeding_logs")}}" method="post">
-            <label id="date_label">選擇欲查詢日期: 
-              <input type="date" class="input-group-text" id="feeding_logs_date" name="feeding_logs_date"/>
-              <span class="validity"></span>
-            </label>
+              <label id="date_label">選擇欲查詢日期: 
+                <input type="date" class="input-group-text" id="feeding_logs_date" name="feeding_logs_date"/>
+                <span class="validity"></span>
+              </label>
+              <br>
+              <br>
+              <label>
+                將顯示從查詢日期開始往前一週(7天)的紀錄
+              </label>
+              <br>
+              <br>
+              <button id="send_date_btn" class="btn btn-outline-secondary" type="submit">送出</button>
+            </form>
             <br>
-            <br>
-            <label>
-              將顯示從查詢日期開始往前一週(7天)的紀錄
-            </label>
-            <br>
-            <br>
-            <button id="send_date_btn" class="btn btn-outline-secondary" type="submit">送出</button>
-            <br>
-            <br>
-            <input type="text" class="input-group-text" id="all_records" name="all_records" style="display:none"/>
-            <button id="all_records_btn" name="all_records_btn" class="btn btn-outline-secondary" type="submit">查看所有紀錄</button>
+            <form action="{{ url_for("feeding_logs")}}" method="post">
+              <input type="text" class="input-group-text" id="all_records" name="all_records" style="display:none"/>
+              <button id="all_records_btn" name="all_records_btn" class="btn btn-outline-secondary" type="submit">查看所有紀錄</button>
+            </form>
           </div>
           
           <br>
@@ -272,6 +274,7 @@
               <button id="update_logs_btn" class="btn btn-outline-secondary" type="submit">更新紀錄</button>
               <br>
               <br>
+            </form>
           </div> 
           {% endif %}
 
