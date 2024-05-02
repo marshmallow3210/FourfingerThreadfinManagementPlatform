@@ -66,27 +66,32 @@ def send_data():
     feeding_logs = list(cursor.fetchall())
     print('feeding_logs:', feeding_logs)
 
-    aquarium_id = str(feeding_logs[0][1])      # "84"
-    action = "create"                          # "create" or "update"
-    if action == "create":
-        journal_id = 0                         # 0 or other number
-    else:
-        journal_id = int(feeding_logs[0][0])
+    aquarium_id = "144"                             # "84"
+    action = "create"                               # "create" or "update"
+    journal_id = 0                                  # 0 or other number
 
-    food_id = str(feeding_logs[0][4])          # "19"        NULL
-    feeding_amount = feeding_logs[0][7]        # 5
-    food_unit = str(feeding_logs[0][6])        # "catty"
-    food_name = str(feeding_logs[0][5])        # "A牌"       NULL
+    food_id = str(feeding_logs[0][4])               # "19"        NULL
+    if food_id is None:
+        food_id = ""
+    feeding_amount = feeding_logs[0][7]             # 5
+    food_unit = str(feeding_logs[0][6])             # "catty"
+    food_name = str(feeding_logs[0][5])             # "A牌"       NULL
+    if food_name is None: 
+        food_name = ""
 
     start_time = utc8(feeding_logs, 2) 
     start_time = start_time[0]
     start_time = start_time[2]
     start_time = convert_to_unix_timestamp(start_time) # 1693877520000
     
-    use_time = int(feeding_logs[0][3])         # 35
-    status = str(feeding_logs[0][9])           # "normal"    NULL
-    left_amount = feeding_logs[0][8]           # ""         
-    description = str(feeding_logs[0][10])     # "吃很久"     NULL
+    use_time = int(feeding_logs[0][3])              # 35
+    status = str(feeding_logs[0][9])                # "normal"    NULL
+    if status is None: 
+        status = ""
+    left_amount = str(feeding_logs[0][8])           # ""         
+    description = str(feeding_logs[0][10])          # "吃很久"     NULL
+    if description is None:
+        description = ""
 
     sql = "select distinct food_id from " + databaseName + ".new_feeding_logs WHERE food_id IS NOT NULL;"
     cursor.execute(sql)
@@ -94,11 +99,11 @@ def send_data():
     checkedList = [str(food_id[0]) for food_id in checkedList] # ["19"]
     print('checkedList:', checkedList)                       
     
-    # params
+    # params from ekoral
     url = 'https://api.ekoral.io' 
-    api_key = 'WSGS4kmccIGadre9Cr3PgksaUeR4umR1'  # from ekoral
-    api_endpoint = '/api/configure_journal_feeding' # from ekoral
-    member_id = '30095'  # from ekoral
+    api_key = 'WSGS4kmccIGadre9Cr3PgksaUeR4umR1'  
+    api_endpoint = '/api/configure_journal_feeding' 
+    member_id = '30095'  
     data = {
         "parm": {
             "journal": {
@@ -147,12 +152,10 @@ def send_data():
 
         if response.status_code == 200:
             print("Request successful!")
-            print("Response:")
-            print(response.json())
+            print("Response:", response.json())
         else:
             print("Unexpected status code:", response.status_code)
-            print("Response:")
-            print(response.text)
+            print("Response:", response.text)
     except requests.exceptions.RequestException as e:
         print("Request failed:", e)
 
