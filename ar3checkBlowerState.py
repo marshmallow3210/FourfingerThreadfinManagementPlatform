@@ -23,7 +23,7 @@ connection = pymysql.connect(host='127.0.0.1',
                             password='66386638',
                             autocommit=True)
 
-databaseName = "ar2DB"
+databaseName = "ar3DB"
 blower_state = 'off'
 switchMode = 1
 start_time_fromESP32 = None
