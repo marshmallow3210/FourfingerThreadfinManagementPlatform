@@ -4,7 +4,15 @@ check blower_state from ESP32 in background and get data from ESP32 to feeding_l
 import threading
 import pymysql
 import time
+import base64
+import hashlib
+import hmac
+import json
+import uuid
+import pymysql
 import datetime
+from datetime import timedelta
+import requests
 
 # 創建 Lock 物件，用於同步訪問全局變數
 lock = threading.Lock()
@@ -21,54 +29,146 @@ switchMode = 1
 start_time_fromESP32 = None
 start_time_temp = None
 
-def getMode():
-    global databaseName
-    global blower_state
-    global switchMode
-    global start_time_fromESP32
-    global start_time_temp
+
+''' date format setting ''' 
+def utc8(utc, p):
+    for i in range(0, len(utc)):
+        if utc[i][p] != None:
+            utc[i] = list(utc[i])
+            utc[i][p]=utc[i][p].astimezone(datetime.timezone(timedelta(hours=8))).strftime("%Y-%m-%d %H:%M:%S")
+
+    return utc
+
+
+''' API integration'''
+def convert_to_unix_timestamp(datetime_str):
+    dt_obj = datetime.datetime.strptime(datetime_str, '%Y-%m-%d %H:%M:%S')
+    timestamp = int(dt_obj.timestamp() * 1000) # 計算 Unix timestamp (以秒為單位 = 毫秒*1000)
+    return timestamp
+
+def generate_signature(api_key, api_endpoint, request_body, nonce):
+    message = api_key + api_endpoint + request_body + nonce # according to API Authentication from API key document
+    signature = hmac.new(bytes(api_key,'utf-8'), bytes(message,'utf-8'), hashlib.sha256).hexdigest().encode('utf-8')
+    print("Signature:", signature)
+    return base64.b64encode(signature).decode('utf-8')
+
+def send_data():
+    print("\nstart to sending data")
+    current_time = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    date = convert_to_unix_timestamp(current_time)
+    
+    # get data from database
     global connection
     cursor = connection.cursor()
+    
+    sql = "select journal_id, pool_id, start_time, use_time, food_id, food_name, food_unit, feeding_amount, left_amount, status, description from " + databaseName + ".new_feeding_logs order by start_time desc limit 1;"
+    cursor.execute(sql)
+    feeding_logs = list(cursor.fetchall())
+    print('feeding_logs:', feeding_logs)
 
-    global cnt 
-    cnt = 0
+    aquarium_id = "144"                             # "84"
+    action = "create"                               # "create" or "update"
+    journal_id = 0                                  # 0 or other number
 
-    # check if feeding
-    while True:
-        cnt += 1
-        print(cnt)
+    food_id = str(feeding_logs[0][4])               # "19"        NULL
+    if food_id is None:
+        food_id = ""
+    feeding_amount = feeding_logs[0][7]             # 5
+    food_unit = str(feeding_logs[0][6])             # "catty"
+    food_name = str(feeding_logs[0][5])             # "A牌"       NULL
+    if food_name is None: 
+        food_name = ""
 
-        cursor.execute("SELECT blower_state FROM " + databaseName + ".ESP32 ORDER BY CONCAT(date, ' ', time) DESC LIMIT 1;")
-        result = cursor.fetchone()
-        if result is not None:
-            with lock:  # 使用 Lock 來保護全局變數
-                blower_state = result[0]
-            print(f'blower_state: {blower_state} switchMode: {switchMode}')
+    start_time = utc8(feeding_logs, 2) 
+    start_time = start_time[0]
+    start_time = start_time[2]
+    start_time = convert_to_unix_timestamp(start_time) # 1693877520000
+    
+    use_time = int(feeding_logs[0][3])              # 35
+    status = str(feeding_logs[0][9])                # "normal"    NULL
+    if status is None: 
+        status = ""
+    left_amount = str(feeding_logs[0][8])           # ""         
+    description = str(feeding_logs[0][10])          # "吃很久"     NULL
+    if description is None:
+        description = ""
 
-            if blower_state != 'off' and switchMode == 1: # 開啟投餌機時
-                start_time_temp = getStartTime()
-                with lock: 
-                    switchMode = 0
+    sql = "select distinct food_id from " + databaseName + ".new_feeding_logs WHERE food_id IS NOT NULL;"
+    cursor.execute(sql)
+    checkedList = list(cursor.fetchall())
+    checkedList = [str(food_id[0]) for food_id in checkedList] # ["19"]
+    print('checkedList:', checkedList)                       
+    
+    # params from ekoral
+    url = 'https://api.ekoral.io' 
+    api_key = 'WSGS4kmccIGadre9Cr3PgksaUeR4umR1'  
+    api_endpoint = '/api/configure_journal_feeding' 
+    member_id = '30095'  
+    data = {
+        "parm": {
+            "journal": {
+                "aquarium_id": aquarium_id,
+                "journal_id": journal_id,
+                "action": action,
+                "date": date,
+                "feeding": [
+                    {
+                        "food": [
+                            {
+                                "id": food_id, 
+                                "weight": feeding_amount,
+                                "unit": food_unit,
+                                "name": food_name
+                            }
+                        ],
+                        "feedingTime": start_time,
+                        "period": use_time,
+                        "status": status,
+                        "left": left_amount,
+                        "description": description,
+                        "checkedList": checkedList
+                    }
+                ]
+            }
+        }
+    }
 
-                if start_time_fromESP32 is None:
-                    start_time_fromESP32 = start_time_temp
+    print(data)
+    
+    request_body = json.dumps(data, separators=(',', ':'), ensure_ascii=False)
+    nonce = str(uuid.uuid4()) # 動態生成 nonce  
+    signature = generate_signature(api_key, api_endpoint, request_body, nonce)
+    
+    headers = {
+        'x-ekoral-memberid': member_id,
+        'x-ekoral-authorization': signature,
+        'x-ekoral-authorization-nonce': nonce,
+        'Content-Type': 'application/json'
+    }
 
-                print("dispenser is feeding, getStartTime:", start_time_fromESP32)
+    try:
+        response = requests.post(url + api_endpoint, headers=headers, json=data)
+        response.raise_for_status()  # Raises an exception for non-2xx status codes
 
-            elif blower_state == 'off' and switchMode == 0: # 結束投餌時
-                getDataFromESP32(start_time_fromESP32)
-                with lock: 
-                    switchMode = 1
+        if response.status_code == 200:
+            print("Request successful!")
+            print("Response:", response.json())
+        else:
+            print("Unexpected status code:", response.status_code)
+            print("Response:", response.text)
+    except requests.exceptions.RequestException as e:
+        print("Request failed:", e)
 
-                print("dispenser finished feeding, getDataFromESP32")
+    return 
 
-        time.sleep(10)  # 10 sec 
 
+''' check blower_state from ESP32 in background and get data from ESP32 to feeding_logs '''
 def getStartTime():
     global blower_state
     global switchMode
     global start_time_fromESP32
     global start_time_temp
+    global connection
 
     with lock:
         if blower_state != 'off' and switchMode == 1: # 開啟投餌機時
@@ -94,7 +194,7 @@ def getDataFromESP32(start_time):
             cursor = connection.cursor()
 
             # get end_time
-            sql = "SELECT CONCAT(date, ' ', time) FROM " + databaseName + ".ESP32 ORDER BY CONCAT(date, ' ', time) DESC LIMIT 1;"
+            sql = f"SELECT CONCAT(date, ' ', time) FROM {databaseName}.ESP32 ORDER BY CONCAT(date, ' ', time) DESC LIMIT 1;"
             cursor.execute(sql)
             end_time = cursor.fetchone()
             end_time = end_time[0]
@@ -106,34 +206,92 @@ def getDataFromESP32(start_time):
             print(f'use_time: {use_time} min')
 
             # counting feeding_amount
-            
-            sql = f"SELECT COUNT(*) AS feeding_count FROM " + databaseName + ".ESP32 WHERE CONCAT(date, ' ', time) >= '{str(start_time)}' AND CONCAT(date, ' ', time) <= '{str(end_time)}';"
+            sql = f"SELECT COUNT(*) AS feeding_count FROM {databaseName}.ESP32 WHERE CONCAT(date, ' ', time) >= '{str(start_time)}' AND CONCAT(date, ' ', time) <= '{str(end_time)}';"
             cursor.execute(sql)
             feeding_count = list(cursor.fetchall())
             feeding_count = int(feeding_count[0][0])
-
-            sql = f"SELECT weight FROM " + databaseName + ".ESP32 WHERE CONCAT(date, ' ', time) >= '{str(start_time)}' AND CONCAT(date, ' ', time) <= '{str(end_time)}';"
+            
+            sql = f"SELECT weight FROM {databaseName}.ESP32 WHERE CONCAT(date, ' ', time) >= '{str(start_time)}' AND CONCAT(date, ' ', time) <= '{str(end_time)}';"
             cursor.execute(sql)
             weight = list(cursor.fetchall())
-            print(weight)
+            print('weight:', weight)
 
             feeding_amount = 0
-            feeding_benchmark = weight[0][0]
-            for i in range(1, feeding_count):
-                if weight[i][0] <= weight[i-1][0] and weight[i][0] <= feeding_benchmark:
-                    feeding_amount = feeding_amount + (weight[i-1][0] - weight[i][0])
-                else:
-                    feeding_benchmark = weight[i][0]
-            print('feeding_benchmark:', feeding_benchmark)
-            print('feeding_amount:', feeding_amount)
-
+            feeding_benchmark = 0
+            if weight:
+                feeding_benchmark = weight[0][0]
+                for i in range(1, feeding_count):
+                    if weight[i][0] <= weight[i-1][0] and weight[i][0] <= feeding_benchmark:
+                        feeding_amount = feeding_amount + (weight[i-1][0] - weight[i][0])
+                    else:
+                        feeding_benchmark = weight[i][0]
+                print('feeding_benchmark:', feeding_benchmark)
+                print('feeding_amount:', feeding_amount)
+                left_amount = weight[feeding_count-1][0]
+                print('left_amount', left_amount)
+            else:
+                print("The weight list is empty.")
+                left_amount = 0
             
-            sql = f"INSERT INTO " + databaseName + ".feeding_logs (start_time, use_time, feeding_amount) VALUES ('{str(start_time)}', {use_time}, {feeding_amount});"
+            sql = f"select journal_id from {databaseName}.new_feeding_logs order by start_time desc limit 1;"
             cursor.execute(sql)
+            journal_id = cursor.fetchone()
+            journal_id = journal_id[0] + 1
+            
+            sql = f"INSERT INTO {databaseName}.new_feeding_logs (journal_id, start_time, use_time, feeding_amount, left_amount) VALUES ({journal_id}, '{str(start_time)}', {use_time}, {feeding_amount}, {left_amount});"
+            cursor.execute(sql)
+
+            send_data()
+            print("finished!")
 
             switchMode = 1
             start_time_fromESP32 = None
 
+def checkBlowerState():
+    global databaseName
+    global blower_state
+    global switchMode
+    global start_time_fromESP32
+    global start_time_temp
+    global connection
+
+    global cnt 
+    cnt = 0
+
+    # check if feeding
+    while True:
+        cursor = connection.cursor()
+
+        cnt += 1
+        print(cnt)
+
+        cursor.execute("SELECT blower_state FROM " + databaseName + ".ESP32 ORDER BY CONCAT(date, ' ', time) DESC LIMIT 1;")
+        result = cursor.fetchone()
+        if result is not None:
+            with lock:  # 使用 Lock 來保護全局變數
+                blower_state = result[0]
+            print(f'blower_state: {blower_state}, switchMode: {switchMode}')
+
+            if blower_state != 'off' and switchMode == 1: # 開啟投餌機時
+                start_time_temp = getStartTime()
+                with lock: 
+                    switchMode = 0
+
+                if start_time_fromESP32 is None:
+                    start_time_fromESP32 = start_time_temp
+
+                print("dispenser is feeding, getStartTime:", start_time_fromESP32)
+
+            elif blower_state == 'off' and switchMode == 0: # 結束投餌時
+                getDataFromESP32(start_time_fromESP32)
+                with lock: 
+                    switchMode = 1
+
+                print("dispenser finished feeding, getDataFromESP32")
+
+        time.sleep(10)  # 10 sec 
+
+
 if __name__ == "__main__":
-    background_thread = threading.Thread(target=getMode)
+    background_thread = threading.Thread(target=checkBlowerState)
     background_thread.start()
