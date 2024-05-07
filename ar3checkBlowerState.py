@@ -236,7 +236,10 @@ def getDataFromESP32(start_time):
             sql = f"select journal_id from {databaseName}.new_feeding_logs order by start_time desc limit 1;"
             cursor.execute(sql)
             journal_id = cursor.fetchone()
-            journal_id = journal_id[0] + 1
+            if journal_id is not None:
+                journal_id = journal_id[0] + 1
+            else:
+                journal_id = 1 
             
             sql = f"INSERT INTO {databaseName}.new_feeding_logs (journal_id, start_time, use_time, feeding_amount, left_amount) VALUES ({journal_id}, '{str(start_time)}', {use_time}, {feeding_amount}, {left_amount});"
             cursor.execute(sql)
