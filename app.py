@@ -54,6 +54,17 @@ users = {
 }
 
 
+def connect_to_mysql():
+    print("reconnect to mysql...")
+    connection = pymysql.connect(host='127.0.0.1',
+                                 port=3306,
+                                 user='lab403',
+                                 password='66386638',
+                                 autocommit=True)
+    print("connected!")
+    return connection
+
+
 ''' database name settings ''' 
 def usernameChooseDatabaseName(username):
     global databaseName
@@ -1043,6 +1054,10 @@ def getRippleFrames():
 
 @app.route('/choose_ripple_frames', methods=["GET", "POST"])
 def choose_ripple_frames():
+    global connection
+    if not connection.open:
+        connection = connect_to_mysql()
+
     # storeRippleFrames()
     ripple_frames = getRippleFrames()
     url = " "
@@ -1050,7 +1065,6 @@ def choose_ripple_frames():
     if request.method == "POST":  
         databaseName = portChoooseDatabaseName()
         
-        global connection
         cursor = connection.cursor()
         sql = "use " + databaseName + ";"
         cursor.execute(sql)
