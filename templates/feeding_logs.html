@@ -213,7 +213,7 @@
                   <td>紀錄編號</td>
                   <td>魚池編號</td>
                   <td>投餌機編號</td>
-                  <td>飼料編號(不需顯示)</td>
+                  <!--<td>飼料編號(不需顯示)</td>-->
                   <td>飼料品牌</td>
                   <td>投餌時間</td>
                   <td>耗時(分鐘)</td>
@@ -229,7 +229,7 @@
                   <td>{{value.0}}</td> <!--journal_id-->
                   <td>{{value.1}}</td> <!--pool_id-->
                   <td>{{value.2}}</td> <!--dispenser_id-->
-                  <td>{{value.5}}</td> <!--food_id-->
+                  <!--<td>{{value.5}}</td> food_id-->
                   <td>{{value.6}}</td> <!--food_name-->
                   <td>{{value.3}}</td> <!--start_time-->
                   <td>{{value.4}}</td> <!--use_time-->
@@ -285,22 +285,22 @@
             <table style="border:3px #cccccc solid;" cellpadding="10" border='1'>
               <thead>
                 <tr>
-                  <td>魚池編號</td>
+                  <!--<td>魚池編號</td>-->
                   <td>投餌機編號</td>
                   <td>投餌時間</td>
                   <td>耗時(分鐘)</td>
-                  <td>投餌料號</td>
-                  <td>投餌量(公斤)(不需顯示)</td>
+                  <!--<td>投餌料號</td>-->
+                  <!--<td>投餌量(公斤)(不需顯示)</td>-->
                 </tr>
               </thead>
                 {% for value in original_feeding_data %}
                 <tr>
-                  <td>{{value.0}}</td>
+                  <!--<td>{{value.0}}</td>-->
                   <td>{{value.1}}</td>
                   <td>{{value.2}}</td>
                   <td>{{value.3}}</td>
-                  <td>{{value.4}}</td>
-                  <td>{{value.5}}</td>
+                  <!--<td>{{value.4}}</td>-->
+                  <!--<td>{{value.5}}</td>-->
                 </tr>
                 {% endfor %}
             </table> 

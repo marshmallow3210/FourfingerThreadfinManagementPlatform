@@ -774,6 +774,7 @@ def feeding_logs():
                 new_feeding_data = list(cursor.fetchall())
                 start_times = [row[3] for row in new_feeding_data]  
                 use_times = [row[4] for row in new_feeding_data]  
+                feeding_amounts = [row[8] for row in new_feeding_data]  
 
                 sql = "select * from original_feeding_logs where start_time between %s and %s"
                 cursor.execute(sql, (one_week_ago + timedelta(days=1), next_day))
@@ -795,11 +796,12 @@ def feeding_logs():
                 plt.grid(axis='y', linestyle='--', color='gray')
 
                 # 將每個 start_time 根據 y 軸(00:00 到 23:59，間隔1小時)開始往下，並根據 use_time(分鐘) 來繪製長條
-                for start_time, use_time in zip(start_times, use_times):
+                for start_time, use_time, feeding_amount in zip(start_times, use_times, feeding_amounts):
                     start_y = (start_time.hour * 60 + start_time.minute)  
                     print(f'part of {start_time} is same as {24-(1440-start_y-use_time)/60}')
                     midday = datetime.datetime(start_time.year, start_time.month, start_time.day, 22, 0) - timedelta(days=1)
                     plt.bar(midday, use_time, width=0.17, bottom=(1440-start_y-use_time), color='#009999')
+                    plt.text(midday, (1440 - start_y), str(feeding_amount), ha='center', va='bottom', color='black', fontsize=8)
 
                 for start_time, use_time in zip(original_start_times, original_use_times):
                     start_y = (start_time.hour * 60 + start_time.minute)  
@@ -807,7 +809,7 @@ def feeding_logs():
                     midday = datetime.datetime(start_time.year, start_time.month, start_time.day, 2, 0)
                     plt.bar(midday, use_time, width=0.17, bottom=(1440-start_y-use_time), color='#ee8822')
 
-                legend_labels = {'#009999': '新料桶', '#ee8822': '舊料桶'}
+                legend_labels = {'#009999': '新料桶', '#ee8822': '舊料桶', 'black': '投餌量(公斤)'}
                 legend_handles = []
                 for color, label in legend_labels.items():
                     legend_handles.append(plt.Rectangle((0,0),1,1, color=color, label=label))
@@ -845,6 +847,7 @@ def feeding_logs():
                     new_feeding_data = list(cursor.fetchall())
                     start_times = [row[3] for row in new_feeding_data]  
                     use_times = [row[4] for row in new_feeding_data]  
+                    feeding_amounts = [row[8] for row in new_feeding_data]  
 
                     sql = "select * from original_feeding_logs where start_time between %s and %s"
                     cursor.execute(sql, (one_week_ago + timedelta(days=1), next_day))
@@ -866,11 +869,12 @@ def feeding_logs():
                     plt.grid(axis='y', linestyle='--', color='gray')
 
                     # 將每個 start_time 根據 y 軸(00:00 到 23:59，間隔1小時)開始往下，並根據 use_time(分鐘) 來繪製長條
-                    for start_time, use_time in zip(start_times, use_times):
+                    for start_time, use_time, feeding_amount in zip(start_times, use_times, feeding_amounts):
                         start_y = (start_time.hour * 60 + start_time.minute)  
                         print(f'part of {start_time} is same as {24-(1440-start_y-use_time)/60}')
                         midday = datetime.datetime(start_time.year, start_time.month, start_time.day, 22, 0) - timedelta(days=1)
                         plt.bar(midday, use_time, width=0.17, bottom=(1440-start_y-use_time), color='#009999')
+                        plt.text(midday, (1440 - start_y), str(feeding_amount), ha='center', va='bottom', color='black', fontsize=8)
 
                     for start_time, use_time in zip(original_start_times, original_use_times):
                         start_y = (start_time.hour * 60 + start_time.minute)  
@@ -878,7 +882,7 @@ def feeding_logs():
                         midday = datetime.datetime(start_time.year, start_time.month, start_time.day, 2, 0)
                         plt.bar(midday, use_time, width=0.17, bottom=(1440-start_y-use_time), color='#ee8822')
 
-                    legend_labels = {'#009999': '新料桶', '#ee8822': '舊料桶'}
+                    legend_labels = {'#009999': '新料桶', '#ee8822': '舊料桶', 'black': '投餌量(公斤)'}
                     legend_handles = []
                     for color, label in legend_labels.items():
                         legend_handles.append(plt.Rectangle((0,0),1,1, color=color, label=label))
