@@ -52,6 +52,7 @@ def generate_signature(api_key, api_endpoint, request_body, nonce):
     print("Signature:", signature)
     return base64.b64encode(signature).decode('utf-8')
 
+# create data version
 def send_data():
     print("\nstart to sending data")
     current_time = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
@@ -61,7 +62,7 @@ def send_data():
     global connection
     cursor = connection.cursor()
     
-    sql = "select journal_id, pool_id, start_time, use_time, food_id, food_name, food_unit, feeding_amount, left_amount, status, description from " + databaseName + ".new_feeding_logs order by start_time desc limit 1;"
+    sql = f"select journal_id, pool_id, start_time, use_time, food_id, food_name, food_unit, feeding_amount, left_amount, status, description from {databaseName}.new_feeding_logs order by start_time desc limit 1;"
     cursor.execute(sql)
     feeding_logs = list(cursor.fetchall())
     print('feeding_logs:', feeding_logs)
@@ -93,7 +94,7 @@ def send_data():
     if description is None:
         description = ""
 
-    sql = "select distinct food_id from " + databaseName + ".new_feeding_logs WHERE food_id IS NOT NULL;"
+    sql = f"select distinct food_id from {databaseName}.new_feeding_logs WHERE food_id IS NOT NULL;"
     cursor.execute(sql)
     checkedList = list(cursor.fetchall())
     checkedList = [str(food_id[0]) for food_id in checkedList] # ["19"]
@@ -107,28 +108,30 @@ def send_data():
     data = {
         "parm": {
             "journal": {
-                "aquarium_id": aquarium_id,
-                "journal_id": journal_id,
-                "action": action,
-                "date": date,
-                "feeding": [
+            "aquarium_id": aquarium_id,
+            "journal_id": journal_id,
+            "action": action,
+            "date": date,
+            "feeding": [
+                {
+                "food": [
                     {
-                        "food": [
-                            {
-                                "id": food_id, 
-                                "weight": feeding_amount,
-                                "unit": food_unit,
-                                "name": food_name
-                            }
-                        ],
-                        "feedingTime": start_time,
-                        "period": use_time,
-                        "status": status,
-                        "left": left_amount,
-                        "description": description,
-                        "checkedList": checkedList
+                    "id": "39",
+                    "weight": feeding_amount,
+                    "unit": food_unit,
+                    "name": "測試"
                     }
+                ],
+                "feedingTime": start_time,
+                "period": use_time,
+                "status": "normal",
+                "left": left_amount,
+                "description": "",
+                "checkedList": [
+                    "39"
                 ]
+                }
+            ]
             }
         }
     }
@@ -153,6 +156,14 @@ def send_data():
         if response.status_code == 200:
             print("Request successful!")
             print("Response:", response.json())
+            response_data  = response.json()
+            if 'data' in response_data and 'journal' in response_data['data'] and 'id' in response_data['data']['journal']:
+                journal_id = response_data['data']['journal']['id']
+                print("Response journal_id is:", journal_id)
+                sql = f"update {databaseName}.new_feeding_logs set journal_id = {journal_id} order by start_time desc limit 1;"
+                cursor.execute(sql)
+            else:
+                print("Error: Cannot find journal id in response data.")
         else:
             print("Unexpected status code:", response.status_code)
             print("Response:", response.text)
@@ -173,7 +184,7 @@ def getStartTime():
     with lock:
         if blower_state != 'off' and switchMode == 1: # 開啟投餌機時
             cursor = connection.cursor()
-            sql = "SELECT CONCAT(date, ' ', time) FROM  " + databaseName + ".ESP32 ORDER BY CONCAT(date, ' ', time) DESC LIMIT 1;"
+            sql = f"SELECT CONCAT(date, ' ', time) FROM {databaseName}.ESP32 ORDER BY CONCAT(date, ' ', time) DESC LIMIT 1;"
             cursor.execute(sql)
             start_time = cursor.fetchone()
             start_time = start_time[0]
@@ -244,7 +255,7 @@ def getDataFromESP32(start_time):
             sql = f"INSERT INTO {databaseName}.new_feeding_logs (journal_id, start_time, use_time, feeding_amount, left_amount) VALUES ({journal_id}, '{str(start_time)}', {use_time}, {feeding_amount}, {left_amount});"
             cursor.execute(sql)
 
-            # send_data()
+            send_data()
             print("finished!")
 
             switchMode = 1
@@ -268,7 +279,7 @@ def checkBlowerState():
         cnt += 1
         # print(cnt)
 
-        cursor.execute("SELECT blower_state FROM " + databaseName + ".ESP32 ORDER BY CONCAT(date, ' ', time) DESC LIMIT 1;")
+        cursor.execute(f"SELECT blower_state FROM {databaseName}.ESP32 ORDER BY CONCAT(date, ' ', time) DESC LIMIT 1;")
         result = cursor.fetchone()
         if result is not None:
             with lock:  # 使用 Lock 來保護全局變數
