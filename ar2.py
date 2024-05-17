@@ -328,14 +328,6 @@ def send_data(journal_id1, journal_id2):
                 if response.status_code == 200:
                     print("Request successful!")
                     print("Response:", response.json())
-                    response_data  = response.json()
-                    if 'data' in response_data and 'journal' in response_data['data'] and 'id' in response_data['data']['journal']:
-                        journal_id = response_data['data']['journal']['id']
-                        print("Response journal_id is:", journal_id)
-                        sql = f"update {databaseName}.new_feeding_logs set journal_id = {journal_id} order by start_time desc limit 1;"
-                        cursor.execute(sql)
-                    else:
-                        print("Error: Cannot find journal id in response data.")
                 else:
                     print("Unexpected status code:", response.status_code)
                     print("Response:", response.text)
