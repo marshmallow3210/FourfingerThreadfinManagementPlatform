@@ -111,12 +111,14 @@ select{
     color: #003366;
     font-weight: bold;
     padding-left: 20px;
-    transition: width 0.2s ease; /* 添加過渡效果 */
+    transition: width 0.3s ease; /* 添加過渡效果 */
+    overflow-y: auto; /* 當內容過多時可滾動 */
 }
 
 /* content(header+main) */
 .content {
     flex: 1; /* Content佔滿剩餘空間 */
+    overflow-y: auto; /* 當內容過多時可滾動 */
 }
 
 .indented-list li {
@@ -179,21 +181,47 @@ span {
     outline: none;
 }
 
-/* 在小屏幕時，讓側邊欄堆疊在主內容上方 */
-@media screen and (max-width: 768px) {
-    .box {
-      flex-direction: column; /* 主內容和側邊欄堆疊在一起 */
-    }
-    .sidebar {
-      order: 1;
-    }
-    .content {
-      order: 2; 
-    }
-  }
-
 .monitor {
     width: 100%; /* 使圖片寬度佔滿其父元素 */
     height: auto; /* 讓高度根據比例自動調整 */
     border: 1px solid #003366;
+}
+
+.image-container img {
+    max-width: 100%;
+    height: auto;
+    display: block;
+}
+
+@media (max-width: 768px) {
+    .container {
+        flex-direction: column;
+    }
+
+    .sidebar {
+        flex: 0 0 auto; /* 自動調整高度 */
+        width: 100%; /* 滿寬 */
+        order: 1; /* 在 content 之後顯示 */
+    }
+
+    .content {
+        flex: 1;
+        order: 0; /* 在 sidebar 之前顯示 */
+    }
+    .image-container {
+        padding: 15px;
+    }
+}
+
+@media (max-width: 480px) {
+    .sidebar {
+        padding: 10px;
+    }
+
+    .content {
+        padding: 15px;
+    }
+    .image-container {
+        padding: 10px;
+    }
 }
