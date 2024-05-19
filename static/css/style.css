@@ -79,21 +79,35 @@ select{
     flex: 0 1 240px;
     background-color: #ccf2f2;
     border-right: 2px solid LightSteelBlue;
-    transition: width 0.1s ease; /* 添加過渡效果 */
+    transition: flex 0.25s ease; /* 添加過渡效果 */
+    overflow-y: auto; /* 當內容過多時可滾動 */
 }
 
-/* sidebar收縮後的樣式 */
+/* sidebar 收縮後的樣式 */
 .sidebar.collapsed {
     flex: 0 0 0;
     width: 0; /* 將寬度設定為 0，隱藏側邊欄 */
     margin: 0;
     padding: 0;
+    transition: flex 0.25s ease; /* 添加過渡效果 */
+    overflow-y: auto; /* 當內容過多時可滾動 */
+}
+
+/* sidebar items */
+.sidebar-item {
+    height: 100%;
+    background-color: #ccf2f2;
+    color: #003366;
+    font-weight: bold;
+    padding-left: 20px;
+    transition: width 0.25s ease; /* 添加過渡效果 */
+    overflow-y: auto; /* 當內容過多時可滾動 */
 }
 
 /* sidebar hidden btn */
 .hidden {
     opacity: 0;
-    transition: width 0.2s ease; /* 添加過渡效果 */
+    transition: width 0.25s ease; /* 添加過渡效果 */
     pointer-events: none; /* 隱藏時不接受點擊事件 */
 }
 
@@ -103,16 +117,6 @@ select{
     display: flex;
     justify-content: center;
     align-items: center;
-}
-
-.sidebar-item {
-    height: 100%;
-    background-color: #ccf2f2;
-    color: #003366;
-    font-weight: bold;
-    padding-left: 20px;
-    transition: width 0.3s ease; /* 添加過渡效果 */
-    overflow-y: auto; /* 當內容過多時可滾動 */
 }
 
 /* content(header+main) */
