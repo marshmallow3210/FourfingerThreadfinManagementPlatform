@@ -161,7 +161,7 @@ def preidict_weights(age, total_fish_number):
 def preidict_date(latest_weight):
     # 午仔魚
     # 17 months, 2015/4~2016/8
-    x_set = np.array([0, 2, 15, 47, 73, 81, 116, 157, 178, 193, 190, 195, 199, 202, 208, 215, 230]) #, 238, 250, 260])
+    x_set = np.array([0, 2, 15, 47, 73, 81, 116, 157, 178, 193, 190, 195, 199, 202, 208, 215, 230, 238]) #, 250, 260])
     x_set = x_set * 600 / 328
     date1 = datetime.date(2015,4,1)
     date2 = datetime.date(2016,8,31)
@@ -180,6 +180,9 @@ def preidict_date(latest_weight):
     y_set = np.array([16, 27, 66, 188, 368, 625, 856, 1077, 16, 27, 77, 208, 379, 606, 862, 1102, 16, 48, 108, 246, 425, 717, 904, 1180, 16, 42, 106, 276, 477, 754, 991, 1202])
     y_set = y_set * 800 / 1336
     '''
+    
+    print("x_set 的長度:", len(x_set))
+    print("y_set 的長度:", len(y_set))
 
     # KNN Regression
     knn = KNeighborsRegressor(n_neighbors=3)
@@ -931,13 +934,13 @@ def query_result():
         cursor.execute(sql)
         
         if request.method == "POST":
-            pool_ID = request.form.get("pool_ID")
-            print(pool_ID)
-            sql = "select pool_ID from field_logs where pool_ID = "+str(pool_ID)+";"
+            pool_id = request.form.get("pool_id")
+            print(pool_id)
+            sql = f"select pool_id from field_logs where pool_id={str(pool_id)};"
             cursor.execute(sql)
             field_result = cursor.fetchall()
 
-            sql = "select pool_ID from feeding_logs where pool_ID = "+str(pool_ID)+";"
+            sql = f"select pool_id from new_feeding_logs where pool_id={str(pool_id)};"
             cursor.execute(sql)
             feeding_result = cursor.fetchall()
             
@@ -946,29 +949,29 @@ def query_result():
                 alertContent="ThisPoolhasNoFieldData!"
 
             elif len(feeding_result) == 0:
-                print("feeding_logs is empty")
+                print("new_feeding_logs is empty")
                 alertContent="ThisPoolhasNoFeedingData!"
 
             else:
                 print("Result set is not empty")
                 # counting estimated_weights
-                sql = "select record_weights from field_logs where pool_ID = "+str(pool_ID)+" order by update_time asc;"
+                sql = f"select record_weights from field_logs where pool_id={str(pool_id)} order by update_time asc;"
                 cursor.execute(sql)
                 first_weight = cursor.fetchone()
                 first_weight = first_weight[0]
 
-                sql = "select spec from field_logs where pool_ID = "+str(pool_ID)+" order by update_time asc;"
+                sql = f"select spec from field_logs where pool_id={str(pool_id)} order by update_time asc;"
                 cursor.execute(sql)
                 first_spec = cursor.fetchone()
                 first_spec = first_spec[0]
                 total_fish_number = first_spec * first_weight
 
-                sql = "select estimated_weights from field_logs where pool_ID = "+str(pool_ID)+" order by update_time desc;"
+                sql = f"select estimated_weights from field_logs where pool_id={str(pool_id)} order by update_time desc;"
                 cursor.execute(sql)
                 latest_weight = cursor.fetchone()
                 latest_weight = latest_weight[0]
 
-                sql = "select update_time from field_logs where pool_ID = "+str(pool_ID)+" order by update_time asc;"
+                sql = f"select update_time from field_logs where pool_id={str(pool_id)} order by update_time asc;"
                 cursor.execute(sql) 
                 first_time = cursor.fetchone()
                 first_time = first_time[0]
@@ -976,7 +979,7 @@ def query_result():
                 age = str((query_time-first_time).days)
                 
                 # counting fcr
-                sql = "select feeding_amount from feeding_logs where pool_ID = "+str(pool_ID)+";"
+                sql = f"select feeding_amount from new_feeding_logs where pool_id={str(pool_id)} order by start_time desc;"
                 cursor.execute(sql)
                 feeding_amount = list(cursor.fetchall())
                 total_feeding_amount = 0
