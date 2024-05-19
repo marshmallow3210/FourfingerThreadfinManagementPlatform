@@ -41,7 +41,7 @@ setInterval(displayDateTime, 1000);
 $(document).ready(function() {
     $("#sidebar-btn").click(function() {
         $("#sidebar-item").toggleClass("collapsed"); 
-        $("#sidebar").toggleClass("collapsed");
+        $("#sidebar").toggleClass("collapsed"); 
     });
 });
 
@@ -153,314 +153,313 @@ function(){
 })
 })
 
-// jsgrid table
-var dataset = [
-    { 
-    "魚池編號": "1",
-    "規格<br>(尾/公斤)": 100.0,
-    "紀錄魚群總重<br>(公斤)": 300.0, 
-    "預估魚群總重<br>(公斤)": 300.0, 
-    "換肉率": 0.0, 
-    "死亡數量": 0, 
-    "更新時間": "2023-03-01 12:30:00" 
-    },
-    { 
-    "魚池編號": "1",
-    "規格<br>(尾/公斤)": 50.0,
-    "紀錄魚群總重<br>(公斤)": 600.0, 
-    "預估魚群總重<br>(公斤)": 600.0, 
-    "換肉率": 2.0,
-    "死亡數量": 100,
-    "更新時間": "2023-04-01 12:30:00" 
-    },
-    { 
-    "魚池編號": "2",
-    "規格<br>(尾/公斤)": 120.0,
-    "紀錄魚群總重<br>(公斤)": 300.0, 
-    "預估魚群總重<br>(公斤)": 300.0, 
-    "換肉率": 0.0, 
-    "死亡數量": 0, 
-    "更新時間": "2023-03-01 12:30:00" 
-    },
-    { 
-    "魚池編號": "2",
-    "規格<br>(尾/公斤)": 100.0,
-    "紀錄魚群總重<br>(公斤)": 400.0, 
-    "預估魚群總重<br>(公斤)": 400.0, 
-    "換肉率": 1.5, 
-    "死亡數量": 100, 
-    "更新時間": "2023-03-10 12:30:00" 
-    },
-    { 
-    "場域編魚池編號號": "2",
-    "規格<br>(尾/公斤)": 100.0,
-    "紀錄魚群總重<br>(公斤)": 600.0, 
-    "預估魚群總重<br>(公斤)": 600.0, 
-    "換肉率": 1.1, 
-    "死亡數量": 100, 
-    "更新時間": "2023-04-01 12:30:00" 
-    }
-];
+// // jsgrid table
+// var dataset = [
+//     { 
+//     "魚池編號": "1",
+//     "規格<br>(尾/公斤)": 100.0,
+//     "紀錄魚群總重<br>(公斤)": 300.0, 
+//     "預估魚群總重<br>(公斤)": 300.0, 
+//     "換肉率": 0.0, 
+//     "死亡數量": 0, 
+//     "更新時間": "2023-03-01 12:30:00" 
+//     },
+//     { 
+//     "魚池編號": "1",
+//     "規格<br>(尾/公斤)": 50.0,
+//     "紀錄魚群總重<br>(公斤)": 600.0, 
+//     "預估魚群總重<br>(公斤)": 600.0, 
+//     "換肉率": 2.0,
+//     "死亡數量": 100,
+//     "更新時間": "2023-04-01 12:30:00" 
+//     },
+//     { 
+//     "魚池編號": "2",
+//     "規格<br>(尾/公斤)": 120.0,
+//     "紀錄魚群總重<br>(公斤)": 300.0, 
+//     "預估魚群總重<br>(公斤)": 300.0, 
+//     "換肉率": 0.0, 
+//     "死亡數量": 0, 
+//     "更新時間": "2023-03-01 12:30:00" 
+//     },
+//     { 
+//     "魚池編號": "2",
+//     "規格<br>(尾/公斤)": 100.0,
+//     "紀錄魚群總重<br>(公斤)": 400.0, 
+//     "預估魚群總重<br>(公斤)": 400.0, 
+//     "換肉率": 1.5, 
+//     "死亡數量": 100, 
+//     "更新時間": "2023-03-10 12:30:00" 
+//     },
+//     { 
+//     "場域編魚池編號號": "2",
+//     "規格<br>(尾/公斤)": 100.0,
+//     "紀錄魚群總重<br>(公斤)": 600.0, 
+//     "預估魚群總重<br>(公斤)": 600.0, 
+//     "換肉率": 1.1, 
+//     "死亡數量": 100, 
+//     "更新時間": "2023-04-01 12:30:00" 
+//     }
+// ];
 
-var feeding_logs_dataset = [
-    { "魚池編號": "1",
-    "投餌機編號": "1",
-    "投餌時間": "2023-04-01 13:00:00", 
-    "耗時(分鐘)": 30.0, 
-    "投餌料號": "test", 
-    "投餌量(公克)": 100000 
-    },
-    { "魚池編號": "1",
-    "投餌機編號": "2",
-    "投餌時間": "2023-04-02 13:00:00", 
-    "耗時(分鐘)": 30.0, 
-    "投餌料號": "test", 
-    "投餌量(公克)": 100000 
-    },
-    { "魚池編號": "1",
-    "投餌機編號": "1",
-    "投餌時間": "2023-04-03 13:00:00", 
-    "耗時(分鐘)": 30.0, 
-    "投餌料號": "test", 
-    "投餌量(公克)": 100000 
-    },
-    { "魚池編號": "1",
-    "投餌機編號": "1",
-    "投餌時間": "2023-04-04 13:00:00", 
-    "耗時(分鐘)": 30.0, 
-    "投餌料號": "test", 
-    "投餌量(公克)": 100000 
-    },
-    { "魚池編號": "1",
-    "投餌機編號": "1",
-    "投餌時間": "2023-04-05 13:00:00", 
-    "耗時(分鐘)": 30.0, 
-    "投餌料號": "test", 
-    "投餌量(公克)": 100000 
-    },
-    { "魚池編號": "1",
-    "投餌機編號": "2",
-    "投餌時間": "2023-04-06 13:00:00", 
-    "耗時(分鐘)": 30.0, 
-    "投餌料號": "test", 
-    "投餌量(公克)": 100000 
-    }
-];
+// var feeding_logs_dataset = [
+//     { "魚池編號": "1",
+//     "投餌機編號": "1",
+//     "投餌時間": "2023-04-01 13:00:00", 
+//     "耗時(分鐘)": 30.0, 
+//     "投餌料號": "test", 
+//     "投餌量(公克)": 100000 
+//     },
+//     { "魚池編號": "1",
+//     "投餌機編號": "2",
+//     "投餌時間": "2023-04-02 13:00:00", 
+//     "耗時(分鐘)": 30.0, 
+//     "投餌料號": "test", 
+//     "投餌量(公克)": 100000 
+//     },
+//     { "魚池編號": "1",
+//     "投餌機編號": "1",
+//     "投餌時間": "2023-04-03 13:00:00", 
+//     "耗時(分鐘)": 30.0, 
+//     "投餌料號": "test", 
+//     "投餌量(公克)": 100000 
+//     },
+//     { "魚池編號": "1",
+//     "投餌機編號": "1",
+//     "投餌時間": "2023-04-04 13:00:00", 
+//     "耗時(分鐘)": 30.0, 
+//     "投餌料號": "test", 
+//     "投餌量(公克)": 100000 
+//     },
+//     { "魚池編號": "1",
+//     "投餌機編號": "1",
+//     "投餌時間": "2023-04-05 13:00:00", 
+//     "耗時(分鐘)": 30.0, 
+//     "投餌料號": "test", 
+//     "投餌量(公克)": 100000 
+//     },
+//     { "魚池編號": "1",
+//     "投餌機編號": "2",
+//     "投餌時間": "2023-04-06 13:00:00", 
+//     "耗時(分鐘)": 30.0, 
+//     "投餌料號": "test", 
+//     "投餌量(公克)": 100000 
+//     }
+// ];
 
-// field logs jsgrid
-$("#field_logs").jsGrid({
-    width: "100%",
-    height: "400px",
+// // field logs jsgrid
+// $("#field_logs").jsGrid({
+//     width: "100%",
+//     height: "400px",
 
-    inserting: true,
-    editing: true,
-    sorting: true,
-    paging: true,
-    autoload: true,
-    controller: {
-        loadData: function() {
-            var d = $.Deferred();
-            $.ajax({
-                url: "/api/database",
-                dataType: "json",
-                type: "GET"
-            }).done(function(response) {
-                d.resolve(response);
-            });
+//     inserting: true,
+//     editing: true,
+//     sorting: true,
+//     paging: true,
+//     autoload: true,
+//     controller: {
+//         loadData: function() {
+//             var d = $.Deferred();
+//             $.ajax({
+//                 url: "/api/database",
+//                 dataType: "json",
+//                 type: "GET"
+//             }).done(function(response) {
+//                 d.resolve(response);
+//             });
 
-            return d.promise();
-        },
-        updateItem: function(item) {
-            var d = $.Deferred();
-            // console.log("updateItem:", item);
-            $.ajax({
-                url: "/api/database",
-                data: JSON.stringify(item),
-                type: "PUT",
-                dataType: "json",
-                contentType: "application/json",
-            }).done(function(response) {
-                d.resolve(response);
-            });
-            return d.promise();
-        },
-        deleteItem: function(item) {
-            var d = $.Deferred();
-            $.ajax({
-                url: "/api/database",
-                data: item,
-                type: "DELETE",
-            }).done(function(response) {
-                d.resolve(response);
-            });
-            return d.promise();
-        },
-        insertItem: function(item) {
-            var d = $.Deferred();
-            $.ajax({
-                url: "/api/database",
-                data: JSON.stringify(item),
-                dataType: "json",
-                contentType: "application/json",
-                type: "POST",
-            }).done(function(response) {
-                d.resolve(response);
-            });
-            return d.promise();
-        },
-
-
-    },
-
-    fields: [
-        { 
-            name: "場域編號", 
-            type: "text", 
-            width: 40, 
-            validate: "required" 
-        },
-        { 
-            name: "規格<br>(尾/公斤)",
-            type: "number",
-            width: 40 
-        },
-        { name: "紀錄魚群總重<br>(公斤)",
-            type: "number",
-            width: 40 
-        },
-        { 
-            name: "預估魚群總重<br>(公斤)", 
-            type: "number", 
-            width: 40 
-        },
-        { 
-            name: "換肉率", 
-            type: "number", 
-            width: 30, 
-            itemTemplate: function(value) {
-            return value.toFixed(2);
-        },
-        },
-        { 
-            name: "死亡數量", 
-            type: "number", 
-            width: 30 
-        },
-        { 
-            name: "更新時間", 
-            type: "text", 
-            width: 60,
-            sorting: true
-        },
-        { 
-            type: "control", 
-            width: 20 
-        }
-    ]
-});
-
-// feeding logs jsgrid
-$("#feeding_logs").jsGrid({
-width: "100%",
-height: "400px",
-
-inserting: true,
-editing: true,
-sorting: false,
-paging: false,
-autoload: true,
-controller: {
-    loadData: function() {
-        var d = $.Deferred();
-        $.ajax({
-            url: "/api/feedingdatabase",
-            dataType: "json",
-            type: "GET"
-        }).done(function(response) {
-            d.resolve(response);
-        });
-
-        return d.promise();
-    },
-    updateItem: function(item) {
-        var d = $.Deferred();
-        // console.log("updateItem:", item);
-        $.ajax({
-            url: "/api/feedingdatabase",
-            data: JSON.stringify(item),
-            type: "PUT",
-            dataType: "json",
-            contentType: "application/json",
-        }).done(function(response) {
-            d.resolve(response);
-        });
-        return d.promise();
-    },
-    deleteItem: function(item) {
-        var d = $.Deferred();
-        $.ajax({
-            url: "/api/feedingdatabase",
-            data: item,
-            type: "DELETE",
-        }).done(function(response) {
-            d.resolve(response);
-        });
-        return d.promise();
-    },
-    insertItem: function(item) {
-        var d = $.Deferred();
-        $.ajax({
-            url: "/api/feedingdatabase",
-            data: JSON.stringify(item),
-            dataType: "json",
-            contentType: "application/json",
-            type: "POST",
-        }).done(function(response) {
-            d.resolve(response);
-        });
-        return d.promise();
-    },
+//             return d.promise();
+//         },
+//         updateItem: function(item) {
+//             var d = $.Deferred();
+//             // console.log("updateItem:", item);
+//             $.ajax({
+//                 url: "/api/database",
+//                 data: JSON.stringify(item),
+//                 type: "PUT",
+//                 dataType: "json",
+//                 contentType: "application/json",
+//             }).done(function(response) {
+//                 d.resolve(response);
+//             });
+//             return d.promise();
+//         },
+//         deleteItem: function(item) {
+//             var d = $.Deferred();
+//             $.ajax({
+//                 url: "/api/database",
+//                 data: item,
+//                 type: "DELETE",
+//             }).done(function(response) {
+//                 d.resolve(response);
+//             });
+//             return d.promise();
+//         },
+//         insertItem: function(item) {
+//             var d = $.Deferred();
+//             $.ajax({
+//                 url: "/api/database",
+//                 data: JSON.stringify(item),
+//                 dataType: "json",
+//                 contentType: "application/json",
+//                 type: "POST",
+//             }).done(function(response) {
+//                 d.resolve(response);
+//             });
+//             return d.promise();
+//         },
 
 
-    },
-    fields: [
-        { 
-        name: "場域編號", 
-        type: "text", 
-        width: 40, 
-        validate: "required" 
-        },
-        { 
-        name: "投餌機編號",
-        type: "text", 
-        width: 40 
-        },
-        { 
-        name: "投餌時間", 
-        type: "text", 
-        width: 60,
-        sorting: true
-        },
-        { name: "耗時(分鐘)",
-        type: "number",
-        width: 30 
-        },
-        { 
-        name: "投餌料號", 
-        type: "text", 
-        width: 40 
-        },
-        { 
-        name: "投餌量(公克)", 
-        type: "number", 
-        width: 30 
-        },
-        { 
-        type: "control", 
-        width: 20 
-        }
-    ]
+//     },
+
+//     fields: [
+//         { 
+//             name: "場域編號", 
+//             type: "text", 
+//             width: 40, 
+//             validate: "required" 
+//         },
+//         { 
+//             name: "規格<br>(尾/公斤)",
+//             type: "number",
+//             width: 40 
+//         },
+//         { name: "紀錄魚群總重<br>(公斤)",
+//             type: "number",
+//             width: 40 
+//         },
+//         { 
+//             name: "預估魚群總重<br>(公斤)", 
+//             type: "number", 
+//             width: 40 
+//         },
+//         { 
+//             name: "換肉率", 
+//             type: "number", 
+//             width: 30, 
+//             itemTemplate: function(value) {
+//             return value.toFixed(2);
+//         },
+//         },
+//         { 
+//             name: "死亡數量", 
+//             type: "number", 
+//             width: 30 
+//         },
+//         { 
+//             name: "更新時間", 
+//             type: "text", 
+//             width: 60,
+//             sorting: true
+//         },
+//         { 
+//             type: "control", 
+//             width: 20 
+//         }
+//     ]
+// });
+
+// // feeding logs jsgrid
+// $("#feeding_logs").jsGrid({
+// width: "100%",
+// height: "400px",
+
+// inserting: true,
+// editing: true,
+// sorting: false,
+// paging: false,
+// autoload: true,
+// controller: {
+//     loadData: function() {
+//         var d = $.Deferred();
+//         $.ajax({
+//             url: "/api/feedingdatabase",
+//             dataType: "json",
+//             type: "GET"
+//         }).done(function(response) {
+//             d.resolve(response);
+//         });
+
+//         return d.promise();
+//     },
+//     updateItem: function(item) {
+//         var d = $.Deferred();
+//         // console.log("updateItem:", item);
+//         $.ajax({
+//             url: "/api/feedingdatabase",
+//             data: JSON.stringify(item),
+//             type: "PUT",
+//             dataType: "json",
+//             contentType: "application/json",
+//         }).done(function(response) {
+//             d.resolve(response);
+//         });
+//         return d.promise();
+//     },
+//     deleteItem: function(item) {
+//         var d = $.Deferred();
+//         $.ajax({
+//             url: "/api/feedingdatabase",
+//             data: item,
+//             type: "DELETE",
+//         }).done(function(response) {
+//             d.resolve(response);
+//         });
+//         return d.promise();
+//     },
+//     insertItem: function(item) {
+//         var d = $.Deferred();
+//         $.ajax({
+//             url: "/api/feedingdatabase",
+//             data: JSON.stringify(item),
+//             dataType: "json",
+//             contentType: "application/json",
+//             type: "POST",
+//         }).done(function(response) {
+//             d.resolve(response);
+//         });
+//         return d.promise();
+//     },
 
 
-});
+//     },
+//     fields: [
+//         { 
+//         name: "場域編號", 
+//         type: "text", 
+//         width: 40, 
+//         validate: "required" 
+//         },
+//         { 
+//         name: "投餌機編號",
+//         type: "text", 
+//         width: 40 
+//         },
+//         { 
+//         name: "投餌時間", 
+//         type: "text", 
+//         width: 60,
+//         sorting: true
+//         },
+//         { name: "耗時(分鐘)",
+//         type: "number",
+//         width: 30 
+//         },
+//         { 
+//         name: "投餌料號", 
+//         type: "text", 
+//         width: 40 
+//         },
+//         { 
+//         name: "投餌量(公克)", 
+//         type: "number", 
+//         width: 30 
+//         },
+//         { 
+//         type: "control", 
+//         width: 20 
+//         }
+//     ]
 
+
+// });
