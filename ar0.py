@@ -6,6 +6,7 @@ import json
 import uuid
 from flask import Flask, jsonify, make_response, render_template, request, redirect, url_for, session
 from matplotlib import pyplot as plt
+from matplotlib.font_manager import FontProperties
 from flask_login import LoginManager, UserMixin, login_user, logout_user
 from flask_cors import CORS
 import pymysql
@@ -50,6 +51,18 @@ users = {
     'ar0DB': 'ar0DB',
     'admin0': 'admin0',
 }
+
+
+def reconnect_to_mysql():
+    print("reconnect to mysql...")
+    connection = pymysql.connect(host='127.0.0.1',
+                                 port=3306,
+                                 user='lab403',
+                                 password='66386638',
+                                 database=databaseName,
+                                 autocommit=True)
+    print("connected!")
+    return connection
 
 
 ''' database name settings ''' 
@@ -122,6 +135,7 @@ def preidict_weights(age, total_fish_number):
     y_set = np.array([16, 27, 66, 188, 368, 625, 856, 1077, 16, 27, 77, 208, 379, 606, 862, 1102, 16, 48, 108, 246, 425, 717, 904, 1180, 16, 42, 106, 276, 477, 754, 991, 1202])
     y_set = y_set * 800 / 1336
     '''
+    
     # 午仔魚
     # 9 months
     date1 = datetime.date(2015,4,1)
@@ -148,7 +162,7 @@ def preidict_weights(age, total_fish_number):
 def preidict_date(latest_weight):
     # 午仔魚
     # 17 months, 2015/4~2016/8
-    x_set = np.array([0, 2, 15, 47, 73, 81, 116, 157, 178, 193, 190, 195, 199, 202, 208, 215, 230]) #, 238, 250, 260])
+    x_set = np.array([0, 2, 15, 47, 73, 81, 116, 157, 178, 193, 190, 195, 199, 202, 208, 215, 230, 238]) #, 250, 260])
     x_set = x_set * 600 / 328
     date1 = datetime.date(2015,4,1)
     date2 = datetime.date(2016,8,31)
@@ -167,6 +181,9 @@ def preidict_date(latest_weight):
     y_set = np.array([16, 27, 66, 188, 368, 625, 856, 1077, 16, 27, 77, 208, 379, 606, 862, 1102, 16, 48, 108, 246, 425, 717, 904, 1180, 16, 42, 106, 276, 477, 754, 991, 1202])
     y_set = y_set * 800 / 1336
     '''
+    
+    print("x_set 的長度:", len(x_set))
+    print("y_set 的長度:", len(y_set))
 
     # KNN Regression
     knn = KNeighborsRegressor(n_neighbors=3)
@@ -190,6 +207,138 @@ def counting_fcr(total_feeding_amount, latest_weight, first_weights):
     else:
         estimated_fcr = round(total_feeding_amount * 1000 / ((latest_weight - first_weights) * 600), 2)
         return estimated_fcr
+
+
+''' API integration'''
+def convert_to_unix_timestamp(datetime_str):
+    dt_obj = datetime.datetime.strptime(datetime_str, '%Y-%m-%d %H:%M:%S')
+    timestamp = int(dt_obj.timestamp() * 1000) # 計算 Unix timestamp (以秒為單位 = 毫秒*1000)
+    return timestamp
+
+def generate_signature(api_key, api_endpoint, request_body, nonce):
+    message = api_key + api_endpoint + request_body + nonce # according to API Authentication from API key document
+    signature = hmac.new(bytes(api_key,'utf-8'), bytes(message,'utf-8'), hashlib.sha256).hexdigest().encode('utf-8')
+    return base64.b64encode(signature).decode('utf-8')
+
+# update data version
+def send_data(journal_id1, journal_id2):
+    print("\nstart to sending data")
+    current_time = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    print('current_time:', current_time)
+    date = convert_to_unix_timestamp(current_time)
+    
+    # get data from database
+    global connection
+    cursor = connection.cursor()
+    for journal_id in range(journal_id1, journal_id2+1): 
+        sql = f"select journal_id from {databaseName}.new_feeding_logs;"
+        cursor.execute(sql)
+        journal_ids = cursor.fetchall()
+
+        if journal_id not in [row[0] for row in journal_ids]:
+            print(f"journal_id({journal_id}) is not in journal_ids")
+            continue
+        else:
+            sql = f"select journal_id, pool_id, start_time, use_time, food_id, food_name, food_unit, feeding_amount, left_amount, status, description from {databaseName}.new_feeding_logs where journal_id={journal_id} limit 1;"
+            cursor.execute(sql)
+            feeding_logs = list(cursor.fetchall())
+            print('feeding_logs:', feeding_logs)
+
+            aquarium_id = "144"                             # "84"
+            action = "update"                               # "create" or "update"
+
+            food_id = str(feeding_logs[0][4])               # "19"        NULL
+            if food_id is None:
+                food_id = ""
+            feeding_amount = str(feeding_logs[0][7])        # 5
+            food_unit = str(feeding_logs[0][6])             # "catty"
+            food_name = str(feeding_logs[0][5])             # "A牌"       NULL
+            if food_name is None: 
+                food_name = ""
+
+            start_time = utc8(feeding_logs, 2) 
+            start_time = start_time[0]
+            start_time = start_time[2]
+            start_time = convert_to_unix_timestamp(start_time) # 1693877520000
+            
+            use_time = int(feeding_logs[0][3])              # 35
+            status = str(feeding_logs[0][9])           
+            status = str(feeding_logs[0][9])                # "normal"    NULL
+            if status is None: 
+                status = ""
+            left_amount = str(feeding_logs[0][8])           # ""          
+            description = str(feeding_logs[0][10])          # "吃很久"     NULL
+            if description is None:
+                description = ""
+
+            sql = f"select distinct food_id from {databaseName}.new_feeding_logs WHERE food_id IS NOT NULL;"
+            cursor.execute(sql)
+            checkedList = list(cursor.fetchall())
+            checkedList = [food_id]# [str(food_id[0]) for food_id in checkedList] # ["19"]
+            
+            # params from ekoral
+            url = 'https://api.ekoral.io' 
+            api_key = 'WSGS4kmccIGadre9Cr3PgksaUeR4umR1' 
+            api_endpoint = '/api/configure_journal_feeding' 
+            member_id = '30095' 
+            data = {
+                "parm": {
+                    "journal": {
+                    "aquarium_id": aquarium_id,
+                    "journal_id": journal_id,
+                    "action": action,
+                    "date": date,
+                    "feeding": [
+                        {
+                        "food": [
+                            {
+                            "id": "39",
+                            "weight": feeding_amount,
+                            "unit": food_unit,
+                            "name": "測試"
+                            }
+                        ],
+                        "feedingTime": start_time,
+                        "period": use_time,
+                        "status": status,
+                        "left": left_amount,
+                        "description": description,
+                        "checkedList": [
+                            "39"
+                        ]
+                        }
+                    ]
+                    }
+                }
+            }
+            
+            print(data)
+            
+            request_body = json.dumps(data, separators=(',', ':'), ensure_ascii=False)
+            nonce = str(uuid.uuid4()) # 動態生成 nonce  
+            signature = generate_signature(api_key, api_endpoint, request_body, nonce)
+            
+            headers = {
+                'x-ekoral-memberid': member_id,
+                'x-ekoral-authorization': signature,
+                'x-ekoral-authorization-nonce': nonce,
+                'Content-Type': 'application/json'
+            }
+
+            try:
+                response = requests.post(url + api_endpoint, headers=headers, json=data)
+                response.raise_for_status()  # Raises an exception for non-2xx status codes
+
+                if response.status_code == 200:
+                    print("Request successful!")
+                    print("Response:", response.json())
+                else:
+                    print("Unexpected status code:", response.status_code)
+                    print("Response:", response.text)
+            except requests.exceptions.RequestException as e:
+                print("Request failed:", e)
+
+    return 
 
 
 ''' root page ''' 
@@ -248,10 +397,17 @@ def home():
     if 'username' in session:
         update_time = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
         print(update_time)
+        
         global connection
         cursor = connection.cursor()
-        sql = "use " + databaseName + ";"
-        cursor.execute(sql)
+        sql = f"USE {databaseName};"
+        try:
+            cursor.execute(sql)
+        except pymysql.err.OperationalError as e:
+            print(f"OperationalError: {e}")
+            connection = reconnect_to_mysql() 
+            cursor = connection.cursor()
+            cursor.execute(sql)
 
         sql= "select * from field_logs where DATE_FORMAT(update_time, '%Y-%m-%d') = CURDATE() limit 1; " 
         pool_data = list(cursor.fetchall()) 
@@ -326,8 +482,14 @@ def storeFrames():
 def connect_to_db():
     global connection
     cursor = connection.cursor()
-    sql = "use " + databaseName + ";"
-    cursor.execute(sql)
+    sql = f"USE {databaseName};"
+    try:
+        cursor.execute(sql)
+    except pymysql.err.OperationalError as e:
+        print(f"OperationalError: {e}")
+        connection = reconnect_to_mysql() 
+        cursor = connection.cursor()
+        cursor.execute(sql)
 
     global framesData
     sql = "select update_time, data from frames where ID = 1;"
@@ -379,11 +541,16 @@ def field_view():
 @app.route('/field_logs', methods=["GET", "POST"])
 def field_logs():
     if 'username' in session:
-        # print(request.method)
         global connection
         cursor = connection.cursor()
-        sql = "use " + databaseName + ";"
-        cursor.execute(sql)
+        sql = f"USE {databaseName};"
+        try:
+            cursor.execute(sql)
+        except pymysql.err.OperationalError as e:
+            print(f"OperationalError: {e}")
+            connection = reconnect_to_mysql() 
+            cursor = connection.cursor()
+            cursor.execute(sql)
         
         sql = "select * from field_logs;"
         cursor.execute(sql)
@@ -443,8 +610,14 @@ def update():
         isSuccess = 0
         global connection
         cursor = connection.cursor()
-        sql = "use " + databaseName + ";"
-        cursor.execute(sql)
+        sql = f"USE {databaseName};"
+        try:
+            cursor.execute(sql)
+        except pymysql.err.OperationalError as e:
+            print(f"OperationalError: {e}")
+            connection = reconnect_to_mysql() 
+            cursor = connection.cursor()
+            cursor.execute(sql)
 
         if request.method == "POST":  
             opt = int(request.form.get("opt"))
@@ -585,67 +758,191 @@ def update():
 @app.route('/feeding_logs', methods=["GET", "POST"])
 def feeding_logs():
     if 'username' in session:
-        feeding_data = None
-        base64_img = ''
-
         global connection
         cursor = connection.cursor()
-        sql = "use " + databaseName + ";"
-        cursor.execute(sql)
-        
+        sql = f"USE {databaseName};"
+        try:
+            cursor.execute(sql)
+        except pymysql.err.OperationalError as e:
+            print(f"OperationalError: {e}")
+            connection = reconnect_to_mysql() 
+            cursor = connection.cursor()
+            cursor.execute(sql)
+
+        global feeding_logs_date_temp
+        feeding_logs_date_temp = ""
+        new_feeding_data = None
+        original_feeding_data = None
+        base64_img = ''
         if request.method == "POST": 
-            all_records = request.form.get("all_records")
-            if all_records == 'true' or all_records == '1':
-                sql = "SELECT * FROM feeding_logs"
+            update_logs = request.form.get("update_logs")
+            if update_logs == 'true' or update_logs == '1': # 填寫紀錄
+                journal_id1 = int(request.form.get("journal_id1"))
+                journal_id2 = int(request.form.get("journal_id2"))
+                food_name = request.form.get("food_name")
+                sql = "SELECT food_name, food_id FROM new_feeding_logs"
                 cursor.execute(sql)
-                feeding_data = list(cursor.fetchall())
-                all_records = ''
-            else:
-                feeding_logs_date = request.form.get("feeding_logs_date")
-                selected_date = datetime.datetime.strptime(feeding_logs_date, "%Y-%m-%d")
-                next_day = selected_date + timedelta(days=1)
-                one_week_ago = selected_date - timedelta(days=7)
-                time_range = [one_week_ago + timedelta(days=i) for i in range(9)] 
+                food_names_in_db = cursor.fetchall()
+                new_food_id = None
+                food_name_exists = False
+                for name, food_id in food_names_in_db:
+                    if food_name == name:
+                        food_name_exists = True
+                        new_food_id = food_id
+                        break
+                if not food_name_exists:
+                    max_food_id = max((food_id for _, food_id in food_names_in_db if food_id is not None), default=0)
+                    new_food_id = max_food_id + 1
+                print("new_food_id:", new_food_id)
 
-                sql = "SELECT * FROM feeding_logs WHERE start_time between %s AND %s"
-                cursor.execute(sql, (one_week_ago + timedelta(days=1), next_day))
-                feeding_data = list(cursor.fetchall())
+                status = request.form.get("status")
+                description = request.form.get("description")
+                sql = f"UPDATE new_feeding_logs SET food_id = '{new_food_id}', food_name = '{food_name}', status = '{status}', description = '{description}' WHERE journal_id BETWEEN {journal_id1} AND {journal_id2};"
+                cursor.execute(sql)
 
-                start_times = [row[2] for row in feeding_data]  
-                use_times = [row[3] for row in feeding_data]   
+                # update api data
+                send_data(journal_id1, journal_id2)
+                print('send_data finished!')
 
-                # 測資
-                # start_times = [datetime.datetime(2024, 4, 22, 8, 0), datetime.datetime(2024, 4, 22, 14, 0), datetime.datetime(2024, 4, 23, 10, 0), datetime.datetime(2024, 4, 24, 12, 0)]
-                # use_times = [120, 30, 180, 90]  # 使用時間（分鐘）
+                # show feeding_logs updated result 
+                if feeding_logs_date_temp: 
+                    feeding_logs_date = feeding_logs_date_temp
+                    selected_date = datetime.datetime.strptime(feeding_logs_date, "%Y-%m-%d")
+                    next_day = selected_date + timedelta(days=1)
+                    one_week_ago = selected_date - timedelta(days=7)
+                    time_range = [one_week_ago + timedelta(days=i) for i in range(9)] 
 
-                plt.figure(figsize=(10, 8))
+                    sql = "select * from new_feeding_logs where start_time between %s and %s"
+                    cursor.execute(sql, (one_week_ago + timedelta(days=1), next_day))
+                    new_feeding_data = list(cursor.fetchall())
+                    start_times = [row[3] for row in new_feeding_data]  
+                    use_times = [row[4] for row in new_feeding_data]  
+                    feeding_amounts = [row[8] for row in new_feeding_data]  
 
-                plt.xlim(time_range[0], time_range[-1])
-                plt.xticks(time_range[1:-1], rotation=60)
-                plt.gca().xaxis.set_ticks_position('top')
-                plt.gca().xaxis.set_label_position('top')
-                
-                plt.ylim(0, 24*60)
-                plt.yticks(range(24*60, 0, -60), [f"{h:02d}:00" for h in range(0, 24)])
-                plt.grid(axis='y', linestyle='--', color='gray')
+                    sql = "select * from original_feeding_logs where start_time between %s and %s"
+                    cursor.execute(sql, (one_week_ago + timedelta(days=1), next_day))
+                    original_feeding_data = list(cursor.fetchall())
+                    original_start_times = [row[2] for row in original_feeding_data]  
+                    original_use_times = [row[3] for row in original_feeding_data]  
 
-                # 將每個 start_time 根據 y 軸(00:00 到 23:59，間隔1小時)開始往下，並根據 use_time(分鐘) 來繪製長條
-                for start_time, use_time in zip(start_times, use_times):
-                    start_y = (start_time.hour * 60 + start_time.minute)  
-                    print(f'part of {start_time} is same as {24-(1440-start_y-use_time)/60}')
-                    plt.bar(start_time.date(), use_time, width=0.2, bottom=(1440-start_y-use_time), color='#009999')
+                    font_path = '/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc'
+                    font_prop = FontProperties(fname=font_path)
+                    plt.figure(figsize=(14, 8))
 
-                plt.xlabel('date', labelpad=10)
-                plt.ylabel('feeding time', labelpad=10)
+                    plt.xlim(time_range[0], time_range[-1])
+                    plt.xticks(time_range[1:-1], rotation=60, fontproperties=font_prop) 
+                    plt.gca().xaxis.set_ticks_position('top')
+                    plt.gca().xaxis.set_label_position('top')
 
-                plt.tight_layout()
+                    plt.ylim(0, 24*60)
+                    plt.yticks(range(24*60, 0, -60), [f"{h:02d}:00" for h in range(0, 24)], fontproperties=font_prop)  
+                    plt.grid(axis='y', linestyle='--', color='gray')
 
-                img_data = io.BytesIO()
-                plt.savefig(img_data, format='png')
-                img_data.seek(0)
-                base64_img = base64.b64encode(img_data.getvalue()).decode()
+                    # 將每個 start_time 根據 y 軸(00:00 到 23:59，間隔1小時)開始往下，並根據 use_time(分鐘) 來繪製長條
+                    for start_time, use_time, feeding_amount in zip(start_times, use_times, feeding_amounts):
+                        start_y = (start_time.hour * 60 + start_time.minute)  
+                        print(f'part of {start_time} is same as {24-(1440-start_y-use_time)/60}')
+                        midday = datetime.datetime(start_time.year, start_time.month, start_time.day, 22, 0) - timedelta(days=1)
+                        plt.bar(midday, use_time, width=0.17, bottom=(1440-start_y-use_time), color='#009999')
+                        plt.text(midday, (1440 - start_y), str(feeding_amount), ha='center', va='bottom', color='black', fontsize=8)
 
-        return render_template('feeding_logs.html', feeding_data=feeding_data, base64_img=base64_img, species=species, species_logo_url=species_logo_url) 
+                    for start_time, use_time in zip(original_start_times, original_use_times):
+                        start_y = (start_time.hour * 60 + start_time.minute)  
+                        print(f'part of {start_time} is same as {24-(1440-start_y-use_time)/60}')
+                        midday = datetime.datetime(start_time.year, start_time.month, start_time.day, 2, 0)
+                        plt.bar(midday, use_time, width=0.17, bottom=(1440-start_y-use_time), color='#ee8822')
+
+                    legend_labels = {'#009999': '新料桶', '#ee8822': '舊料桶', 'black': '投餌量(公斤)'}
+                    legend_handles = []
+                    for color, label in legend_labels.items():
+                        legend_handles.append(plt.Rectangle((0,0),1,1, color=color, label=label))
+                    plt.legend(handles=legend_handles, prop=font_prop) 
+
+                    plt.xlabel('date', labelpad=10, fontproperties=font_prop)  
+                    plt.ylabel('feeding time', labelpad=10, fontproperties=font_prop) 
+                    plt.tight_layout()
+
+                    img_data = io.BytesIO()
+                    plt.savefig(img_data, format='png')
+                    img_data.seek(0)
+                    base64_img = base64.b64encode(img_data.getvalue()).decode()
+                    update_logs = '' 
+                    feeding_logs_date_temp = '' 
+            else: # 不填寫紀錄 => 查看紀錄
+                all_records = request.form.get("all_records")
+                if all_records == 'true' or all_records == '1': # 查看所有紀錄
+                    sql = "SELECT * FROM new_feeding_logs"
+                    cursor.execute(sql)
+                    new_feeding_data = list(cursor.fetchall())
+                    sql = "SELECT * FROM original_feeding_logs"
+                    cursor.execute(sql)
+                    original_feeding_data = list(cursor.fetchall())
+                    all_records = ''
+                else: # 查看查詢日期開始往前一週(7天)的紀錄
+                    feeding_logs_date = request.form.get("feeding_logs_date")
+                    selected_date = datetime.datetime.strptime(feeding_logs_date, "%Y-%m-%d")
+                    next_day = selected_date + timedelta(days=1)
+                    one_week_ago = selected_date - timedelta(days=7)
+                    time_range = [one_week_ago + timedelta(days=i) for i in range(9)] 
+
+                    sql = "select * from new_feeding_logs where start_time between %s and %s"
+                    cursor.execute(sql, (one_week_ago + timedelta(days=1), next_day))
+                    new_feeding_data = list(cursor.fetchall())
+                    start_times = [row[3] for row in new_feeding_data]  
+                    use_times = [row[4] for row in new_feeding_data]  
+                    feeding_amounts = [row[8] for row in new_feeding_data]  
+
+                    sql = "select * from original_feeding_logs where start_time between %s and %s"
+                    cursor.execute(sql, (one_week_ago + timedelta(days=1), next_day))
+                    original_feeding_data = list(cursor.fetchall())
+                    original_start_times = [row[2] for row in original_feeding_data]  
+                    original_use_times = [row[3] for row in original_feeding_data]  
+
+                    font_path = '/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc'
+                    font_prop = FontProperties(fname=font_path)
+                    plt.figure(figsize=(14, 8))
+
+                    plt.xlim(time_range[0], time_range[-1])
+                    plt.xticks(time_range[1:-1], rotation=60, fontproperties=font_prop) 
+                    plt.gca().xaxis.set_ticks_position('top')
+                    plt.gca().xaxis.set_label_position('top')
+
+                    plt.ylim(0, 24*60)
+                    plt.yticks(range(24*60, 0, -60), [f"{h:02d}:00" for h in range(0, 24)], fontproperties=font_prop)  
+                    plt.grid(axis='y', linestyle='--', color='gray')
+
+                    # 將每個 start_time 根據 y 軸(00:00 到 23:59，間隔1小時)開始往下，並根據 use_time(分鐘) 來繪製長條
+                    for start_time, use_time, feeding_amount in zip(start_times, use_times, feeding_amounts):
+                        start_y = (start_time.hour * 60 + start_time.minute)  
+                        print(f'part of {start_time} is same as {24-(1440-start_y-use_time)/60}')
+                        midday = datetime.datetime(start_time.year, start_time.month, start_time.day, 22, 0) - timedelta(days=1)
+                        plt.bar(midday, use_time, width=0.17, bottom=(1440-start_y-use_time), color='#009999')
+                        plt.text(midday, (1440 - start_y), str(feeding_amount), ha='center', va='bottom', color='black', fontsize=8)
+
+                    for start_time, use_time in zip(original_start_times, original_use_times):
+                        start_y = (start_time.hour * 60 + start_time.minute)  
+                        print(f'part of {start_time} is same as {24-(1440-start_y-use_time)/60}')
+                        midday = datetime.datetime(start_time.year, start_time.month, start_time.day, 2, 0)
+                        plt.bar(midday, use_time, width=0.17, bottom=(1440-start_y-use_time), color='#ee8822')
+
+                    legend_labels = {'#009999': '新料桶', '#ee8822': '舊料桶', 'black': '投餌量(公斤)'}
+                    legend_handles = []
+                    for color, label in legend_labels.items():
+                        legend_handles.append(plt.Rectangle((0,0),1,1, color=color, label=label))
+                    plt.legend(handles=legend_handles, prop=font_prop) 
+
+                    plt.xlabel('date', labelpad=10, fontproperties=font_prop)  
+                    plt.ylabel('feeding time', labelpad=10, fontproperties=font_prop) 
+                    plt.tight_layout()
+
+                    img_data = io.BytesIO()
+                    plt.savefig(img_data, format='png')
+                    img_data.seek(0)
+                    base64_img = base64.b64encode(img_data.getvalue()).decode()
+                    feeding_logs_date_temp = feeding_logs_date
+                    feeding_logs_date = ''
+
+        return render_template('feeding_logs.html', new_feeding_data=new_feeding_data, original_feeding_data=original_feeding_data, base64_img=base64_img, species=species, species_logo_url=species_logo_url) 
     else:
         return redirect(url_for('login'))   
 
@@ -663,17 +960,23 @@ def query_result():
     if 'username' in session:
         global connection
         cursor = connection.cursor()
-        sql = "use " + databaseName + ";"
-        cursor.execute(sql)
+        sql = f"USE {databaseName};"
+        try:
+            cursor.execute(sql)
+        except pymysql.err.OperationalError as e:
+            print(f"OperationalError: {e}")
+            connection = reconnect_to_mysql() 
+            cursor = connection.cursor()
+            cursor.execute(sql)
         
         if request.method == "POST":
-            pool_ID = request.form.get("pool_ID")
-            print(pool_ID)
-            sql = "select pool_ID from field_logs where pool_ID = "+str(pool_ID)+";"
+            pool_id = request.form.get("pool_id")
+            print(pool_id)
+            sql = f"select pool_id from field_logs where pool_id={str(pool_id)};"
             cursor.execute(sql)
             field_result = cursor.fetchall()
 
-            sql = "select pool_ID from feeding_logs where pool_ID = "+str(pool_ID)+";"
+            sql = f"select pool_id from new_feeding_logs where pool_id={str(pool_id)};"
             cursor.execute(sql)
             feeding_result = cursor.fetchall()
             
@@ -682,29 +985,29 @@ def query_result():
                 alertContent="ThisPoolhasNoFieldData!"
 
             elif len(feeding_result) == 0:
-                print("feeding_logs is empty")
+                print("new_feeding_logs is empty")
                 alertContent="ThisPoolhasNoFeedingData!"
 
             else:
                 print("Result set is not empty")
                 # counting estimated_weights
-                sql = "select record_weights from field_logs where pool_ID = "+str(pool_ID)+" order by update_time asc;"
+                sql = f"select record_weights from field_logs where pool_id={str(pool_id)} order by update_time asc;"
                 cursor.execute(sql)
                 first_weight = cursor.fetchone()
                 first_weight = first_weight[0]
 
-                sql = "select spec from field_logs where pool_ID = "+str(pool_ID)+" order by update_time asc;"
+                sql = f"select spec from field_logs where pool_id={str(pool_id)} order by update_time asc;"
                 cursor.execute(sql)
                 first_spec = cursor.fetchone()
                 first_spec = first_spec[0]
                 total_fish_number = first_spec * first_weight
 
-                sql = "select estimated_weights from field_logs where pool_ID = "+str(pool_ID)+" order by update_time desc;"
+                sql = f"select estimated_weights from field_logs where pool_id={str(pool_id)} order by update_time desc;"
                 cursor.execute(sql)
                 latest_weight = cursor.fetchone()
                 latest_weight = latest_weight[0]
 
-                sql = "select update_time from field_logs where pool_ID = "+str(pool_ID)+" order by update_time asc;"
+                sql = f"select update_time from field_logs where pool_id={str(pool_id)} order by update_time asc;"
                 cursor.execute(sql) 
                 first_time = cursor.fetchone()
                 first_time = first_time[0]
@@ -712,7 +1015,7 @@ def query_result():
                 age = str((query_time-first_time).days)
                 
                 # counting fcr
-                sql = "select feeding_amount from feeding_logs where pool_ID = "+str(pool_ID)+";"
+                sql = f"select feeding_amount from new_feeding_logs where pool_id={str(pool_id)} order by start_time desc;"
                 cursor.execute(sql)
                 feeding_amount = list(cursor.fetchall())
                 total_feeding_amount = 0
@@ -732,106 +1035,6 @@ def query_result():
     else:
         return redirect(url_for('login'))
 
-
-''' API integration'''
-def convert_to_unix_timestamp(datetime_str):
-    dt_obj = datetime.datetime.strptime(datetime_str, '%Y-%m-%d %H:%M:%S')
-    timestamp = int(dt_obj.timestamp() * 1000) # 計算 Unix timestamp (以秒為單位 = 毫秒*1000)
-    return timestamp
-
-def generate_signature(api_key, api_endpoint, request_body, nonce):
-    message = api_key + api_endpoint + request_body + nonce # according to API Authentication from API key document
-    signature = hmac.new(bytes(api_key,'utf-8'), bytes(message,'utf-8'), hashlib.sha256).hexdigest().encode('utf-8')
-    print("Signature:", signature)
-    return base64.b64encode(signature).decode('utf-8')
-
-@app.route('/send_data')
-def send_data():
-    current_time = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-    date = convert_to_unix_timestamp(current_time)
-    
-    # get data from database
-    global connection
-    cursor = connection.cursor()
-    sql = "use " + databaseName + ";"
-    cursor.execute(sql)
-
-    sql = "select pool_ID, start_time, use_time, food_ID, feeding_amount from feeding_logs order by start_time desc limit 1;"
-    cursor.execute(sql)
-    feeding_logs = list(cursor.fetchall())
-    start_time = utc8(feeding_logs, 1)
-    start_time = start_time[0]
-    start_time = start_time[1]
-    feedingTime = convert_to_unix_timestamp(start_time)
-    feeding_logs = feeding_logs[0]
-    # aquarium_id = feeding_logs[0]
-    period = int(feeding_logs[2])
-    # food_ID = feeding_logs[3]
-    weight = float(feeding_logs[4])
-
-    
-    # 參數們
-    url = 'https://api.ekoral.io' 
-    api_key = 'WSGS4kmccIGadre9Cr3PgksaUeR4umR1'  # from ekoral
-    api_endpoint = '/api/configure_journal_feeding' # from ekoral
-    member_id = '30095'  # from ekoral
-    data = {
-        "parm": {
-            "journal": {
-                "aquarium_id": "144",
-                "journal_id": 0,
-                "action": "create",
-                "date": date,
-                "feeding": [
-                    {
-                        "food": [
-                            {
-                                "id": "19",
-                                "weight": weight,
-                                "unit": "catty",
-                                "name": "A牌"
-                            }
-                        ],
-                        "feedingTime": feedingTime,
-                        "period": period,
-                        "status": "normal",
-                        "left": "",
-                        "description": "吃很久",
-                        "checkedList": [
-                            "19"
-                        ]
-                    }
-                ]
-            }
-        }
-    }
-    request_body = json.dumps(data, separators=(',', ':'), ensure_ascii=False)
-    nonce = str(uuid.uuid4()) # 動態生成 nonce  
-    signature = generate_signature(api_key, api_endpoint, request_body, nonce)
-    
-    headers = {
-        'x-ekoral-memberid': member_id,
-        'x-ekoral-authorization': signature,
-        'x-ekoral-authorization-nonce': nonce,
-        'Content-Type': 'application/json'
-    }
-
-    try:
-        response = requests.post(url + api_endpoint, headers=headers, json=data)
-        response.raise_for_status()  # Raises an exception for non-2xx status codes
-
-        if response.status_code == 200:
-            print("Request successful!")
-            print("Response:")
-            print(response.json())
-        else:
-            print("Unexpected status code:", response.status_code)
-            print("Response:")
-            print(response.text)
-        return make_response("OK", 200)
-    except requests.exceptions.RequestException as e:
-        print("Request failed:", e)
-        return make_response("Error", 500)
 
 ''' choose ripple frames (send to linebot)'''
 def storeRippleFrames():
@@ -869,8 +1072,14 @@ def getRippleFrames():
 
     global connection
     cursor = connection.cursor()
-    sql = "use " + databaseName + ";"
-    cursor.execute(sql)
+    sql = f"USE {databaseName};"
+    try:
+        cursor.execute(sql)
+    except pymysql.err.OperationalError as e:
+        print(f"OperationalError: {e}")
+        connection = reconnect_to_mysql() 
+        cursor = connection.cursor()
+        cursor.execute(sql)
 
     sql = "select count(*) as row_count from ripple_frames"
     cursor.execute(sql)
@@ -910,11 +1119,16 @@ def choose_ripple_frames():
     
     if request.method == "POST":  
         databaseName = portChoooseDatabaseName()
-        
         global connection
         cursor = connection.cursor()
-        sql = "use " + databaseName + ";"
-        cursor.execute(sql)
+        sql = f"USE {databaseName};"
+        try:
+            cursor.execute(sql)
+        except pymysql.err.OperationalError as e:
+            print(f"OperationalError: {e}")
+            connection = reconnect_to_mysql() 
+            cursor = connection.cursor()
+            cursor.execute(sql)
 
         sql = "select count(*) as row_count from ripple_frames"
         cursor.execute(sql)

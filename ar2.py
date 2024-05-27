@@ -53,6 +53,18 @@ users = {
 }
 
 
+def reconnect_to_mysql():
+    print("reconnect to mysql...")
+    connection = pymysql.connect(host='127.0.0.1',
+                                 port=3306,
+                                 user='lab403',
+                                 password='66386638',
+                                 database=databaseName,
+                                 autocommit=True)
+    print("connected!")
+    return connection
+
+
 ''' database name settings ''' 
 def usernameChooseDatabaseName(username):
     global databaseName
@@ -96,17 +108,6 @@ def portChoooseDatabaseName():
         return "ar6DB"
     elif port == 5070:
         return "ar7DB"
-
-
-def connect_to_mysql():
-    print("reconnect to mysql...")
-    connection = pymysql.connect(host='127.0.0.1',
-                                 port=3306,
-                                 user='lab403',
-                                 password='66386638',
-                                 autocommit=True)
-    print("connected!")
-    return connection
 
 
 ''' date format setting ''' 
@@ -162,7 +163,7 @@ def preidict_date(latest_weight):
     # 午仔魚
     # 17 months, 2015/4~2016/8
     '''
-    x_set = np.array([0, 2, 15, 47, 73, 81, 116, 157, 178, 193, 190, 195, 199, 202, 208, 215, 230]) #, 238, 250, 260])
+    x_set = np.array([0, 2, 15, 47, 73, 81, 116, 157, 178, 193, 190, 195, 199, 202, 208, 215, 230, 238]) #, 250, 260])
     x_set = x_set * 600 / 328
     date1 = datetime.date(2015,4,1)
     date2 = datetime.date(2016,8,31)
@@ -180,6 +181,9 @@ def preidict_date(latest_weight):
         x_set = np.append(x_set, x)
     y_set = np.array([16, 27, 66, 188, 368, 625, 856, 1077, 16, 27, 77, 208, 379, 606, 862, 1102, 16, 48, 108, 246, 425, 717, 904, 1180, 16, 42, 106, 276, 477, 754, 991, 1202])
     y_set = y_set * 800 / 1336
+    
+    print("x_set 的長度:", len(x_set))
+    print("y_set 的長度:", len(y_set))
 
     # KNN Regression
     knn = KNeighborsRegressor(n_neighbors=3)
@@ -336,6 +340,7 @@ def send_data(journal_id1, journal_id2):
 
     return 
 
+
 ''' root page ''' 
 @app.route('/')
 def test():
@@ -392,10 +397,17 @@ def home():
     if 'username' in session:
         update_time = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
         print(update_time)
+        
         global connection
         cursor = connection.cursor()
-        sql = "use " + databaseName + ";"
-        cursor.execute(sql)
+        sql = f"USE {databaseName};"
+        try:
+            cursor.execute(sql)
+        except pymysql.err.OperationalError as e:
+            print(f"OperationalError: {e}")
+            connection = reconnect_to_mysql() 
+            cursor = connection.cursor()
+            cursor.execute(sql)
 
         sql= "select * from field_logs where DATE_FORMAT(update_time, '%Y-%m-%d') = CURDATE() limit 1; " 
         pool_data = list(cursor.fetchall()) 
@@ -470,8 +482,14 @@ def storeFrames():
 def connect_to_db():
     global connection
     cursor = connection.cursor()
-    sql = "use " + databaseName + ";"
-    cursor.execute(sql)
+    sql = f"USE {databaseName};"
+    try:
+        cursor.execute(sql)
+    except pymysql.err.OperationalError as e:
+        print(f"OperationalError: {e}")
+        connection = reconnect_to_mysql() 
+        cursor = connection.cursor()
+        cursor.execute(sql)
 
     global framesData
     sql = "select update_time, data from frames where ID = 1;"
@@ -523,11 +541,16 @@ def field_view():
 @app.route('/field_logs', methods=["GET", "POST"])
 def field_logs():
     if 'username' in session:
-        # print(request.method)
         global connection
         cursor = connection.cursor()
-        sql = "use " + databaseName + ";"
-        cursor.execute(sql)
+        sql = f"USE {databaseName};"
+        try:
+            cursor.execute(sql)
+        except pymysql.err.OperationalError as e:
+            print(f"OperationalError: {e}")
+            connection = reconnect_to_mysql() 
+            cursor = connection.cursor()
+            cursor.execute(sql)
         
         sql = "select * from field_logs;"
         cursor.execute(sql)
@@ -587,8 +610,14 @@ def update():
         isSuccess = 0
         global connection
         cursor = connection.cursor()
-        sql = "use " + databaseName + ";"
-        cursor.execute(sql)
+        sql = f"USE {databaseName};"
+        try:
+            cursor.execute(sql)
+        except pymysql.err.OperationalError as e:
+            print(f"OperationalError: {e}")
+            connection = reconnect_to_mysql() 
+            cursor = connection.cursor()
+            cursor.execute(sql)
 
         if request.method == "POST":  
             opt = int(request.form.get("opt"))
@@ -729,16 +758,22 @@ def update():
 @app.route('/feeding_logs', methods=["GET", "POST"])
 def feeding_logs():
     if 'username' in session:
+        global connection
+        cursor = connection.cursor()
+        sql = f"USE {databaseName};"
+        try:
+            cursor.execute(sql)
+        except pymysql.err.OperationalError as e:
+            print(f"OperationalError: {e}")
+            connection = reconnect_to_mysql() 
+            cursor = connection.cursor()
+            cursor.execute(sql)
+
         global feeding_logs_date_temp
+        feeding_logs_date_temp = ""
         new_feeding_data = None
         original_feeding_data = None
         base64_img = ''
-
-        global connection
-        cursor = connection.cursor()
-        sql = "use " + databaseName + ";"
-        cursor.execute(sql)
-
         if request.method == "POST": 
             update_logs = request.form.get("update_logs")
             if update_logs == 'true' or update_logs == '1': # 填寫紀錄
@@ -770,68 +805,69 @@ def feeding_logs():
                 print('send_data finished!')
 
                 # show feeding_logs updated result 
-                feeding_logs_date = feeding_logs_date_temp
-                selected_date = datetime.datetime.strptime(feeding_logs_date, "%Y-%m-%d")
-                next_day = selected_date + timedelta(days=1)
-                one_week_ago = selected_date - timedelta(days=7)
-                time_range = [one_week_ago + timedelta(days=i) for i in range(9)] 
+                if feeding_logs_date_temp: 
+                    feeding_logs_date = feeding_logs_date_temp
+                    selected_date = datetime.datetime.strptime(feeding_logs_date, "%Y-%m-%d")
+                    next_day = selected_date + timedelta(days=1)
+                    one_week_ago = selected_date - timedelta(days=7)
+                    time_range = [one_week_ago + timedelta(days=i) for i in range(9)] 
 
-                sql = "select * from new_feeding_logs where start_time between %s and %s"
-                cursor.execute(sql, (one_week_ago + timedelta(days=1), next_day))
-                new_feeding_data = list(cursor.fetchall())
-                start_times = [row[3] for row in new_feeding_data]  
-                use_times = [row[4] for row in new_feeding_data]  
-                feeding_amounts = [row[8] for row in new_feeding_data]  
+                    sql = "select * from new_feeding_logs where start_time between %s and %s"
+                    cursor.execute(sql, (one_week_ago + timedelta(days=1), next_day))
+                    new_feeding_data = list(cursor.fetchall())
+                    start_times = [row[3] for row in new_feeding_data]  
+                    use_times = [row[4] for row in new_feeding_data]  
+                    feeding_amounts = [row[8] for row in new_feeding_data]  
 
-                sql = "select * from original_feeding_logs where start_time between %s and %s"
-                cursor.execute(sql, (one_week_ago + timedelta(days=1), next_day))
-                original_feeding_data = list(cursor.fetchall())
-                original_start_times = [row[2] for row in original_feeding_data]  
-                original_use_times = [row[3] for row in original_feeding_data]  
+                    sql = "select * from original_feeding_logs where start_time between %s and %s"
+                    cursor.execute(sql, (one_week_ago + timedelta(days=1), next_day))
+                    original_feeding_data = list(cursor.fetchall())
+                    original_start_times = [row[2] for row in original_feeding_data]  
+                    original_use_times = [row[3] for row in original_feeding_data]  
 
-                font_path = '/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc'
-                font_prop = FontProperties(fname=font_path)
-                plt.figure(figsize=(14, 8))
+                    font_path = '/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc'
+                    font_prop = FontProperties(fname=font_path)
+                    plt.figure(figsize=(14, 8))
 
-                plt.xlim(time_range[0], time_range[-1])
-                plt.xticks(time_range[1:-1], rotation=60, fontproperties=font_prop) 
-                plt.gca().xaxis.set_ticks_position('top')
-                plt.gca().xaxis.set_label_position('top')
+                    plt.xlim(time_range[0], time_range[-1])
+                    plt.xticks(time_range[1:-1], rotation=60, fontproperties=font_prop) 
+                    plt.gca().xaxis.set_ticks_position('top')
+                    plt.gca().xaxis.set_label_position('top')
 
-                plt.ylim(0, 24*60)
-                plt.yticks(range(24*60, 0, -60), [f"{h:02d}:00" for h in range(0, 24)], fontproperties=font_prop)  
-                plt.grid(axis='y', linestyle='--', color='gray')
+                    plt.ylim(0, 24*60)
+                    plt.yticks(range(24*60, 0, -60), [f"{h:02d}:00" for h in range(0, 24)], fontproperties=font_prop)  
+                    plt.grid(axis='y', linestyle='--', color='gray')
 
-                # 將每個 start_time 根據 y 軸(00:00 到 23:59，間隔1小時)開始往下，並根據 use_time(分鐘) 來繪製長條
-                for start_time, use_time, feeding_amount in zip(start_times, use_times, feeding_amounts):
-                    start_y = (start_time.hour * 60 + start_time.minute)  
-                    print(f'part of {start_time} is same as {24-(1440-start_y-use_time)/60}')
-                    midday = datetime.datetime(start_time.year, start_time.month, start_time.day, 22, 0) - timedelta(days=1)
-                    plt.bar(midday, use_time, width=0.17, bottom=(1440-start_y-use_time), color='#009999')
-                    plt.text(midday, (1440 - start_y), str(feeding_amount), ha='center', va='bottom', color='black', fontsize=8)
+                    # 將每個 start_time 根據 y 軸(00:00 到 23:59，間隔1小時)開始往下，並根據 use_time(分鐘) 來繪製長條
+                    for start_time, use_time, feeding_amount in zip(start_times, use_times, feeding_amounts):
+                        start_y = (start_time.hour * 60 + start_time.minute)  
+                        print(f'part of {start_time} is same as {24-(1440-start_y-use_time)/60}')
+                        midday = datetime.datetime(start_time.year, start_time.month, start_time.day, 22, 0) - timedelta(days=1)
+                        plt.bar(midday, use_time, width=0.17, bottom=(1440-start_y-use_time), color='#009999')
+                        plt.text(midday, (1440 - start_y), str(feeding_amount), ha='center', va='bottom', color='black', fontsize=8)
 
-                for start_time, use_time in zip(original_start_times, original_use_times):
-                    start_y = (start_time.hour * 60 + start_time.minute)  
-                    print(f'part of {start_time} is same as {24-(1440-start_y-use_time)/60}')
-                    midday = datetime.datetime(start_time.year, start_time.month, start_time.day, 2, 0)
-                    plt.bar(midday, use_time, width=0.17, bottom=(1440-start_y-use_time), color='#ee8822')
+                    for start_time, use_time in zip(original_start_times, original_use_times):
+                        start_y = (start_time.hour * 60 + start_time.minute)  
+                        print(f'part of {start_time} is same as {24-(1440-start_y-use_time)/60}')
+                        midday = datetime.datetime(start_time.year, start_time.month, start_time.day, 2, 0)
+                        plt.bar(midday, use_time, width=0.17, bottom=(1440-start_y-use_time), color='#ee8822')
 
-                legend_labels = {'#009999': '新料桶', '#ee8822': '舊料桶', 'black': '投餌量(公斤)'}
-                legend_handles = []
-                for color, label in legend_labels.items():
-                    legend_handles.append(plt.Rectangle((0,0),1,1, color=color, label=label))
-                plt.legend(handles=legend_handles, prop=font_prop) 
+                    legend_labels = {'#009999': '新料桶', '#ee8822': '舊料桶', 'black': '投餌量(公斤)'}
+                    legend_handles = []
+                    for color, label in legend_labels.items():
+                        legend_handles.append(plt.Rectangle((0,0),1,1, color=color, label=label))
+                    plt.legend(handles=legend_handles, prop=font_prop) 
 
-                plt.xlabel('date', labelpad=10, fontproperties=font_prop)  
-                plt.ylabel('feeding time', labelpad=10, fontproperties=font_prop) 
-                plt.tight_layout()
+                    plt.xlabel('date', labelpad=10, fontproperties=font_prop)  
+                    plt.ylabel('feeding time', labelpad=10, fontproperties=font_prop) 
+                    plt.tight_layout()
 
-                img_data = io.BytesIO()
-                plt.savefig(img_data, format='png')
-                img_data.seek(0)
-                base64_img = base64.b64encode(img_data.getvalue()).decode()
-                update_logs = '' 
-                feeding_logs_date_temp = '' 
+                    img_data = io.BytesIO()
+                    plt.savefig(img_data, format='png')
+                    img_data.seek(0)
+                    base64_img = base64.b64encode(img_data.getvalue()).decode()
+                    update_logs = '' 
+                    feeding_logs_date_temp = '' 
             else: # 不填寫紀錄 => 查看紀錄
                 all_records = request.form.get("all_records")
                 if all_records == 'true' or all_records == '1': # 查看所有紀錄
@@ -924,17 +960,23 @@ def query_result():
     if 'username' in session:
         global connection
         cursor = connection.cursor()
-        sql = "use " + databaseName + ";"
-        cursor.execute(sql)
+        sql = f"USE {databaseName};"
+        try:
+            cursor.execute(sql)
+        except pymysql.err.OperationalError as e:
+            print(f"OperationalError: {e}")
+            connection = reconnect_to_mysql() 
+            cursor = connection.cursor()
+            cursor.execute(sql)
         
         if request.method == "POST":
-            pool_ID = request.form.get("pool_ID")
-            print(pool_ID)
-            sql = "select pool_ID from field_logs where pool_ID = "+str(pool_ID)+";"
+            pool_id = request.form.get("pool_id")
+            print(pool_id)
+            sql = f"select pool_id from field_logs where pool_id={str(pool_id)};"
             cursor.execute(sql)
             field_result = cursor.fetchall()
 
-            sql = "select pool_ID from feeding_logs where pool_ID = "+str(pool_ID)+";"
+            sql = f"select pool_id from new_feeding_logs where pool_id={str(pool_id)};"
             cursor.execute(sql)
             feeding_result = cursor.fetchall()
             
@@ -943,29 +985,29 @@ def query_result():
                 alertContent="ThisPoolhasNoFieldData!"
 
             elif len(feeding_result) == 0:
-                print("feeding_logs is empty")
+                print("new_feeding_logs is empty")
                 alertContent="ThisPoolhasNoFeedingData!"
 
             else:
                 print("Result set is not empty")
                 # counting estimated_weights
-                sql = "select record_weights from field_logs where pool_ID = "+str(pool_ID)+" order by update_time asc;"
+                sql = f"select record_weights from field_logs where pool_id={str(pool_id)} order by update_time asc;"
                 cursor.execute(sql)
                 first_weight = cursor.fetchone()
                 first_weight = first_weight[0]
 
-                sql = "select spec from field_logs where pool_ID = "+str(pool_ID)+" order by update_time asc;"
+                sql = f"select spec from field_logs where pool_id={str(pool_id)} order by update_time asc;"
                 cursor.execute(sql)
                 first_spec = cursor.fetchone()
                 first_spec = first_spec[0]
                 total_fish_number = first_spec * first_weight
 
-                sql = "select estimated_weights from field_logs where pool_ID = "+str(pool_ID)+" order by update_time desc;"
+                sql = f"select estimated_weights from field_logs where pool_id={str(pool_id)} order by update_time desc;"
                 cursor.execute(sql)
                 latest_weight = cursor.fetchone()
                 latest_weight = latest_weight[0]
 
-                sql = "select update_time from field_logs where pool_ID = "+str(pool_ID)+" order by update_time asc;"
+                sql = f"select update_time from field_logs where pool_id={str(pool_id)} order by update_time asc;"
                 cursor.execute(sql) 
                 first_time = cursor.fetchone()
                 first_time = first_time[0]
@@ -973,7 +1015,7 @@ def query_result():
                 age = str((query_time-first_time).days)
                 
                 # counting fcr
-                sql = "select feeding_amount from feeding_logs where pool_ID = "+str(pool_ID)+";"
+                sql = f"select feeding_amount from new_feeding_logs where pool_id={str(pool_id)} order by start_time desc;"
                 cursor.execute(sql)
                 feeding_amount = list(cursor.fetchall())
                 total_feeding_amount = 0
@@ -1030,8 +1072,14 @@ def getRippleFrames():
 
     global connection
     cursor = connection.cursor()
-    sql = "use " + databaseName + ";"
-    cursor.execute(sql)
+    sql = f"USE {databaseName};"
+    try:
+        cursor.execute(sql)
+    except pymysql.err.OperationalError as e:
+        print(f"OperationalError: {e}")
+        connection = reconnect_to_mysql() 
+        cursor = connection.cursor()
+        cursor.execute(sql)
 
     sql = "select count(*) as row_count from ripple_frames"
     cursor.execute(sql)
@@ -1065,20 +1113,22 @@ def getRippleFrames():
 
 @app.route('/choose_ripple_frames', methods=["GET", "POST"])
 def choose_ripple_frames():
-    global connection
-    if not connection.open:
-        connection = connect_to_mysql()
-
     # storeRippleFrames()
     ripple_frames = getRippleFrames()
     url = " "
     
     if request.method == "POST":  
         databaseName = portChoooseDatabaseName()
-        
+        global connection
         cursor = connection.cursor()
-        sql = "use " + databaseName + ";"
-        cursor.execute(sql)
+        sql = f"USE {databaseName};"
+        try:
+            cursor.execute(sql)
+        except pymysql.err.OperationalError as e:
+            print(f"OperationalError: {e}")
+            connection = reconnect_to_mysql() 
+            cursor = connection.cursor()
+            cursor.execute(sql)
 
         sql = "select count(*) as row_count from ripple_frames"
         cursor.execute(sql)

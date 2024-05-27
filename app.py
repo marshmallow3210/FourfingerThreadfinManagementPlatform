@@ -54,12 +54,13 @@ users = {
 }
 
 
-def connect_to_mysql():
+def reconnect_to_mysql():
     print("reconnect to mysql...")
     connection = pymysql.connect(host='127.0.0.1',
                                  port=3306,
                                  user='lab403',
                                  password='66386638',
+                                 database=databaseName,
                                  autocommit=True)
     print("connected!")
     return connection
@@ -135,6 +136,7 @@ def preidict_weights(age, total_fish_number):
     y_set = np.array([16, 27, 66, 188, 368, 625, 856, 1077, 16, 27, 77, 208, 379, 606, 862, 1102, 16, 48, 108, 246, 425, 717, 904, 1180, 16, 42, 106, 276, 477, 754, 991, 1202])
     y_set = y_set * 800 / 1336
     '''
+    
     # 午仔魚
     # 9 months
     date1 = datetime.date(2015,4,1)
@@ -396,10 +398,17 @@ def home():
     if 'username' in session:
         update_time = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
         print(update_time)
+        
         global connection
         cursor = connection.cursor()
-        sql = "use " + databaseName + ";"
-        cursor.execute(sql)
+        sql = f"USE {databaseName};"
+        try:
+            cursor.execute(sql)
+        except pymysql.err.OperationalError as e:
+            print(f"OperationalError: {e}")
+            connection = reconnect_to_mysql() 
+            cursor = connection.cursor()
+            cursor.execute(sql)
 
         sql= "select * from field_logs where DATE_FORMAT(update_time, '%Y-%m-%d') = CURDATE() limit 1; " 
         pool_data = list(cursor.fetchall()) 
@@ -474,8 +483,14 @@ def storeFrames():
 def connect_to_db():
     global connection
     cursor = connection.cursor()
-    sql = "use " + databaseName + ";"
-    cursor.execute(sql)
+    sql = f"USE {databaseName};"
+    try:
+        cursor.execute(sql)
+    except pymysql.err.OperationalError as e:
+        print(f"OperationalError: {e}")
+        connection = reconnect_to_mysql() 
+        cursor = connection.cursor()
+        cursor.execute(sql)
 
     global framesData
     sql = "select update_time, data from frames where ID = 1;"
@@ -527,11 +542,16 @@ def field_view():
 @app.route('/field_logs', methods=["GET", "POST"])
 def field_logs():
     if 'username' in session:
-        # print(request.method)
         global connection
         cursor = connection.cursor()
-        sql = "use " + databaseName + ";"
-        cursor.execute(sql)
+        sql = f"USE {databaseName};"
+        try:
+            cursor.execute(sql)
+        except pymysql.err.OperationalError as e:
+            print(f"OperationalError: {e}")
+            connection = reconnect_to_mysql() 
+            cursor = connection.cursor()
+            cursor.execute(sql)
         
         sql = "select * from field_logs;"
         cursor.execute(sql)
@@ -591,8 +611,14 @@ def update():
         isSuccess = 0
         global connection
         cursor = connection.cursor()
-        sql = "use " + databaseName + ";"
-        cursor.execute(sql)
+        sql = f"USE {databaseName};"
+        try:
+            cursor.execute(sql)
+        except pymysql.err.OperationalError as e:
+            print(f"OperationalError: {e}")
+            connection = reconnect_to_mysql() 
+            cursor = connection.cursor()
+            cursor.execute(sql)
 
         if request.method == "POST":  
             opt = int(request.form.get("opt"))
@@ -733,17 +759,22 @@ def update():
 @app.route('/feeding_logs', methods=["GET", "POST"])
 def feeding_logs():
     if 'username' in session:
+        global connection
+        cursor = connection.cursor()
+        sql = f"USE {databaseName};"
+        try:
+            cursor.execute(sql)
+        except pymysql.err.OperationalError as e:
+            print(f"OperationalError: {e}")
+            connection = reconnect_to_mysql() 
+            cursor = connection.cursor()
+            cursor.execute(sql)
+
         global feeding_logs_date_temp
         feeding_logs_date_temp = ""
         new_feeding_data = None
         original_feeding_data = None
         base64_img = ''
-
-        global connection
-        cursor = connection.cursor()
-        sql = "use " + databaseName + ";"
-        cursor.execute(sql)
-
         if request.method == "POST": 
             update_logs = request.form.get("update_logs")
             if update_logs == 'true' or update_logs == '1': # 填寫紀錄
@@ -930,8 +961,14 @@ def query_result():
     if 'username' in session:
         global connection
         cursor = connection.cursor()
-        sql = "use " + databaseName + ";"
-        cursor.execute(sql)
+        sql = f"USE {databaseName};"
+        try:
+            cursor.execute(sql)
+        except pymysql.err.OperationalError as e:
+            print(f"OperationalError: {e}")
+            connection = reconnect_to_mysql() 
+            cursor = connection.cursor()
+            cursor.execute(sql)
         
         if request.method == "POST":
             pool_id = request.form.get("pool_id")
@@ -1036,8 +1073,14 @@ def getRippleFrames():
 
     global connection
     cursor = connection.cursor()
-    sql = "use " + databaseName + ";"
-    cursor.execute(sql)
+    sql = f"USE {databaseName};"
+    try:
+        cursor.execute(sql)
+    except pymysql.err.OperationalError as e:
+        print(f"OperationalError: {e}")
+        connection = reconnect_to_mysql() 
+        cursor = connection.cursor()
+        cursor.execute(sql)
 
     sql = "select count(*) as row_count from ripple_frames"
     cursor.execute(sql)
@@ -1071,20 +1114,22 @@ def getRippleFrames():
 
 @app.route('/choose_ripple_frames', methods=["GET", "POST"])
 def choose_ripple_frames():
-    global connection
-    if not connection.open:
-        connection = connect_to_mysql()
-
     # storeRippleFrames()
     ripple_frames = getRippleFrames()
     url = " "
     
     if request.method == "POST":  
         databaseName = portChoooseDatabaseName()
-        
+        global connection
         cursor = connection.cursor()
-        sql = "use " + databaseName + ";"
-        cursor.execute(sql)
+        sql = f"USE {databaseName};"
+        try:
+            cursor.execute(sql)
+        except pymysql.err.OperationalError as e:
+            print(f"OperationalError: {e}")
+            connection = reconnect_to_mysql() 
+            cursor = connection.cursor()
+            cursor.execute(sql)
 
         sql = "select count(*) as row_count from ripple_frames"
         cursor.execute(sql)
