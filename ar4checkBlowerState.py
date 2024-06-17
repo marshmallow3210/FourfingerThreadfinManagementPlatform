@@ -23,7 +23,7 @@ connection = pymysql.connect(host='127.0.0.1',
                             password='66386638',
                             autocommit=True)
 
-databaseName = "ar2DB"
+databaseName = "ar4DB"
 blower_state = 'off'
 switchMode = 1
 start_time_fromESP32 = None
@@ -67,7 +67,7 @@ def send_data():
     feeding_logs = list(cursor.fetchall())
     print('feeding_logs:', feeding_logs)
 
-    aquarium_id = "146"                             
+    aquarium_id = "95"                             
     action = "create"                               
     journal_id = 0
 

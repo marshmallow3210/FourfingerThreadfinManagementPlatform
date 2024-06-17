@@ -1,3 +1,4 @@
+import random
 import pymysql
 import datetime
 import time
@@ -12,7 +13,7 @@ connection = pymysql.connect(host='127.0.0.1',
 cursor = connection.cursor()
 
 # 定義 weight 序列和當前索引
-weight_sequence = [100, 30, 20, 40, 90, 50, 60, 70, 80]
+weight_sequence = [10.0, 3.5, 2.2, 4.8, 9.0, 5.5, 6.1, 7.2, 8.2]
 current_index = 0
 
 def generate_data():
@@ -27,16 +28,17 @@ def generate_data():
     # 如果超出序列長度，循環到開頭
     if current_index >= len(weight_sequence):
         current_index = 0
-        weight_sequence.extend([weight_sequence[-1] + 10])  # 在序列中添加新的 weight 值
+        new_weight = weight_sequence[-1] + round(random.uniform(1, 10), 2)
+        weight_sequence.extend([new_weight])  # 在序列中添加新的 weight 值
 
     # 創建數據字典
     data = {
         'weight': current_weight,
-        'laser': 10.50,
+        'laser': 100,
         'blower_state': 'on',
-        'angle_state': 60,
-        'speed_level': 600,
-        'system_mode': 1,
+        'angle_state': 0,
+        'speed_level': 0,
+        'system_mode': 0,
         'time': datetime.datetime.now().strftime('%H:%M:%S'),
         'date': datetime.datetime.now().strftime('%Y-%m-%d'),
         'dispenser_ID': 1
@@ -56,7 +58,7 @@ def main():
     while True:
         data = generate_data()
         upload_to_ESP32(data)
-        time.sleep(30)
+        time.sleep(300)
 
 if __name__ == '__main__':
     main()

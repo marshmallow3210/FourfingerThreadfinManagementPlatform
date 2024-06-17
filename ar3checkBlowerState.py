@@ -67,38 +67,38 @@ def send_data():
     feeding_logs = list(cursor.fetchall())
     print('feeding_logs:', feeding_logs)
 
-    aquarium_id = "144"                             # "84"
-    action = "create"                               # "create" or "update"
-    journal_id = 0                                  # 0 or other number
+    aquarium_id = "82"                             
+    action = "create"                               
+    journal_id = 0
 
-    food_id = str(feeding_logs[0][4])               # "19"        NULL
+    food_id = str(feeding_logs[0][4])               
     if food_id is None:
         food_id = ""
-    feeding_amount = feeding_logs[0][7]             # 5
-    food_unit = str(feeding_logs[0][6])             # "catty"
-    food_name = str(feeding_logs[0][5])             # "A牌"       NULL
+    feeding_amount = feeding_logs[0][7]             
+    food_unit = str(feeding_logs[0][6])             
+    food_name = str(feeding_logs[0][5])            
     if food_name is None: 
         food_name = ""
 
     start_time = utc8(feeding_logs, 2) 
     start_time = start_time[0]
     start_time = start_time[2]
-    start_time = convert_to_unix_timestamp(start_time) # 1693877520000
+    start_time = convert_to_unix_timestamp(start_time) 
     
-    use_time = int(feeding_logs[0][3])              # 35
-    status = str(feeding_logs[0][9])                # "normal"    NULL
+    use_time = int(feeding_logs[0][3])              
+    status = str(feeding_logs[0][9])               
     if status is None: 
         status = ""
-    left_amount = str(feeding_logs[0][8])           # ""         
-    description = str(feeding_logs[0][10])          # "吃很久"     NULL
+    left_amount = str(feeding_logs[0][8])           
+    description = str(feeding_logs[0][10])         
     if description is None:
         description = ""
 
     sql = f"select distinct food_id from {databaseName}.new_feeding_logs WHERE food_id IS NOT NULL;"
     cursor.execute(sql)
     checkedList = list(cursor.fetchall())
-    checkedList = [str(food_id[0]) for food_id in checkedList] # ["19"]
-    print('checkedList:', checkedList)                       
+    checkedList = [str(food_id[0]) for food_id in checkedList] 
+    print('checkedList:', checkedList)                        
     
     # params from ekoral
     url = 'https://api.ekoral.io' 
