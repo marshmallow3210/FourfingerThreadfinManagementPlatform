@@ -24,6 +24,9 @@ connection = pymysql.connect(host='127.0.0.1',
                             autocommit=True)
 
 databaseName = "ar2DB"
+aquarium_id = "146" 
+food_name = "海洋牌"
+
 blower_state = 'off'
 switchMode = 1
 start_time_fromESP32 = None
@@ -49,7 +52,6 @@ def convert_to_unix_timestamp(datetime_str):
 def generate_signature(api_key, api_endpoint, request_body, nonce):
     message = api_key + api_endpoint + request_body + nonce # according to API Authentication from API key document
     signature = hmac.new(bytes(api_key,'utf-8'), bytes(message,'utf-8'), hashlib.sha256).hexdigest().encode('utf-8')
-    print("Signature:", signature)
     return base64.b64encode(signature).decode('utf-8')
 
 # create data version
@@ -66,19 +68,24 @@ def send_data():
     cursor.execute(sql)
     feeding_logs = list(cursor.fetchall())
     print('feeding_logs:', feeding_logs)
-
-    aquarium_id = "146"                             
+                        
     action = "create"                               
     journal_id = 0
 
-    food_id = str(feeding_logs[0][4])               
-    if food_id is None:
-        food_id = ""
+    if food_name == "測試":         # fishDB
+        food_id = 39
+    elif food_name == "海洋牌":     # ar2DB
+        food_id = 40
+    elif food_name == "漢神牌":     # ar4DB
+        food_id = 41
+    elif food_name == "海洋飼料":   # ar3DB
+        food_id = 42
+    else:
+        food_name == "無此飼料品牌"
+        food_id = 39
+
     feeding_amount = feeding_logs[0][7]             
-    food_unit = str(feeding_logs[0][6])             
-    food_name = str(feeding_logs[0][5])            
-    if food_name is None: 
-        food_name = ""
+    food_unit = str(feeding_logs[0][6])  
 
     start_time = utc8(feeding_logs, 2) 
     start_time = start_time[0]
@@ -92,13 +99,7 @@ def send_data():
     left_amount = str(feeding_logs[0][8])           
     description = str(feeding_logs[0][10])         
     if description is None:
-        description = ""
-
-    sql = f"select distinct food_id from {databaseName}.new_feeding_logs WHERE food_id IS NOT NULL;"
-    cursor.execute(sql)
-    checkedList = list(cursor.fetchall())
-    checkedList = [str(food_id[0]) for food_id in checkedList] 
-    print('checkedList:', checkedList)                       
+        description = ""                    
     
     # params from ekoral
     url = 'https://api.ekoral.io' 
@@ -116,27 +117,24 @@ def send_data():
                 {
                 "food": [
                     {
-                    "id": "39",
+                    "id": food_id,
                     "weight": feeding_amount,
                     "unit": food_unit,
-                    "name": "測試"
+                    "name": food_name
                     }
                 ],
                 "feedingTime": start_time,
                 "period": use_time,
                 "status": "normal",
                 "left": left_amount,
-                "description": "",
-                "checkedList": [
-                    "39"
-                ]
+                "description": ""
                 }
             ]
             }
         }
     }
 
-    print(data)
+    print("data:", data)
     
     request_body = json.dumps(data, separators=(',', ':'), ensure_ascii=False)
     nonce = str(uuid.uuid4()) # 動態生成 nonce  
