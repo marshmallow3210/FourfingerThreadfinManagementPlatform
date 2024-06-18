@@ -330,9 +330,26 @@
 
   document.getElementById('update_logs_btn').addEventListener('click', function() {
     document.getElementById('update_logs').value = true;
-      alert('update_logs!');
-      window.location.reload();
+    alert('填寫完成!');
+
+    sessionStorage.setItem('updateStatus', 'true');
+    window.location.reload();
   });
+
+  document.addEventListener('DOMContentLoaded', function() {
+    var updateStatus = sessionStorage.getItem('updateStatus');
+
+    if (updateStatus === 'true') {
+        var isSent = {{ isSent|tojson }};
+        if (isSent) {
+            alert("更新後的資料已經成功傳送至決策系統!");
+        } else {
+            alert("資料傳送失敗! 請檢查資料是否填寫正確。");
+        }
+        sessionStorage.removeItem('updateStatus');
+    }
+  });
+
 
   function validateForm() {
     var journal_id1 = document.getElementById("journal_id1").value;

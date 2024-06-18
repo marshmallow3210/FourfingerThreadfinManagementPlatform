@@ -52,6 +52,7 @@ users = {
     'admin': 'admin',
     'fishDB': 'fishDB'
 }
+aquarium_id = "144"        
 
 
 def reconnect_to_mysql():
@@ -169,7 +170,7 @@ def preidict_date(latest_weight):
     date2 = datetime.date(2016,8,31)
     days_count = (date2-date1).days
     y_set = np.linspace(0, days_count, 18)
-    
+
     # 鱸魚
     '''
     days= 210 # 0 to 210 days
@@ -224,6 +225,7 @@ def generate_signature(api_key, api_endpoint, request_body, nonce):
 # update data version
 def send_data(journal_id1, journal_id2):
     print("\nstart to sending data")
+    isSent = False
     current_time = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
     print('current_time:', current_time)
     date = convert_to_unix_timestamp(current_time)
@@ -244,38 +246,28 @@ def send_data(journal_id1, journal_id2):
             cursor.execute(sql)
             feeding_logs = list(cursor.fetchall())
             print('feeding_logs:', feeding_logs)
+                    
+            action = "update"                              
 
-            aquarium_id = "144"                             # "84"
-            action = "update"                               # "create" or "update"
-
-            food_id = str(feeding_logs[0][4])               # "19"        NULL
-            if food_id is None:
-                food_id = ""
-            feeding_amount = str(feeding_logs[0][7])        # 5
-            food_unit = str(feeding_logs[0][6])             # "catty"
-            food_name = str(feeding_logs[0][5])             # "A牌"       NULL
-            if food_name is None: 
-                food_name = ""
+            food_id = str(feeding_logs[0][4]) 
+            feeding_amount = str(feeding_logs[0][7])        
+            food_unit = str(feeding_logs[0][6])             
+            food_name = str(feeding_logs[0][5])         
 
             start_time = utc8(feeding_logs, 2) 
             start_time = start_time[0]
             start_time = start_time[2]
-            start_time = convert_to_unix_timestamp(start_time) # 1693877520000
+            start_time = convert_to_unix_timestamp(start_time) 
             
-            use_time = int(feeding_logs[0][3])              # 35
+            use_time = int(feeding_logs[0][3])              
             status = str(feeding_logs[0][9])           
-            status = str(feeding_logs[0][9])                # "normal"    NULL
+            status = str(feeding_logs[0][9])               
             if status is None: 
                 status = ""
-            left_amount = str(feeding_logs[0][8])           # ""          
-            description = str(feeding_logs[0][10])          # "吃很久"     NULL
+            left_amount = str(feeding_logs[0][8])                  
+            description = str(feeding_logs[0][10])          
             if description is None:
                 description = ""
-
-            sql = f"select distinct food_id from {databaseName}.new_feeding_logs WHERE food_id IS NOT NULL;"
-            cursor.execute(sql)
-            checkedList = list(cursor.fetchall())
-            checkedList = [food_id]# [str(food_id[0]) for food_id in checkedList] # ["19"]
             
             # params from ekoral
             url = 'https://api.ekoral.io' 
@@ -293,27 +285,24 @@ def send_data(journal_id1, journal_id2):
                         {
                         "food": [
                             {
-                            "id": "39",
+                            "id": food_id,
                             "weight": feeding_amount,
                             "unit": food_unit,
-                            "name": "測試"
+                            "name": food_name
                             }
                         ],
                         "feedingTime": start_time,
                         "period": use_time,
                         "status": status,
                         "left": left_amount,
-                        "description": description,
-                        "checkedList": [
-                            "39"
-                        ]
+                        "description": description
                         }
                     ]
                     }
                 }
             }
             
-            print(data)
+            print("data:", data)
             
             request_body = json.dumps(data, separators=(',', ':'), ensure_ascii=False)
             nonce = str(uuid.uuid4()) # 動態生成 nonce  
@@ -333,13 +322,14 @@ def send_data(journal_id1, journal_id2):
                 if response.status_code == 200:
                     print("Request successful!")
                     print("Response:", response.json())
+                    isSent = True
                 else:
                     print("Unexpected status code:", response.status_code)
                     print("Response:", response.text)
             except requests.exceptions.RequestException as e:
                 print("Request failed:", e)
 
-    return 
+    return isSent
 
 
 ''' root page ''' 
@@ -758,6 +748,7 @@ def update():
 ''' feeding_logs function '''
 @app.route('/feeding_logs', methods=["GET", "POST"])
 def feeding_logs():
+    isSent = False
     if 'username' in session:
         global connection
         cursor = connection.cursor()
@@ -777,33 +768,30 @@ def feeding_logs():
         base64_img = ''
         if request.method == "POST": 
             update_logs = request.form.get("update_logs")
-            if update_logs == 'true' or update_logs == '1': # 填寫紀錄
+            
+            # 填寫紀錄
+            if update_logs == 'true' or update_logs == '1': 
                 journal_id1 = int(request.form.get("journal_id1"))
                 journal_id2 = int(request.form.get("journal_id2"))
                 food_name = request.form.get("food_name")
-                sql = "SELECT food_name, food_id FROM new_feeding_logs"
-                cursor.execute(sql)
-                food_names_in_db = cursor.fetchall()
-                new_food_id = None
-                food_name_exists = False
-                for name, food_id in food_names_in_db:
-                    if food_name == name:
-                        food_name_exists = True
-                        new_food_id = food_id
-                        break
-                if not food_name_exists:
-                    max_food_id = max((food_id for _, food_id in food_names_in_db if food_id is not None), default=0)
-                    new_food_id = max_food_id + 1
-                print("new_food_id:", new_food_id)
 
+                if food_name == "海洋牌":       # ar2DB
+                    food_id = 40
+                elif food_name == "漢神牌":     # ar4DB
+                    food_id = 41
+                elif food_name == "海洋飼料":   # ar3DB
+                    food_id = 42
+                else:
+                    food_name == "無此飼料品牌"
+                    food_id = 39
+                
                 status = request.form.get("status")
                 description = request.form.get("description")
-                sql = f"UPDATE new_feeding_logs SET food_id = '{new_food_id}', food_name = '{food_name}', status = '{status}', description = '{description}' WHERE journal_id BETWEEN {journal_id1} AND {journal_id2};"
+                sql = f"UPDATE new_feeding_logs SET food_id = '{food_id}', food_name = '{food_name}', status = '{status}', description = '{description}' WHERE journal_id BETWEEN {journal_id1} AND {journal_id2};"
                 cursor.execute(sql)
 
                 # update api data
-                send_data(journal_id1, journal_id2)
-                print('send_data finished!')
+                isSent = send_data(journal_id1, journal_id2)
 
                 # show feeding_logs updated result 
                 if feeding_logs_date_temp: 
@@ -869,7 +857,16 @@ def feeding_logs():
                     base64_img = base64.b64encode(img_data.getvalue()).decode()
                     update_logs = '' 
                     feeding_logs_date_temp = '' 
-            else: # 不填寫紀錄 => 查看紀錄
+                else: # 查看所有紀錄
+                    sql = "SELECT * FROM new_feeding_logs"
+                    cursor.execute(sql)
+                    new_feeding_data = list(cursor.fetchall())
+                    sql = "SELECT * FROM original_feeding_logs"
+                    cursor.execute(sql)
+                    original_feeding_data = list(cursor.fetchall())
+
+            # 不填寫紀錄 => 查看紀錄
+            else: 
                 all_records = request.form.get("all_records")
                 if all_records == 'true' or all_records == '1': # 查看所有紀錄
                     sql = "SELECT * FROM new_feeding_logs"
@@ -943,7 +940,12 @@ def feeding_logs():
                     feeding_logs_date_temp = feeding_logs_date
                     feeding_logs_date = ''
 
-        return render_template('feeding_logs.html', new_feeding_data=new_feeding_data, original_feeding_data=original_feeding_data, base64_img=base64_img, species=species, species_logo_url=species_logo_url) 
+        return render_template('feeding_logs.html', 
+                               new_feeding_data=new_feeding_data, 
+                               original_feeding_data=original_feeding_data, 
+                               base64_img=base64_img, 
+                               isSent=isSent, 
+                               species=species, species_logo_url=species_logo_url) 
     else:
         return redirect(url_for('login'))   
 
