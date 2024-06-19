@@ -259,9 +259,9 @@ def send_data(journal_id1, journal_id2):
             start_time = convert_to_unix_timestamp(start_time) 
             
             use_time = int(feeding_logs[0][3])
-            status = str(feeding_logs[0][9]) or "normal"
-            left_amount = str(feeding_logs[0][8])
-            description = str(feeding_logs[0][10]) or ""
+            status = str(feeding_logs[0][9]).strip() if feeding_logs[0][9] is not None else "normal"
+            left_amount = str(feeding_logs[0][8])           
+            description = str(feeding_logs[0][10]).strip() if feeding_logs[0][10] is not None else ""
             
             # params from ekoral
             url = 'https://api.ekoral.io' 
