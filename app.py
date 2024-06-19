@@ -259,15 +259,10 @@ def send_data(journal_id1, journal_id2):
             start_time = start_time[2]
             start_time = convert_to_unix_timestamp(start_time) 
             
-            use_time = int(feeding_logs[0][3])              
-            status = str(feeding_logs[0][9])           
-            status = str(feeding_logs[0][9])               
-            if status is None: 
-                status = ""
-            left_amount = str(feeding_logs[0][8])                  
-            description = str(feeding_logs[0][10])          
-            if description is None:
-                description = ""
+            use_time = int(feeding_logs[0][3])
+            status = str(feeding_logs[0][9]) or "normal"
+            left_amount = str(feeding_logs[0][8])
+            description = str(feeding_logs[0][10]) or ""
             
             # params from ekoral
             url = 'https://api.ekoral.io' 
@@ -775,15 +770,13 @@ def feeding_logs():
                 journal_id2 = int(request.form.get("journal_id2"))
                 food_name = request.form.get("food_name")
 
-                if food_name == "海洋牌":       # ar2DB
-                    food_id = 40
-                elif food_name == "漢神牌":     # ar4DB
-                    food_id = 41
-                elif food_name == "海洋飼料":   # ar3DB
-                    food_id = 42
-                else:
-                    food_name == "無此飼料品牌"
-                    food_id = 39
+                food_id_map = {
+                    "測試": 39,         # fishDB
+                    "海洋牌": 40,       # ar2DB
+                    "漢神牌": 41,       # ar4DB
+                    "海洋飼料": 42      # ar3DB
+                }
+                food_id = food_id_map.get(food_name, 39)
                 
                 status = request.form.get("status")
                 description = request.form.get("description")
