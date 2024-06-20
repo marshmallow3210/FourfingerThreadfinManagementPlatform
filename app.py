@@ -892,7 +892,7 @@ def feeding_logs():
 
                     font_path = '/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc'
                     font_prop = FontProperties(fname=font_path)
-                    plt.figure(figsize=(14, 8))
+                    plt.figure(figsize=(16, 8))
 
                     plt.xlim(time_range[0], time_range[-1])
                     plt.xticks(time_range[1:-1], rotation=60, fontproperties=font_prop) 
@@ -920,7 +920,7 @@ def feeding_logs():
                         midday = datetime.datetime(start_time.year, start_time.month, start_time.day, 2, 0)
                         plt.bar(midday, use_time, width=0.17, bottom=(1440-start_y-use_time), color='#ee8822')
 
-                    legend_labels = {'#009999': '新料桶', '#ee8822': '舊料桶', 'black': '投餌量(公斤)'}
+                    legend_labels = {'#009999': '新料桶', '#e33333': '新料桶未正常運作', '#ee8822': '舊料桶', 'black': '投餌量(公斤)'}
                     legend_handles = []
                     for color, label in legend_labels.items():
                         legend_handles.append(plt.Rectangle((0,0),1,1, color=color, label=label))

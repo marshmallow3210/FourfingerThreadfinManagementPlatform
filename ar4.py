@@ -919,7 +919,7 @@ def feeding_logs():
                         midday = datetime.datetime(start_time.year, start_time.month, start_time.day, 2, 0)
                         plt.bar(midday, use_time, width=0.17, bottom=(1440-start_y-use_time), color='#ee8822')
 
-                    legend_labels = {'#009999': '新料桶', '#ee8822': '舊料桶', 'black': '投餌量(公斤)'}
+                    legend_labels = {'#009999': '新料桶', '#e33333': '新料桶未正常運作', '#ee8822': '舊料桶', 'black': '投餌量(公斤)'}
                     legend_handles = []
                     for color, label in legend_labels.items():
                         legend_handles.append(plt.Rectangle((0,0),1,1, color=color, label=label))
