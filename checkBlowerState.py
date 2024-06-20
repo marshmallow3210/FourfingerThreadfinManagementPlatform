@@ -266,7 +266,7 @@ def checkBlowerState():
         print(f'blower_state: {blower_state}, switchMode: {switchMode}, time_difference: {time_difference.total_seconds()} sec')
         
         # 用ESP32最新紀錄的時間是否在現在時間的一小時內來檢查投餌機是否正常運作
-        if time_difference.total_seconds() <= 31:            
+        if time_difference.total_seconds() <= 3601:            
             cursor.execute(f"SELECT blower_state FROM {databaseName}.ESP32 ORDER BY CONCAT(date, ' ', time) DESC LIMIT 1;")
             result = cursor.fetchone()
             if result:
