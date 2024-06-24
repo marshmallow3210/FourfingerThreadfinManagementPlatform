@@ -71,16 +71,10 @@ def send_data():
     action = "create"                               
     journal_id = 0
 
-    food_id_map = {
-        "測試": 39,         # fishDB
-        "海洋牌": 40,       # ar2DB
-        "漢神牌": 41,       # ar4DB
-        "海洋飼料": 42      # ar3DB
-    }
-    food_id = food_id_map.get(food_name, 39)
-
+    food_id = feeding_logs[0][4]
     feeding_amount = feeding_logs[0][7]             
     food_unit = str(feeding_logs[0][6])  
+    food_name = str(feeding_logs[0][5]) 
 
     start_time = utc8(feeding_logs, 2) 
     start_time = start_time[0][2]
@@ -233,8 +227,16 @@ def getDataFromESP32(start_time, description):
                 print("The weight list is empty.")
                 left_amount = 0 
             
+            food_id_map = {
+                "測試": 39,         # fishDB
+                "海洋牌": 40,       # ar2DB
+                "漢神牌": 41,       # ar4DB
+                "海洋飼料": 42      # ar3DB
+            }
+            food_id = food_id_map.get(food_name, 39)
+
             # insert to database
-            sql = f"INSERT INTO {databaseName}.new_feeding_logs (journal_id, start_time, use_time, feeding_amount, left_amount, description) VALUES (0, '{str(start_time)}', {use_time}, {feeding_amount}, {left_amount}, '{str(description)}');"
+            sql = f"INSERT INTO {databaseName}.new_feeding_logs (journal_id, start_time, use_time, food_id, food_name, feeding_amount, left_amount, description) VALUES (0, '{str(start_time)}', {use_time}, {food_id}, '{str(food_name)}', {feeding_amount}, {left_amount}, '{str(description)}');"
             cursor.execute(sql)
 
             # api integration

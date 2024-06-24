@@ -22,9 +22,9 @@ connection = pymysql.connect(host='127.0.0.1',
                             password='66386638',
                             autocommit=True)
 
-databaseName = "ar4DB"
-aquarium_id = "95" 
-food_name = "漢神牌"
+databaseName = "ar6DB"
+aquarium_id = "144" 
+food_name = "測試"
 
 blower_state = 'off'
 switchMode = 1
