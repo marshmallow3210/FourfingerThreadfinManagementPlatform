@@ -240,8 +240,8 @@ def getDataFromESP32(start_time, description):
             cursor.execute(sql)
 
             # api integration
-            send_data()
-            print("send_data finished!")
+            # send_data()
+            # print("send_data finished!")
 
             switchMode = 1
             start_time_fromESP32 = None

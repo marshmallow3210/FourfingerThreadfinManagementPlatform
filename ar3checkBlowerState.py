@@ -236,7 +236,7 @@ def getDataFromESP32(start_time, description):
             food_id = food_id_map.get(food_name, 39)
 
             # insert to database
-            sql = f"INSERT INTO {databaseName}.new_feeding_logs (journal_id, start_time, use_time, food_id, food_name, feeding_amount, left_amount, description) VALUES (0, '{str(start_time)}', {use_time}, {food_id}, '{str(food_name)}', {feeding_amount}, {left_amount}, '{str(description)}');"
+            sql = f"INSERT INTO {databaseName}.new_feeding_logs (journal_id, start_time, use_time, food_id, food_name, feeding_amount, left_amount, status, description) VALUES (0, '{str(start_time)}', {use_time}, {food_id}, '{str(food_name)}', {feeding_amount}, {left_amount}, 'good', '{str(description)}');"
             cursor.execute(sql)
 
             # api integration
