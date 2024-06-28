@@ -23,7 +23,7 @@ connection = pymysql.connect(host='127.0.0.1',
                             autocommit=True)
 
 databaseName = "ar7DB"
-aquarium_id = "144" 
+aquarium_id = "145" 
 food_name = "測試"
 
 blower_state = 'off'

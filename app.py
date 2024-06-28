@@ -743,6 +743,7 @@ def update():
 ''' feeding_logs function '''
 @app.route('/feeding_logs', methods=["GET", "POST"])
 def feeding_logs():
+    plt.rcParams.update({'font.size': 14})
     isSent = False
     if 'username' in session:
         global connection
@@ -826,7 +827,7 @@ def feeding_logs():
                         print(f'part of {start_time} is same as {24-(1440-start_y-use_time)/60}')
                         midday = datetime.datetime(start_time.year, start_time.month, start_time.day, 22, 0) - timedelta(days=1)
                         plt.bar(midday, use_time, width=0.17, bottom=(1440-start_y-use_time), color='#009999')
-                        plt.text(midday, (1440 - start_y), str(feeding_amount), ha='center', va='bottom', color='black', fontsize=8)
+                        plt.text(midday, (1440 - start_y), str(feeding_amount), ha='center', va='bottom', color='black')
 
                     for start_time, use_time in zip(original_start_times, original_use_times):
                         start_y = (start_time.hour * 60 + start_time.minute)  
@@ -912,7 +913,7 @@ def feeding_logs():
                             plt.bar(midday, use_time, width=0.17, bottom=(1440-start_y-use_time), color='#e33333')
                         else:
                             plt.bar(midday, use_time, width=0.17, bottom=(1440-start_y-use_time), color='#009999')
-                        plt.text(midday, (1440 - start_y), str(feeding_amount), ha='center', va='bottom', color='black', fontsize=8)
+                        plt.text(midday, (1440 - start_y), str(feeding_amount), ha='center', va='bottom', color='black')
 
                     for start_time, use_time in zip(original_start_times, original_use_times):
                         start_y = (start_time.hour * 60 + start_time.minute)  
@@ -920,14 +921,14 @@ def feeding_logs():
                         midday = datetime.datetime(start_time.year, start_time.month, start_time.day, 2, 0)
                         plt.bar(midday, use_time, width=0.17, bottom=(1440-start_y-use_time), color='#ee8822')
 
-                    legend_labels = {'#009999': '新料桶', '#e33333': '新料桶未正常運作', '#ee8822': '舊料桶', 'black': '投餌量(公斤)'}
+                    legend_labels = {'#009999': 'Smart Feeding Machine', '#e33333': 'Smart Feeding Machine Malfunction', '#ee8822': 'Original Feeding Machine', 'black': 'Feeding Amount(kg)'}
                     legend_handles = []
                     for color, label in legend_labels.items():
                         legend_handles.append(plt.Rectangle((0,0),1,1, color=color, label=label))
                     plt.legend(handles=legend_handles, prop=font_prop) 
 
-                    plt.xlabel('date', labelpad=10, fontproperties=font_prop)  
-                    plt.ylabel('feeding time', labelpad=10, fontproperties=font_prop) 
+                    plt.xlabel('Date', labelpad=10, fontproperties=font_prop)  
+                    plt.ylabel('Feeding Time', labelpad=10, fontproperties=font_prop) 
                     plt.tight_layout()
 
                     img_data = io.BytesIO()
