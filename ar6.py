@@ -41,7 +41,7 @@ connection = pymysql.connect(host='127.0.0.1',
 
 # change me!
 databaseName = "ar6DB"
-port = 5060
+port = 5666
 fieldName = "屏東李學長"
 fieldManager = "李學長"
 contact = "0900000000"
@@ -105,7 +105,7 @@ def portChoooseDatabaseName():
         return "ar4DB"
     elif port == 5050:
         return "ar5DB"
-    elif port == 5060:
+    elif port == 5666:
         return "ar6DB"
     elif port == 5070:
         return "ar7DB"

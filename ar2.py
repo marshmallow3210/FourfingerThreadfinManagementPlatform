@@ -105,7 +105,7 @@ def portChoooseDatabaseName():
         return "ar4DB"
     elif port == 5050:
         return "ar5DB"
-    elif port == 5060:
+    elif port == 5666:
         return "ar6DB"
     elif port == 5070:
         return "ar7DB"
