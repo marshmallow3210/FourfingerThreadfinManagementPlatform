@@ -3,6 +3,7 @@ import hashlib
 import hmac
 import io
 import json
+import pandas as pd
 import uuid
 from flask import Flask, jsonify, make_response, render_template, request, redirect, url_for, session
 from matplotlib import pyplot as plt
@@ -945,6 +946,82 @@ def feeding_logs():
     else:
         return redirect(url_for('login'))   
 
+''' heatmap function '''
+@app.route('/heatmap', methods=["GET", "POST"])
+def heatmap():
+    if 'username' in session:
+        global connection
+        cursor = connection.cursor()
+        sql = f"USE {databaseName};"
+        try:
+            cursor.execute(sql)
+        except pymysql.err.OperationalError as e:
+            print(f"OperationalError: {e}")
+            connection = reconnect_to_mysql() 
+            cursor = connection.cursor()
+            cursor.execute(sql)
+
+        base64_img = ''
+        if request.method == "POST": 
+            heatmap_date = request.form.get("heatmap_date")
+            selected_date = datetime.datetime.strptime(heatmap_date, "%Y-%m-%d")
+            next_day = selected_date + timedelta(days=1)
+            one_week_ago = selected_date - timedelta(days=6)
+            print(f'selected_date: {selected_date}, one_week_ago: {one_week_ago}')
+
+            sql = "select update_time, ripple_area from ripple_history where update_time between %s and %s"
+            cursor.execute(sql, (one_week_ago, next_day))
+            result = list(cursor.fetchall())
+
+            df = pd.DataFrame(result, columns=['update_time', 'ripple_area'])
+            df['update_time'] = pd.to_datetime(df['update_time'])
+
+            df['date'] = df['update_time'].dt.date
+            df['minute'] = df['update_time'].dt.floor('T')
+
+            df_grouped = df.groupby(['date', 'minute']).mean().reset_index()
+
+            # 原始 heatmap_data (1440, 7)
+            heatmap_data = np.zeros((24 * 60, 7))  # 24小時 x 60分鐘 x 7天
+
+            for index, row in df_grouped.iterrows():
+                day_index = (row['date'] - one_week_ago.date()).days
+                minute_of_day = row['minute'].hour * 60 + row['minute'].minute
+                heatmap_data[minute_of_day, day_index] = row['ripple_area']
+
+            # 創建更大的矩陣 (1440, 13)，在每個日期之間插入空白列
+            heatmap_data_with_gaps = np.zeros((1440, 7 * 2 - 1))  # 13列
+
+            # 將原始數據插入新矩陣中
+            for i in range(7):
+                heatmap_data_with_gaps[:, i * 2] = heatmap_data[:, i]
+
+            plt.figure(figsize=(16, 10))
+            plt.imshow(heatmap_data_with_gaps, cmap='hot', aspect='auto')
+            plt.colorbar(label='Ripple Area')
+
+            # X 軸標籤
+            xticks_positions = [i * 2 for i in range(7)]
+            xticks_labels = [(one_week_ago + timedelta(days=i)).strftime('%Y-%m-%d') for i in range(7)]
+            plt.xticks(xticks_positions, xticks_labels)
+
+            plt.yticks(range(0, 24*60, 120), [f"{i:02d}:00" for i in range(0, 24, 2)])
+            plt.xlabel('Date')
+            plt.ylabel('Time of Day')
+            plt.title('Ripple Area Heatmap')
+            plt.tight_layout()
+
+            img_data = io.BytesIO()
+            plt.savefig(img_data, format='png')
+            img_data.seek(0)
+            base64_img = base64.b64encode(img_data.getvalue()).decode()
+
+        return render_template('heatmap.html', 
+                            base64_img=base64_img, 
+                            species=species, species_logo_url=species_logo_url) 
+    else:
+        return redirect(url_for('login'))  
+    
 
 ''' query function '''
 @app.route('/query', methods=["GET", "POST"])

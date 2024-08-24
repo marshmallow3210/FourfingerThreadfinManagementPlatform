@@ -1,14 +1,14 @@
-<!DOCTYPE html>
 <html>
 <head>
   <meta charset="utf-8">
-  <title>估算查詢</title>
-
+  <title>熱區圖</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css">
   <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/style.css') }}" />
-
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+  <link type="text/css" rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jsgrid/1.5.3/jsgrid.min.css" />
+  <link type="text/css" rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jsgrid/1.5.3/jsgrid-theme.min.css" />
+  <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jsgrid/1.5.3/jsgrid.min.js"></script>
 </head>
-
 <body>
   <div class="row box">
     <!-- sidebar -->
@@ -81,7 +81,7 @@
             </a>
           </li>
           <li>
-            <a href="/heatmap" class="nav-link sidebar-item">
+            <a href="/heatmap" class="nav-link sidebar-item active" style="background-color: #003366;">
               <svg class="bi pe-none me-2" width="6" height="24" ></svg>
               <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-kanban" viewBox="0 0 16 16">
                 <path d="M13.5 1a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1h-11a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1zm-11-1a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2z"/>
@@ -91,7 +91,7 @@
             </a>
           </li>
           <li>
-            <a href="/query" class="nav-link sidebar-item active" style="background-color: #003366;">
+            <a href="/query" class="nav-link sidebar-item">
               <svg class="bi pe-none me-2" width="6" height="24" ></svg>
               <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-search" viewBox="0 0 16 16">
                 <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z"/>
@@ -135,28 +135,6 @@
           <!--settings-->
           <div class="col-md-2 center">
             <ul class="nav col-12 col-lg-auto my-2 justify-content-center my-md-0">
-              <!--
-              <li class="center">
-                <a href="" class="nav-link aside" data-bs-toggle="dropdown">
-                    <img src="https://github.com/marshmallow3210/FourfingerThreadfinManagementPlatform/blob/main/IMG_1663.png?raw=true" alt="通知" width="32" height="32" class="rounded-circle me-0">
-                    通知
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-bell" viewBox="0 0 16 16">
-                    <path d="M8 16a2 2 0 0 0 2-2H6a2 2 0 0 0 2 2zM8 1.918l-.797.161A4.002 4.002 0 0 0 4 6c0 .628-.134 2.197-.459 3.742-.16.767-.376 1.566-.663 2.258h10.244c-.287-.692-.502-1.49-.663-2.258C12.134 8.197 12 6.628 12 6a4.002 4.002 0 0 0-3.203-3.92L8 1.917zM14.22 12c.223.447.481.801.78 1H1c.299-.199.557-.553.78-1C2.68 10.2 3 6.88 3 6c0-2.42 1.72-4.44 4.005-4.901a1 1 0 1 1 1.99 0A5.002 5.002 0 0 1 13 6c0 .88.32 4.2 1.22 6z"/>
-                  </svg>
-                </a>
-                <ul class="dropdown-menu text-small shadow ">
-                  <li class="list-group-item d-flex justify-content-between align-items-start">
-                    <div class="ms-2 me-auto">
-                      <div class="fw-bold">通知1</div>
-                      通知1內容
-                    </div>
-                    <span class="badge bg-primary rounded-pill">12</span>
-                  </li>
-                  <li><hr class="dropdown-divider"></li>
-                  <li><a class="dropdown-item" href="/">通知2</a></li>
-                </ul>
-              </li>
-              -->
               <!--用戶-->
               <li class="center">
                 <a href="" class="nav-link aside dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
@@ -179,37 +157,79 @@
       </div>
        
       <!--main-page-->
-      <div class="row">
+      <div class="row content">
         <div class="main-page">
-          <div>
-            <h2>估算查詢結果</h2>
-            <span height="5"></span>
-          </div>
-          <div>
-            <label for="age">此魚池已養殖了: {{ age }} 天</label>
-            <br>
-            <label for="estimated_weights">系統估算當前魚池總重量: {{ estimated_weights }} 公斤</label>
-            <br>
-            <label for="estimated_fcr">系統估算當前換肉率: {{ estimated_fcr }}</label>
-            <br>
-            <label for="estimated_date">系統推估此魚池可上市的日期: {{ estimated_date }}</label>
-            <br>
-          </div>
-        
-          <hr>
-        
-          <div>
-            <b>說明:<br></b>
-            系統估算當前換肉率 = 飼料量 / (系統預估當前魚池總重量 - 初重)<br>
-            {{ estimated_fcr }} = {{ total_feeding_amount }} / ({{ estimated_weights }} - {{ first_weights }})
+          
+          <div style="padding:20px;">
+            <form action="{{ url_for("heatmap")}}" method="post">
+              <label id="date_label">選擇欲查詢日期: 
+                <input type="date" class="input-group-text" id="heatmap_date" name="heatmap_date"/>
+                <span class="validity"></span>
+              </label>
+              <br>
+              <br>
+              <label>
+                將顯示從查詢日期開始往前一週(7天)的紀錄
+              </label>
+              <br>
+              <br>
+              <button id="send_date_btn" class="btn btn-outline-secondary" type="submit">送出</button>
+            </form>
             <br>
           </div>
+          
+          <br>
+
+          {% if base64_img %}
+          <h2>水花熱區圖</h2>
+          <div class="image-container" style="padding:20px;">
+            <img id="feeding_record_img" src="data:image/png;base64,{{ base64_img }}" alt="{{ base64_img }}">
+          </div>
+          {% endif %}
+          <br>
+
         </div>
-      </div>
     </div>
   </div>
-  
 </body>
+
+<!-- feeding record img  -->
+<script>
+  Date.prototype.toISOString = function () {
+    let pad =(n)=>(n < 10)?'0' + n:n;
+    let hours_offset = this.getTimezoneOffset() / 60;
+    let offset_date = this.setHours(this.getHours() - hours_offset);
+    let symbol = (hours_offset >= 0) ? "-" : "+";
+    let time_zone = symbol+pad(Math.abs(hours_offset))+ ":00";
+    
+    return this.getUTCFullYear() +
+        '-' + pad(this.getUTCMonth() + 1) +
+        '-' + pad(this.getUTCDate()) +
+        'T' + pad(this.getUTCHours()) +
+        ':' + pad(this.getUTCMinutes()) +
+        ':' + pad(this.getUTCSeconds()) +
+        '.' + (this.getUTCMilliseconds() / 1000).toFixed(3).slice(2, 5) +
+        time_zone;
+  };
+
+  var DateofToday = new Date().toISOString().split('T')[0];
+
+  document.getElementById('heatmap_date').setAttribute('min', '2023-01-01');
+  document.getElementById('heatmap_date').setAttribute('max', DateofToday);
+ 
+  document.getElementById('send_date_btn').addEventListener('click', function(event) {
+    var selectedDate = document.getElementById('heatmap_date').value;
+    if (!selectedDate) {
+      alert('請選擇日期後再按送出！');
+      event.preventDefault();
+    }
+  });
+
+  document.getElementById('all_records_btn').addEventListener('click', function() {
+    document.getElementById('all_records').value = true;
+  });
+
+</script>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.4/jquery.min.js"></script>
@@ -217,40 +237,4 @@
 
 </html>
 
-  <!--
 
-  <div>
-    <label for="target_feed">目標飼料量:</label>{{ target_feed }} 公克
-    <br>
-    <label for="total_used">已用飼料量:</label>{{ total_used }} 公克
-    <br>
-    <label for="estimated_days">預估天數:</label>{{ estimated_days }} 天
-    <br><br>
-  </div>
-  <div>
-    <br>
-    <b>說明:<br>
-    目標飼料=(目標均重-目前均重)*(魚隻數量-死亡數量)*換肉率<br>
-    {{ target_feed }} = ({{ target_weight }}-{{ avg_weights }})*({{ counts }}-{{ dead_counts }})*{{ feed_conversion }}
-    <br>
-    預估飼料量=目標飼料量-已用飼料量<br>
-    {{ estimated_feed }} = {{ target_feed }}-{{ total_used }}
-    <br>
-    預估天數=預估飼料量/每日飼料量<br>
-    {{ estimated_days }} = {{ estimated_feed }}/{{ daily_feed }}
-    </b><br><br>
-  </div>
-  <div>
-    <br>
-    換肉率: input or db<br>
-    目標均重(公克): input<br>
-    目前均重(公克):  db<br>
-    魚隻數量(隻):  db<br>
-    魚隻死亡數量(隻): ?<br>
-    目標飼料量(公克): 算<br>
-    已用飼料量(公克):  db<br>
-    每日飼料量(公克): input<br>
-    預估天數(天): 算<br>
-  </div>
-  
-  -->
