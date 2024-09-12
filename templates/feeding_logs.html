@@ -228,6 +228,7 @@
                   <td>飼料品牌</td>
                   <td>投餌時間</td>
                   <td>耗時(分鐘)</td>
+                  <td>建議投餌量</td>
                   <td>投餌量</td>
                   <td>剩餘飼料量</td>
                   <td>投餌單位</td>
@@ -244,11 +245,12 @@
                   <td>{{value.6}}</td> <!--food_name-->
                   <td>{{value.3}}</td> <!--start_time-->
                   <td>{{value.4}}</td> <!--use_time-->
+                  <td>{{value.9}}</td> <!--recommended_feeding_amount-->
                   <td>{{value.8}}</td> <!--feeding_amount-->
-                  <td>{{value.9}}</td> <!--left_amount-->
+                  <td>{{value.10}}</td> <!--left_amount-->
                   <td>{{value.7}}</td> <!--food_unit-->
-                  <td>{{value.10}}</td> <!--status-->
-                  <td>{{value.11}}</td> <!--description-->
+                  <td>{{value.11}}</td> <!--status-->
+                  <td>{{value.12}}</td> <!--description-->
                 </tr>
                 {% endfor %}
             </table> 
@@ -421,5 +423,3 @@
 <script type="text/javascript" src="{{ url_for('static', filename='js/script.js') }}"></script>
 
 </html>
-
-

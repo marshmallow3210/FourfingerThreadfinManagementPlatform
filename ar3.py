@@ -882,7 +882,7 @@ def feeding_logs():
                     start_times = [row[3] for row in new_feeding_data]  
                     use_times = [row[4] for row in new_feeding_data]  
                     feeding_amounts = [row[8] for row in new_feeding_data]  
-                    descriptions = [row[11] for row in new_feeding_data]  
+                    descriptions = [row[12] for row in new_feeding_data]  
 
                     sql = "select * from original_feeding_logs where start_time between %s and %s"
                     cursor.execute(sql, (one_week_ago + timedelta(days=1), next_day))

@@ -70,6 +70,7 @@ CREATE TABLE `new_feeding_logs` (
   `description` varchar(255) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 --
+ALTER TABLE new_feeding_logs ADD COLUMN recommended_feeding_amount FLOAT DEFAULT NULL AFTER feeding_amount;
 
 --
 -- Dumping data for table `feeding_logs`
