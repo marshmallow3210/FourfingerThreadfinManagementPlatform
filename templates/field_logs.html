@@ -192,7 +192,7 @@
           
           <div>
             <span height="5"></span>
-            <a href="/update" class="btn">新增魚池資料</a>
+            <a href="/update" class="btn">新增養殖紀錄</a>
           </div>
 
           <hr>
@@ -208,6 +208,7 @@
               {% endfor %}
             </select>
             <br>
+            {% if pool_data is not none %}
             <table id="pool_data" style="border:3px #cccccc solid;" cellpadding="10" border='1'>
               <thead>
                 <tr>
@@ -234,6 +235,9 @@
                 {% endfor %}
               </tbody>
             </table>
+            {% else %}
+            暫無紀錄
+            {% endif %}
           </div>
 
         </div>
@@ -248,5 +252,3 @@
 <script type="text/javascript" src="{{ url_for('static', filename='js/script.js') }}"></script>
 
 </html>
-
-
