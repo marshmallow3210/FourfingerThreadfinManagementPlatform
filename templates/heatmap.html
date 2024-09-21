@@ -188,6 +188,14 @@
           {% endif %}
           <br>
 
+          {% if trend_img %}
+          <h2>水花趨勢圖</h2>
+          <div class="image-container" style="padding:20px;">
+            <img src="data:image/png;base64,{{ trend_img }}" alt="trend graph">
+          </div>
+          {% endif %}
+          <br>
+
         </div>
     </div>
   </div>
@@ -236,5 +244,3 @@
 <script type="text/javascript" src="{{ url_for('static', filename='js/script.js') }}"></script>
 
 </html>
-
-

@@ -6,7 +6,7 @@ import json
 import pandas as pd
 import uuid
 from flask import Flask, jsonify, make_response, render_template, request, redirect, url_for, session
-from matplotlib import pyplot as plt
+from matplotlib import patches, pyplot as plt
 from matplotlib.font_manager import FontProperties
 from flask_login import LoginManager, UserMixin, login_user, logout_user
 from flask_cors import CORS
@@ -946,7 +946,96 @@ def feeding_logs():
     else:
         return redirect(url_for('login'))   
 
+
 ''' heatmap function '''
+def generate_heatmap(result, one_week_ago):
+    df = pd.DataFrame(result, columns=['update_time', 'ripple_area'])
+    df['update_time'] = pd.to_datetime(df['update_time'])
+
+    df['date'] = df['update_time'].dt.date
+    df['minute'] = df['update_time'].dt.floor('T')
+    df_grouped = df.groupby(['date', 'minute']).mean().reset_index()
+
+    heatmap_data = np.zeros((24 * 60, 7))  # 24小時 x 60分鐘 x 7天
+    for _, row in df_grouped.iterrows():
+        day_index = (row['date'] - one_week_ago.date()).days
+        minute_of_day = row['minute'].hour * 60 + row['minute'].minute
+        heatmap_data[minute_of_day, day_index] = row['ripple_area']
+
+    heatmap_data_with_gaps = np.zeros((1440, 7 * 2 - 1))  # 插入空白列
+    for i in range(7):
+        heatmap_data_with_gaps[:, i * 2] = heatmap_data[:, i]
+
+    df = pd.DataFrame(result, columns=['update_time', 'ripple_area'])
+    df['update_time'] = pd.to_datetime(df['update_time'])
+
+    marks = []
+    start_time = df.iloc[0]['update_time']
+    prev_time = start_time
+
+    for i in range(1, len(df)):
+        current_time = df.iloc[i]['update_time']
+        
+        time_diff = (current_time - prev_time).total_seconds() / 60 
+
+        if time_diff > 2:  # 如果時間差大於 1 分鐘
+            marks.append({'start_time': start_time, 'end_time': prev_time})
+            start_time = current_time  
+
+        prev_time = current_time
+
+    marks.append({'start_time': start_time, 'end_time': prev_time})
+    marks_df = pd.DataFrame(marks)
+    print(marks_df)
+
+    fig, axes = plt.subplots(1, 7, figsize=(13, 10), sharey=True)
+
+    for i in range(7):
+        day_data = heatmap_data[:, i].reshape(-1, 1)
+        ax = axes[i]
+        im = ax.imshow(day_data, cmap='hot', aspect='auto')
+
+        ax.set_title((one_week_ago + timedelta(days=i)).strftime('%Y-%m-%d'))
+        ax.set_xticks([]) 
+        ax.set_yticks(range(0, 24 * 60, 120))  
+        ax.set_yticklabels([f"{j:02d}:00" for j in range(0, 24, 2)])
+        
+        # 畫藍色框
+        for mark in marks:
+            start_minute = (mark['start_time'].hour * 60) + mark['start_time'].minute
+            end_minute = (mark['end_time'].hour * 60) + mark['end_time'].minute
+
+            if mark['start_time'].date() == (one_week_ago + timedelta(days=i)).date():
+                rect_y = start_minute -5 # 5 min
+                rect_height = (end_minute - start_minute) + 10
+
+                rect = patches.Rectangle(
+                    (-0.5, rect_y),     # 左下角座標 (x, y)
+                    1,                  # 矩形寬度
+                    rect_height,        # 矩形高度
+                    linewidth=2,
+                    edgecolor='blue',
+                    facecolor='none'    # 只顯示邊框
+                )
+                ax.add_patch(rect)
+
+    cbar_ax = plt.gcf().add_axes([0.88, 0.06, 0.02, 0.86])
+    cbar = plt.colorbar(im, cax=cbar_ax, aspect='auto') 
+    cbar.ax.set_ylabel('Pixel Number of Water Splashes', fontsize=14)
+
+    fig.suptitle('Ripple Area Heatmap', x=0.5, y=0.97, fontsize=18, fontweight='bold')
+    fig.text(0.5, 0.03, 'Days', ha='center', fontsize=14)  
+    fig.text(0.03, 0.5, 'Time of Day', va='center', rotation='vertical', fontsize=14)
+    fig.subplots_adjust(left=0.1, right=0.85, top=0.9, bottom=0.06, wspace=0.2, hspace=0.3)
+
+    img_data = io.BytesIO()
+    plt.savefig(img_data, format='png')
+    img_data.seek(0)
+    base64_img = base64.b64encode(img_data.getvalue()).decode()
+    plt.close()
+
+    return base64_img
+
 @app.route('/heatmap', methods=["GET", "POST"])
 def heatmap():
     if 'username' in session:
@@ -962,6 +1051,8 @@ def heatmap():
             cursor.execute(sql)
 
         base64_img = ''
+        trend_img = '' 
+
         if request.method == "POST": 
             heatmap_date = request.form.get("heatmap_date")
             selected_date = datetime.datetime.strptime(heatmap_date, "%Y-%m-%d")
@@ -972,55 +1063,93 @@ def heatmap():
             sql = "select update_time, ripple_area from ripple_history where update_time between %s and %s"
             cursor.execute(sql, (one_week_ago, next_day))
             result = list(cursor.fetchall())
+            
+            base64_img = generate_heatmap(result, one_week_ago)
 
+            
+            import matplotlib.dates as mdates
+            # 使用 Least Squares Method 畫趨勢圖
             df = pd.DataFrame(result, columns=['update_time', 'ripple_area'])
-            df['update_time'] = pd.to_datetime(df['update_time'])
+            df['update_time'] = pd.to_datetime(df['update_time'])  # 確保 update_time 是 datetime 格式
+            df.set_index('update_time', inplace=True)  # 將 update_time 設為索引
 
-            df['date'] = df['update_time'].dt.date
-            df['minute'] = df['update_time'].dt.floor('T')
+            # 設定閾值，用來判斷持平的範圍
+            time_threshold = timedelta(minutes=5)  # 5分鐘的時間差作為分段標準
+            flat_slope_threshold = (-0.2, 0.2)  # 持平斜率範圍
 
-            df_grouped = df.groupby(['date', 'minute']).mean().reset_index()
+            # 分段計算平均值、最大值、最小值
+            start_idx = 0
+            segments = []
+            averages = []
+            max_values = []
+            min_values = []
 
-            # 原始 heatmap_data (1440, 7)
-            heatmap_data = np.zeros((24 * 60, 7))  # 24小時 x 60分鐘 x 7天
+            for i in range(1, len(df)):
+                time_diff = (df.index[i] - df.index[i - 1]).total_seconds()  # 計算相鄰時間差（秒）
+                if time_diff > time_threshold.total_seconds():  # 如果時間差超過5分鐘，則分段
+                    segment = df.iloc[start_idx:i]
+                    averages.append(segment['ripple_area'].mean())
+                    max_values.append(segment['ripple_area'].max())
+                    min_values.append(segment['ripple_area'].min())
+                    segments.append(df.index[start_idx])
+                    start_idx = i
 
-            for index, row in df_grouped.iterrows():
-                day_index = (row['date'] - one_week_ago.date()).days
-                minute_of_day = row['minute'].hour * 60 + row['minute'].minute
-                heatmap_data[minute_of_day, day_index] = row['ripple_area']
+            segment = df.iloc[start_idx:]
+            averages.append(segment['ripple_area'].mean())
+            max_values.append(segment['ripple_area'].max())
+            min_values.append(segment['ripple_area'].min())
+            segments.append(df.index[start_idx])
 
-            # 創建更大的矩陣 (1440, 13)，在每個日期之間插入空白列
-            heatmap_data_with_gaps = np.zeros((1440, 7 * 2 - 1))  # 13列
+            segments = np.array(segments)
+            averages = np.array(averages)
+            max_values = np.array(max_values)
+            min_values = np.array(min_values)
 
-            # 將原始數據插入新矩陣中
-            for i in range(7):
-                heatmap_data_with_gaps[:, i * 2] = heatmap_data[:, i]
+            plt.figure(figsize=(13, 8))
 
-            plt.figure(figsize=(16, 10))
-            plt.imshow(heatmap_data_with_gaps, cmap='hot', aspect='auto')
-            plt.colorbar(label='Ripple Area')
+            # 畫平均值的趨勢圖
+            A = np.vstack([np.arange(len(segments)), np.ones(len(segments))]).T
+            m_avg, c_avg = np.linalg.lstsq(A, averages, rcond=None)[0]
+            plt.plot(segments, m_avg * np.arange(len(segments)) + c_avg, color='orange', label='Average Trend', linewidth=2)
 
-            # X 軸標籤
-            xticks_positions = [i * 2 for i in range(7)]
-            xticks_labels = [(one_week_ago + timedelta(days=i)).strftime('%Y-%m-%d') for i in range(7)]
-            plt.xticks(xticks_positions, xticks_labels)
+            # 畫最大值的趨勢圖
+            m_max, c_max = np.linalg.lstsq(A, max_values, rcond=None)[0]
+            plt.plot(segments, m_max * np.arange(len(segments)) + c_max, color='red', label='Max Trend', linewidth=2)
 
-            plt.yticks(range(0, 24*60, 120), [f"{i:02d}:00" for i in range(0, 24, 2)])
-            plt.xlabel('Date')
-            plt.ylabel('Time of Day')
-            plt.title('Ripple Area Heatmap')
+            # 畫最小值的趨勢圖
+            m_min, c_min = np.linalg.lstsq(A, min_values, rcond=None)[0]
+            plt.plot(segments, m_min * np.arange(len(segments)) + c_min, color='blue', label='Min Trend', linewidth=2)
+
+            plt.scatter(df.index, df['ripple_area'], color='black', label='Data Points', s=5, alpha=0.7)
+
+            # 設置自動刻度格式器以自動顯示最佳的時間標籤
+            ax = plt.gca()
+            locator = mdates.AutoDateLocator()
+            formatter = mdates.ConciseDateFormatter(locator)
+            ax.xaxis.set_major_locator(locator)
+            ax.xaxis.set_major_formatter(formatter)
+
+            # 添加 X 軸標籤和標題
+            plt.xlabel('Update Time')
+            plt.ylabel('Ripple Area')
+            plt.title('Ripple Area Trends (Average, Max, Min)')
+
+            plt.legend(loc='upper left')
+            plt.grid(True)
             plt.tight_layout()
 
-            img_data = io.BytesIO()
-            plt.savefig(img_data, format='png')
-            img_data.seek(0)
-            base64_img = base64.b64encode(img_data.getvalue()).decode()
+            trend_img_data = io.BytesIO()
+            plt.savefig(trend_img_data, format='png')
+            trend_img_data.seek(0)
+            trend_img = base64.b64encode(trend_img_data.getvalue()).decode()
+            plt.close()
 
         return render_template('heatmap.html', 
                             base64_img=base64_img, 
+                            trend_img=trend_img, 
                             species=species, species_logo_url=species_logo_url) 
     else:
-        return redirect(url_for('login'))  
+        return redirect(url_for('login'))
     
 
 ''' query function '''
