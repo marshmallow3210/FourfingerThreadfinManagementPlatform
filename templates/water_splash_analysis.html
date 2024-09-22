@@ -1,7 +1,7 @@
-<html>
+<html></html>
 <head>
   <meta charset="utf-8">
-  <title>熱區圖</title>
+  <title>水花分析</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css">
   <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/style.css') }}" />
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
@@ -81,22 +81,22 @@
             </a>
           </li>
           <li>
-            <a href="/heatmap" class="nav-link sidebar-item active" style="background-color: #003366;">
-              <svg class="bi pe-none me-2" width="6" height="24" ></svg>
-              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-kanban" viewBox="0 0 16 16">
-                <path d="M13.5 1a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1h-11a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1zm-11-1a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2z"/>
-                <path d="M6.5 3a1 1 0 0 1 1-1h1a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1a1 1 0 0 1-1-1zm-4 0a1 1 0 0 1 1-1h1a1 1 0 0 1 1 1v7a1 1 0 0 1-1 1h-1a1 1 0 0 1-1-1zm8 0a1 1 0 0 1 1-1h1a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1h-1a1 1 0 0 1-1-1z"/>
-              </svg>
-              <span>熱區圖</span>
-            </a>
-          </li>
-          <li>
             <a href="/query" class="nav-link sidebar-item">
               <svg class="bi pe-none me-2" width="6" height="24" ></svg>
               <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-search" viewBox="0 0 16 16">
                 <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z"/>
               </svg>
               <span>估算查詢</span>
+            </a>
+          </li>
+          <li>
+            <a href="/water_splash_analysis" class="nav-link sidebar-item active" style="background-color: #003366;">
+              <svg class="bi pe-none me-2" width="6" height="24" ></svg>
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-kanban" viewBox="0 0 16 16">
+                <path d="M13.5 1a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1h-11a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1zm-11-1a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2z"/>
+                <path d="M6.5 3a1 1 0 0 1 1-1h1a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1a1 1 0 0 1-1-1zm-4 0a1 1 0 0 1 1-1h1a1 1 0 0 1 1 1v7a1 1 0 0 1-1 1h-1a1 1 0 0 1-1-1zm8 0a1 1 0 0 1 1-1h1a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1h-1a1 1 0 0 1-1-1z"/>
+              </svg>
+              <span>水花分析</span>
             </a>
           </li>
         </ul>
@@ -161,19 +161,43 @@
         <div class="main-page">
           
           <div style="padding:20px;">
-            <form action="{{ url_for("heatmap")}}" method="post">
-              <label id="date_label">選擇欲查詢日期: 
-                <input type="date" class="input-group-text" id="heatmap_date" name="heatmap_date"/>
+            <form id="water_splash_analysis_form" action="{{ url_for("water_splash_analysis")}}" method="post">
+              <div class="col-lg-4">
+                <select class="form-select mb-3" id="chooseDuration">
+                    <option disabled selected value="">選擇時段長度</option>
+                    <option class="dropdown-item" value="opt1">一週</option>
+                    <option class="dropdown-item" value="opt2">一個月</option>
+                    <option class="dropdown-item" value="opt3">三個月</option>
+                </select>
+              </div>
+              <label id="selected_date_label" style="display:none;">選擇欲查詢日期: 
+                <input type="date" class="input-group-text" id="selected_date" name="selected_date" style="display:none;"/>
                 <span class="validity"></span>
               </label>
               <br>
+              <label id="durationLabel" style="display:none;"></label>
+              <input type="hidden" id="opt" name="opt">
               <br>
-              <label>
-                將顯示從查詢日期開始往前一週(7天)的紀錄
-              </label>
+              <div id="loadingMessage" class="spinner" style="display: none;"></div>
+
+              <style>
+              .spinner {
+                border: 8px solid #f3f3f3;
+                border-top: 8px solid #009999;
+                border-radius: 50%;
+                width: 50px;
+                height: 50px;
+                animation: spin 2s linear infinite;
+              }
+
+              @keyframes spin {
+                0% { transform: rotate(0deg); }
+                100% { transform: rotate(360deg); }
+              }
+              </style>
+
               <br>
-              <br>
-              <button id="send_date_btn" class="btn btn-outline-secondary" type="submit">送出</button>
+              <button id="send_btn" class="btn btn-outline-secondary" type="submit" style="display:none;">送出</button>
             </form>
             <br>
           </div>
@@ -188,10 +212,10 @@
           {% endif %}
           <br>
 
-          {% if trend_img %}
+          {% if trendchart %}
           <h2>水花趨勢圖</h2>
           <div class="image-container" style="padding:20px;">
-            <img src="data:image/png;base64,{{ trend_img }}" alt="trend graph">
+            <img src="data:image/png;base64,{{ trendchart }}" alt="trend graph">
           </div>
           {% endif %}
           <br>
@@ -222,21 +246,50 @@
 
   var DateofToday = new Date().toISOString().split('T')[0];
 
-  document.getElementById('heatmap_date').setAttribute('min', '2023-01-01');
-  document.getElementById('heatmap_date').setAttribute('max', DateofToday);
- 
-  document.getElementById('send_date_btn').addEventListener('click', function(event) {
-    var selectedDate = document.getElementById('heatmap_date').value;
-    if (!selectedDate) {
-      alert('請選擇日期後再按送出！');
-      event.preventDefault();
+  document.getElementById('selected_date').setAttribute('min', '2023-01-01');
+  document.getElementById('selected_date').setAttribute('max', DateofToday);
+
+  document.getElementById('send_btn').addEventListener('click', function(event) {
+  var selectedDate = document.getElementById('selected_date').value;
+  if (!selectedDate) {
+    alert('請選擇日期後再按送出！');
+    event.preventDefault();
+  }
+  });
+
+  document.getElementById('chooseDuration').addEventListener('change', function() {
+    var selectedOption = this.value;
+    var durationLabel = document.getElementById('durationLabel');
+    var selected_date_label = document.getElementById('selected_date_label');
+    var selected_date = document.getElementById('selected_date');
+    var send_btn = document.getElementById('send_btn');
+
+    selected_date_label.style.display = 'block';
+    selected_date.style.display = 'block';
+    selected_date.required = true;
+    send_btn.style.display = 'block';
+    durationLabel.style.display = 'block';
+
+    if (selectedOption === 'opt1') {
+        document.getElementById('opt').value = 1;
+        durationLabel.textContent = '將顯示從查詢日期開始往前一週(7天)的紀錄';
+    }
+    else if (selectedOption === 'opt2') {
+        document.getElementById('opt').value = 2;
+        durationLabel.textContent = '將顯示從查詢日期開始往前一個月(30天)的紀錄';
+    }
+    else if (selectedOption === 'opt3') {
+        document.getElementById('opt').value = 3;
+        durationLabel.textContent = '將顯示從查詢日期開始往前三個月(90天)的紀錄';
+    }
+    else {
+        durationLabel.textContent = 'Please select a valid option';
     }
   });
 
-  document.getElementById('all_records_btn').addEventListener('click', function() {
-    document.getElementById('all_records').value = true;
+  document.getElementById('water_splash_analysis_form').addEventListener('submit', function() {
+    document.getElementById('loadingMessage').style.display = 'block';  // 顯示 Loading Spinner
   });
-
 </script>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"></script>
