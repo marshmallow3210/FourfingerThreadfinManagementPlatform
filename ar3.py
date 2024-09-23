@@ -3,6 +3,7 @@ import hashlib
 import hmac
 import io
 import json
+import math
 import pandas as pd
 import uuid
 from flask import Flask, jsonify, make_response, render_template, request, redirect, url_for, session
@@ -1036,41 +1037,97 @@ def generate_heatmap(result, query_date, duration):
     return base64_img
 
 def generate_trendchart(result, query_date, next_day, duration):
-    # 使用 Least Squares Method 畫趨勢圖
-    df = pd.DataFrame(result, columns=['update_time', 'ripple_area'])
-    df['update_time'] = pd.to_datetime(df['update_time'])  # 確保 update_time 是 datetime 格式
-    df.set_index('update_time', inplace=True)  # 將 update_time 設為索引
+    morning_result = []
+    afternoon_result = []
+    morning_segments = []
+    afternoon_segments = []
+    morning_ripple_areas = []
+    afternoon_ripple_areas = []
 
-    # threshold setting
-    time_threshold = timedelta(minutes=5)  # 5分鐘的時間差作為分段標準
-    flat_slope_threshold = (-0.25, 0.25)  # 持平斜率範圍
+    current_date = result[0][0].date()
+    expected_date = current_date
+    idx = 0
+    for r in result: 
+        timestamp, ripple_area = r
+        segment_date = timestamp.date()
 
-    start_idx = 0
-    segments = []
-    averages = []
-    max_values = []
-    min_values = []
-    for i in range(1, len(df)):
-        time_diff = (df.index[i] - df.index[i - 1]).total_seconds() 
-        if time_diff > time_threshold.total_seconds():  # 如果時間差超過5分鐘，則分段
-            segment = df.iloc[start_idx:i]
-            averages.append(segment['ripple_area'].mean())
-            max_values.append(segment['ripple_area'].max())
-            min_values.append(segment['ripple_area'].min())
-            segments.append(df.index[start_idx])
-            start_idx = i
+        while segment_date > expected_date: # if expected_date has no ripple data
+            morning_segments.append((idx, expected_date, None))
+            afternoon_segments.append((idx, expected_date, None))
+            expected_date += timedelta(days=1)
+            idx += 1
 
-    # 最後一段
-    segment = df.iloc[start_idx:]
-    averages.append(segment['ripple_area'].mean())
-    max_values.append(segment['ripple_area'].max())
-    min_values.append(segment['ripple_area'].min())
-    segments.append(df.index[start_idx])
+        if segment_date != current_date: # 日期不同, 算前一天的平均值並更新日期
+            if morning_ripple_areas:
+                avg_morning_ripple_area = sum(morning_ripple_areas) / len(morning_ripple_areas)
+            else:
+                avg_morning_ripple_area = None
+            
+            if afternoon_ripple_areas:
+                avg_afternoon_ripple_area = sum(afternoon_ripple_areas) / len(afternoon_ripple_areas)
+            else:
+                avg_afternoon_ripple_area = None
+            
+            morning_segments.append((idx, current_date, avg_morning_ripple_area))
+            afternoon_segments.append((idx, current_date, avg_afternoon_ripple_area))
 
-    segments = np.array(segments)
-    averages = np.array(averages)
-    max_values = np.array(max_values)
-    min_values = np.array(min_values)
+            morning_ripple_areas = []
+            afternoon_ripple_areas = []
+            current_date = segment_date
+            expected_date = segment_date
+            idx += 1
+
+        if timestamp.hour < 12:
+            morning_result.append((segment_date, ripple_area))
+            morning_ripple_areas.append(ripple_area)
+        else:
+            afternoon_result.append((segment_date, ripple_area))
+            afternoon_ripple_areas.append(ripple_area)
+
+    # 最後一天
+    if morning_ripple_areas:
+        avg_morning_ripple_area = sum(morning_ripple_areas) / len(morning_ripple_areas)
+    else:
+        avg_morning_ripple_area = None
+    
+    if afternoon_ripple_areas:
+        avg_afternoon_ripple_area = sum(afternoon_ripple_areas) / len(afternoon_ripple_areas)
+    else:
+        avg_afternoon_ripple_area = None
+    
+    morning_segments.append((idx, current_date, avg_morning_ripple_area))
+    afternoon_segments.append((idx, current_date, avg_afternoon_ripple_area))
+
+    # print("Morning Segments:")
+    # for segment in morning_segments:
+    #     if segment[2] is not None:
+    #         print(f"Idxs: {segment[0]}, Date: {segment[1]}, Morning Average Ripple Area: {segment[2]:.2f}")
+    #     else:
+    #         print(f"Idxs: {segment[0]}, Date: {segment[1]}, Morning Average Ripple Area: None")
+
+    # print("\nAfternoon Segments:")
+    # for segment in afternoon_segments:
+    #     if segment[2] is not None:
+    #         print(f"Idxs: {segment[0]}, Date: {segment[1]}, Afternoon Average Ripple Area: {segment[2]:.2f}")
+    #     else:
+    #         print(f"Idxs: {segment[0]}, Date: {segment[1]}, Afternoon Average Ripple Area: None")
+        
+    filtered_segments = [(idx, date, ripple_area) for idx, date, ripple_area in morning_segments if ripple_area is not None]
+    idxs = np.array([segment[0] for segment in filtered_segments])
+    dates = [segment[1] for segment in filtered_segments]
+    ripple_areas = np.array([segment[2] for segment in filtered_segments])
+
+    # least square method, f(t) = at + b
+    n = len(idxs)
+    t = np.sum(idxs)
+    t2 = np.sum(idxs**2)
+    mt = np.sum(ripple_areas)
+    t_mt = np.sum(idxs*ripple_areas)
+
+    a = (n*t_mt-t*mt)/(n*t2-t**2)
+    b = (mt - a*t)/n
+
+    predict_trends=a*idxs+b
 
     from matplotlib import font_manager
     font_path = '/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc'
@@ -1078,52 +1135,37 @@ def generate_trendchart(result, query_date, next_day, duration):
 
     plt.rcParams['font.family'] = font_prop.get_name()
     plt.rcParams['axes.unicode_minus'] = False  # 避免負號顯示為方框
-    plt.figure(figsize=(duration*2-1, 10))
 
-    # 畫平均值的趨勢圖
-    A = np.vstack([np.arange(len(segments)), np.ones(len(segments))]).T
-    m_avg, c_avg = np.linalg.lstsq(A, averages, rcond=None)[0]
-    plt.plot(segments, m_avg * np.arange(len(segments)) + c_avg, color='orange', label='Average Trend', linewidth=2)
+    plt.figure(figsize=(duration*2-1, 10)) # math.ceil((duration*2-1)/16*9)))
 
-    # 畫最大值的趨勢圖
-    m_max, c_max = np.linalg.lstsq(A, max_values, rcond=None)[0]
-    plt.plot(segments, m_max * np.arange(len(segments)) + c_max, color='red', label='Max Trend', linewidth=2)
+    original_morning_dates = [r[0] for r in morning_result]
+    original_morning_ripple_areas = [r[1] for r in morning_result]
+    plt.scatter(original_morning_dates, original_morning_ripple_areas, color='black', s=15, label='原始資料點')
 
-    # 畫最小值的趨勢圖
-    m_min, c_min = np.linalg.lstsq(A, min_values, rcond=None)[0]
-    plt.plot(segments, m_min * np.arange(len(segments)) + c_min, color='blue', label='Min Trend', linewidth=2)
+    plt.plot(dates, ripple_areas, 'o', label="平均水花面積值")
+    plt.plot(dates, predict_trends, '-', color='orange', linewidth=2, label=f"食慾成長趨勢: y={a:.2f}t+{b:.2f}")
 
-    plt.scatter(df.index, df['ripple_area'], color='black', label='Data Points', s=5, alpha=0.7)
-
-    # 在每段的平均值趨勢線上方標註上升、下降或持平
-    for i in range(len(segments) - 1):
-        x_mid = segments[i] + (segments[i + 1] - segments[i]) / 2 # 兩個時間戳的中間點
-        y_mid = m_avg * (i + 0.5) + c_avg  # 平均值線的中間
-        
-        # 標註趨勢
-        if m_avg > flat_slope_threshold[1]:
-            plt.text(x_mid, y_mid + 3000, '食慾增加', color='green', fontsize=12, fontweight='bold', verticalalignment='bottom', horizontalalignment='center', fontproperties=font_prop)
-        elif m_avg < flat_slope_threshold[0]:
-            plt.text(x_mid, y_mid + 3000, '食慾下降', color='red', fontsize=12, fontweight='bold', verticalalignment='bottom', horizontalalignment='center', fontproperties=font_prop)
-        else:
-            plt.text(x_mid, y_mid + 3000, '食慾持平', color='blue', fontsize=12, fontweight='bold', verticalalignment='bottom', horizontalalignment='center', fontproperties=font_prop)
-
+    if a > 0.05:
+        plt.text(dates[len(dates)//2]-timedelta(hours=12), np.mean(predict_trends)+4000, '食慾增加', color='green', fontweight='bold', fontproperties=font_prop)
+    elif a < -0.05:
+        plt.text(dates[len(dates)//2]-timedelta(hours=12), np.mean(predict_trends)+4000, '食慾下降', color='red', ontweight='bold', fontproperties=font_prop)
+    else:
+        plt.text(dates[len(dates)//2]-timedelta(hours=12), np.mean(predict_trends)+4000, '食慾持平', color='blue', fontweight='bold', fontproperties=font_prop)
 
     ax = plt.gca()
-    locator = mdates.HourLocator(byhour=[6, 18]) 
-    formatter = mdates.DateFormatter('%Y-%m-%d \n%H:%M')  
+    locator = mdates.DayLocator()  # 每天一個標籤
+    formatter = mdates.DateFormatter('%Y-%m-%d')  # 顯示格式為 年-月-日
     ax.xaxis.set_major_locator(locator)
     ax.xaxis.set_major_formatter(formatter)
-
     plt.xlim(query_date, next_day)
 
-    plt.xlabel('Time')
+    plt.xlabel('Date')
     plt.ylabel('Water Splash Area')
-    plt.title('Water Splash Area Trend Chart', fontweight='bold')
+    plt.title('Water Splash Area Trend Chart for Morning', fontweight='bold')
 
     plt.legend(loc='upper left')
     plt.grid(True)
-    plt.tight_layout()
+    # plt.tight_layout()
 
     trendchart_data = io.BytesIO()
     plt.savefig(trendchart_data, format='png')
