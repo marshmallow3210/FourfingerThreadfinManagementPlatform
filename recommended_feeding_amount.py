@@ -22,17 +22,14 @@ def utc8(utc, p):
 if __name__ == "__main__":
     cursor = connection.cursor()
 
-    # 場域設定
     databaseName = input("請輸入 databaseName: ") 
     start_date = input("請輸入開始日期 (格式: YYYY-MM-DD): ")
     end_date = input("請輸入結束日期 (格式: YYYY-MM-DD): ")
 
-    # 查詢 ESP32 資料，基於日期範圍
     sql = f"SELECT weight, CONCAT(date, ' ', time) FROM {databaseName}.ESP32 WHERE blower_state='on' AND date BETWEEN %s AND %s ORDER BY CONCAT(date, ' ', time) ASC;"
     cursor.execute(sql, (start_date, end_date))
     ESP32_data = cursor.fetchall()
     
-    # 查詢 ripple_history 資料，基於日期範圍
     sql = f"SELECT * FROM {databaseName}.ripple_history WHERE DATE(update_time) BETWEEN %s AND %s AND system_message <> 'ok' ORDER BY update_time DESC;"
     cursor.execute(sql, (start_date, end_date))
     ripple_history = list(cursor.fetchall())
@@ -64,36 +61,35 @@ if __name__ == "__main__":
             print(f"end_time:   {end_time}")
             end_time = datetime.datetime.strptime(end_time, "%Y-%m-%d %H:%M:%S")  
 
-            recommended_time = end_time
-            recommended_message = "no eating ripple" # 2=>m eating ripple aberrant, 1=>2 eating ripple aberrant, no eating ripple
-            recommended_ripple_area = 100000.0
-            recommended_feeding_amount = 0
-
             if ripple_history:
+                recommended_time = end_time
+                recommended_message = "no eating ripple" # 2=>m eating ripple aberrant, 1=>2 eating ripple aberrant, no eating ripple
+                recommended_ripple_area = ripple_history[0][6]
+                recommended_feeding_amount = 0
                 for row in ripple_history:
-                    update_time = row[1] 
-                    system_message = row[2] 
-                    ripple_area = row[6]
-                    if end_time >= update_time:
-                        if recommended_message == "no eating ripple" and (system_message == "2=>m eating ripple aberrant" or system_message == "1=>2 eating ripple aberrant" or system_message == "no eating ripple"):
-                            if (abs(recommended_ripple_area-ripple_area)/((recommended_ripple_area+ripple_area)/2)) < 0.05 and ripple_area > 1:
-                            # if recommended_ripple_area >= ripple_area and ripple_area > 1:
+                    update_time, system_message, ripple_area = row[1], row[2], row[6]
+                    if recommended_time >= update_time:
+                        d = abs(recommended_ripple_area-ripple_area)/((recommended_ripple_area+ripple_area)/2)
+                        # print(f'\nrecommended_ripple_area: {recommended_ripple_area}')
+                        # print(f'ripple_area:             {ripple_area}')
+                        # print(f'd:                       {d}')
+                        if recommended_message == "no eating ripple" and system_message in ["2=>m eating ripple aberrant", "1=>2 eating ripple aberrant", "no eating ripple"]:
+                            if d <= 0.5 and ripple_area > 1:
                                 recommended_time = update_time
                                 recommended_message = system_message
                                 recommended_ripple_area = ripple_area
-                        if recommended_message == "1=>2 eating ripple aberrant" and (system_message == "2=>m eating ripple aberrant" or system_message == "1=>2 eating ripple aberrant"):
-                            if (abs(recommended_ripple_area-ripple_area)/((recommended_ripple_area+ripple_area)/2)) < 0.05 and ripple_area > 1:
-                            # if recommended_ripple_area >= ripple_area and ripple_area > 1:
+                        if recommended_message == "1=>2 eating ripple aberrant" and system_message in ["2=>m eating ripple aberrant", "1=>2 eating ripple aberrant"]:
+                            if d <= 0.5 and ripple_area > 1:
                                 recommended_time = update_time
                                 recommended_message = system_message
                                 recommended_ripple_area = ripple_area
-                        elif recommended_message == "2=>m eating ripple aberrant" and system_message == "1=>2 eating ripple aberrant":
-                            if (abs(recommended_ripple_area-ripple_area)/((recommended_ripple_area+ripple_area)/2)) < 0.05 and ripple_area > 1:
+                        elif recommended_message == "2=>m eating ripple aberrant" and system_message in ["1=>2 eating ripple aberrant"]:
+                            if d <= 0.5 and ripple_area > 1:
                                 recommended_time = update_time
                                 recommended_message = system_message
                                 recommended_ripple_area = ripple_area
-                        elif recommended_message == "1=>2 eating ripple aberrant" and system_message == "no eating ripple":
-                            if (abs(recommended_ripple_area-ripple_area)/((recommended_ripple_area+ripple_area)/2)) < 0.05 and ripple_area > 1:
+                        elif recommended_message == "1=>2 eating ripple aberrant" and system_message in ["no eating ripple"]:
+                            if d <= 0.5 and ripple_area > 1:
                                 recommended_time = update_time
                                 recommended_message = system_message
                                 recommended_ripple_area = ripple_area
@@ -112,16 +108,17 @@ if __name__ == "__main__":
                         else:
                             feeding_benchmark = segment[i][0]
                         
+            print(f"recommended_feeding_amount: {recommended_feeding_amount}")
             sql = f"select feeding_amount from {databaseName}.new_feeding_logs where start_time = '{start_time}';"
             cursor.execute(sql)
             feeding_amount = cursor.fetchone()
             if feeding_amount is not None:
                 if recommended_feeding_amount == 0 or recommended_feeding_amount == None:
-                    recommended_feeding_amount = float(math.floor(feeding_amount[0])) 
+                    recommended_feeding_amount = float(feeding_amount[0])
 
                 # update database
-                sql = f"UPDATE {databaseName}.new_feeding_logs SET recommended_feeding_amount = {recommended_feeding_amount} WHERE start_time = '{start_time}';"
-                cursor.execute(sql)
+                sql = f"UPDATE {databaseName}.new_feeding_logs SET recommended_feeding_amount = %s WHERE start_time = %s;"
+                cursor.execute(sql, (recommended_feeding_amount, start_time))
             else:
                 recommended_feeding_amount = 0
 

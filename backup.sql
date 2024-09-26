@@ -139,3 +139,12 @@ select * from feeding_logs order by start_time desc limit 5;
 
 SELECT blower_state FROM fishDB.ESP32 ORDER BY CONCAT(date, ' ', time) DESC LIMIT 1;
 UPDATE fishDB.ESP32 SET blower_state = 'off' ORDER BY CONCAT(date, ' ', time) DESC LIMIT 1;
+
+UPDATE new_feeding_logs 
+SET description = 
+    CASE 
+        WHEN description IS NULL OR description = '' 
+        THEN '調機階段' 
+        ELSE CONCAT(description, ', 調機階段') 
+    END
+WHERE feeding_amount < 30;
