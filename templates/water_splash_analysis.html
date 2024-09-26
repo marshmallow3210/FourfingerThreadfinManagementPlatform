@@ -1,4 +1,4 @@
-<html></html>
+<html>
 <head>
   <meta charset="utf-8">
   <title>水花分析</title>
@@ -212,10 +212,19 @@
           {% endif %}
           <br>
 
-          {% if trendchart %}
+          {% if morning_trendchart and afternoon_trendchart %}
           <h2>水花趨勢圖</h2>
+          {% endif %}
+          {% if morning_trendchart %}
           <div class="image-container" style="padding:20px;">
-            <img src="data:image/png;base64,{{ trendchart }}" alt="trend graph">
+            <h4>早上水花趨勢圖</h4>
+            <img src="data:image/png;base64,{{ morning_trendchart }}" alt="morning_trendchart">
+          </div>
+          {% endif %}
+          {% if afternoon_trendchart %}
+          <div class="image-container" style="padding:20px;">
+            <h4>下午水花趨勢圖</h4>
+            <img src="data:image/png;base64,{{ afternoon_trendchart }}" alt="afternoon_trendchart">
           </div>
           {% endif %}
           <br>
