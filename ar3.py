@@ -7,7 +7,7 @@ import json
 import math
 import pandas as pd
 import uuid
-from flask import Flask, jsonify, make_response, render_template, request, redirect, url_for, session
+from flask import Flask, jsonify, render_template, request, redirect, url_for, session
 from matplotlib import patches, pyplot as plt
 from matplotlib.font_manager import FontProperties
 import matplotlib.dates as mdates
@@ -948,6 +948,95 @@ def feeding_logs():
                                species=species, species_logo_url=species_logo_url) 
     else:
         return redirect(url_for('login'))   
+  
+
+''' query function '''
+@app.route('/query', methods=["GET", "POST"])
+def query():
+    if 'username' in session:
+        return render_template('query.html', species=species, species_logo_url=species_logo_url)
+    else:
+        return redirect(url_for('login'))
+
+@app.route('/query_result', methods=["GET", "POST"])
+def query_result():
+    if 'username' in session:
+        global connection
+        cursor = connection.cursor()
+        sql = f"USE {databaseName};"
+        try:
+            cursor.execute(sql)
+        except pymysql.err.OperationalError as e:
+            print(f"OperationalError: {e}")
+            connection = reconnect_to_mysql() 
+            cursor = connection.cursor()
+            cursor.execute(sql)
+        
+        if request.method == "POST":
+            pool_id = request.form.get("pool_id")
+            print(pool_id)
+            sql = f"select pool_id from field_logs where pool_id={str(pool_id)};"
+            cursor.execute(sql)
+            field_result = cursor.fetchall()
+
+            sql = f"select pool_id from new_feeding_logs where pool_id={str(pool_id)};"
+            cursor.execute(sql)
+            feeding_result = cursor.fetchall()
+            
+            if len(field_result) == 0:
+                print("field_logs is empty")
+                alertContent="ThisPoolhasNoFieldData!"
+
+            elif len(feeding_result) == 0:
+                print("new_feeding_logs is empty")
+                alertContent="ThisPoolhasNoFeedingData!"
+
+            else:
+                print("Result set is not empty")
+                # counting estimated_weights
+                sql = f"select record_weights from field_logs where pool_id={str(pool_id)} order by update_time asc;"
+                cursor.execute(sql)
+                first_weight = cursor.fetchone()
+                first_weight = first_weight[0]
+
+                sql = f"select spec from field_logs where pool_id={str(pool_id)} order by update_time asc;"
+                cursor.execute(sql)
+                first_spec = cursor.fetchone()
+                first_spec = first_spec[0]
+                total_fish_number = first_spec * first_weight
+
+                sql = f"select estimated_weights from field_logs where pool_id={str(pool_id)} order by update_time desc;"
+                cursor.execute(sql)
+                latest_weight = cursor.fetchone()
+                latest_weight = latest_weight[0]
+
+                sql = f"select update_time from field_logs where pool_id={str(pool_id)} order by update_time asc;"
+                cursor.execute(sql) 
+                first_time = cursor.fetchone()
+                first_time = first_time[0]
+                query_time = datetime.datetime.now()
+                age = str((query_time-first_time).days)
+                
+                # counting fcr
+                sql = f"select feeding_amount from new_feeding_logs where pool_id={str(pool_id)} order by start_time desc;"
+                cursor.execute(sql)
+                feeding_amount = list(cursor.fetchall())
+                total_feeding_amount = 0
+                for i in range(len(feeding_amount)):
+                    total_feeding_amount += feeding_amount[i][0]
+                print("total_feeding_amount:", total_feeding_amount)
+                estimated_fcr = counting_fcr(total_feeding_amount, latest_weight, first_weight)
+                
+                # counting estimated_date(上市日期) 
+                remaining_date = preidict_date(latest_weight/total_fish_number) # 計算剩餘天數
+                estimated_date = first_time + datetime.timedelta(days = int(remaining_date))
+                print('estimated_date:', estimated_date)
+            
+                return render_template('query_result.html', age=int(age), estimated_date=estimated_date, estimated_weights=latest_weight, estimated_fcr=estimated_fcr, total_feeding_amount=total_feeding_amount, first_weights=first_weight, species=species, species_logo_url=species_logo_url)
+        
+            return render_template('query.html', alertContent=alertContent, species=species, species_logo_url=species_logo_url)
+    else:
+        return redirect(url_for('login'))
 
 
 ''' water_splash_analysis function '''
@@ -1113,7 +1202,6 @@ def plot_trendchart(period, morning_result, query_date, selected_date, duration,
 
     return trendchart
 
-
 def generate_trendchart(total_result, query_date, selected_date, duration):
     morning_result = []
     afternoon_result = []
@@ -1186,96 +1274,7 @@ def water_splash_analysis():
                             species=species, species_logo_url=species_logo_url) 
     else:
         return redirect(url_for('login'))
-    
-
-''' query function '''
-@app.route('/query', methods=["GET", "POST"])
-def query():
-    if 'username' in session:
-        return render_template('query.html', species=species, species_logo_url=species_logo_url)
-    else:
-        return redirect(url_for('login'))
-
-@app.route('/query_result', methods=["GET", "POST"])
-def query_result():
-    if 'username' in session:
-        global connection
-        cursor = connection.cursor()
-        sql = f"USE {databaseName};"
-        try:
-            cursor.execute(sql)
-        except pymysql.err.OperationalError as e:
-            print(f"OperationalError: {e}")
-            connection = reconnect_to_mysql() 
-            cursor = connection.cursor()
-            cursor.execute(sql)
-        
-        if request.method == "POST":
-            pool_id = request.form.get("pool_id")
-            print(pool_id)
-            sql = f"select pool_id from field_logs where pool_id={str(pool_id)};"
-            cursor.execute(sql)
-            field_result = cursor.fetchall()
-
-            sql = f"select pool_id from new_feeding_logs where pool_id={str(pool_id)};"
-            cursor.execute(sql)
-            feeding_result = cursor.fetchall()
-            
-            if len(field_result) == 0:
-                print("field_logs is empty")
-                alertContent="ThisPoolhasNoFieldData!"
-
-            elif len(feeding_result) == 0:
-                print("new_feeding_logs is empty")
-                alertContent="ThisPoolhasNoFeedingData!"
-
-            else:
-                print("Result set is not empty")
-                # counting estimated_weights
-                sql = f"select record_weights from field_logs where pool_id={str(pool_id)} order by update_time asc;"
-                cursor.execute(sql)
-                first_weight = cursor.fetchone()
-                first_weight = first_weight[0]
-
-                sql = f"select spec from field_logs where pool_id={str(pool_id)} order by update_time asc;"
-                cursor.execute(sql)
-                first_spec = cursor.fetchone()
-                first_spec = first_spec[0]
-                total_fish_number = first_spec * first_weight
-
-                sql = f"select estimated_weights from field_logs where pool_id={str(pool_id)} order by update_time desc;"
-                cursor.execute(sql)
-                latest_weight = cursor.fetchone()
-                latest_weight = latest_weight[0]
-
-                sql = f"select update_time from field_logs where pool_id={str(pool_id)} order by update_time asc;"
-                cursor.execute(sql) 
-                first_time = cursor.fetchone()
-                first_time = first_time[0]
-                query_time = datetime.datetime.now()
-                age = str((query_time-first_time).days)
-                
-                # counting fcr
-                sql = f"select feeding_amount from new_feeding_logs where pool_id={str(pool_id)} order by start_time desc;"
-                cursor.execute(sql)
-                feeding_amount = list(cursor.fetchall())
-                total_feeding_amount = 0
-                for i in range(len(feeding_amount)):
-                    total_feeding_amount += feeding_amount[i][0]
-                print("total_feeding_amount:", total_feeding_amount)
-                estimated_fcr = counting_fcr(total_feeding_amount, latest_weight, first_weight)
-                
-                # counting estimated_date(上市日期) 
-                remaining_date = preidict_date(latest_weight/total_fish_number) # 計算剩餘天數
-                estimated_date = first_time + datetime.timedelta(days = int(remaining_date))
-                print('estimated_date:', estimated_date)
-            
-                return render_template('query_result.html', age=int(age), estimated_date=estimated_date, estimated_weights=latest_weight, estimated_fcr=estimated_fcr, total_feeding_amount=total_feeding_amount, first_weights=first_weight, species=species, species_logo_url=species_logo_url)
-        
-            return render_template('query.html', alertContent=alertContent, species=species, species_logo_url=species_logo_url)
-    else:
-        return redirect(url_for('login'))
-
+  
 
 ''' choose ripple frames (send to linebot)'''
 def storeRippleFrames():

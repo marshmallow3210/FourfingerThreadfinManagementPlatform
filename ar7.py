@@ -1,12 +1,16 @@
 import base64
+from collections import defaultdict
 import hashlib
 import hmac
 import io
 import json
+import math
+import pandas as pd
 import uuid
-from flask import Flask, jsonify, make_response, render_template, request, redirect, url_for, session
-from matplotlib import pyplot as plt
+from flask import Flask, jsonify, render_template, request, redirect, url_for, session
+from matplotlib import patches, pyplot as plt
 from matplotlib.font_manager import FontProperties
+import matplotlib.dates as mdates
 from flask_login import LoginManager, UserMixin, login_user, logout_user
 from flask_cors import CORS
 import pymysql
@@ -51,7 +55,7 @@ users = {
     'ar7DB': 'ar7DB',
     'admin7': 'admin7',
 }
-aquarium_id = "145"   
+aquarium_id = "145"
 
 
 def reconnect_to_mysql():
@@ -912,7 +916,7 @@ def feeding_logs():
                         else:
                             plt.bar(midday, use_time, width=0.17, bottom=(1440-start_y-use_time), color='#009999')
                         plt.text(midday, (1440 - start_y), str(feeding_amount), ha='center', va='bottom', color='black', fontsize=8)
-                        
+
                     for start_time, use_time in zip(original_start_times, original_use_times):
                         start_y = (start_time.hour * 60 + start_time.minute)  
                         print(f'part of {start_time} is same as {24-(1440-start_y-use_time)/60}')
@@ -944,7 +948,7 @@ def feeding_logs():
                                species=species, species_logo_url=species_logo_url) 
     else:
         return redirect(url_for('login'))   
-
+  
 
 ''' query function '''
 @app.route('/query', methods=["GET", "POST"])
@@ -1034,6 +1038,243 @@ def query_result():
     else:
         return redirect(url_for('login'))
 
+
+''' water_splash_analysis function '''
+def generate_heatmap(result, query_date, duration):
+    df = pd.DataFrame(result, columns=['update_time', 'ripple_area'])
+    df['update_time'] = pd.to_datetime(df['update_time'])
+
+    df['date'] = df['update_time'].dt.date
+    df['minute'] = df['update_time'].dt.floor('T')
+    df_grouped = df.groupby(['date', 'minute']).mean().reset_index()
+
+    heatmap_data = np.full((24 * 60, duration), np.nan)  # 24小時 x 60分鐘 x duration 天
+    for _, row in df_grouped.iterrows():
+        day_index = (row['date'] - query_date.date()).days
+        minute_of_day = row['minute'].hour * 60 + row['minute'].minute
+        heatmap_data[minute_of_day, day_index] = row['ripple_area']
+
+    marks = []
+    start_time = df.iloc[0]['update_time']
+    prev_time = start_time
+
+    for i in range(1, len(df)):
+        current_time = df.iloc[i]['update_time']
+        
+        time_diff = (current_time - prev_time).total_seconds() / 60 
+
+        if time_diff > 2:  # 如果時間差大於 1 分鐘
+            marks.append({'start_time': start_time, 'end_time': prev_time})
+            start_time = current_time  
+
+        prev_time = current_time
+
+    marks.append({'start_time': start_time, 'end_time': prev_time})
+    marks_df = pd.DataFrame(marks)
+    # print(marks_df)
+
+    fig, axes = plt.subplots(1, duration, figsize=(math.ceil(duration*1.5),  20 if duration >= 60 else 10), sharey=True, constrained_layout=True, dpi=50)
+    cmap = plt.get_cmap('hot')
+    cmap.set_bad(color='black')  # 設置 np.nan 部分為黑色
+    
+    for i in range(duration):
+        day_data = heatmap_data[:, i].reshape(-1, 1)
+        ax = axes[i]
+        im = ax.imshow(day_data, cmap=cmap, aspect='auto', vmin=0, vmax=np.nanmax(heatmap_data))
+
+        ax.set_title((query_date + timedelta(days=i)).strftime('%Y-%m-%d'))
+        ax.set_xticks([]) 
+        ax.set_yticks(range(0, 24 * 60, 120))  
+        ax.set_yticklabels([f"{j:02d}:00" for j in range(0, 24, 2)])
+        
+        # 畫藍色框
+        for mark in marks:
+            start_minute = (mark['start_time'].hour * 60) + mark['start_time'].minute
+            end_minute = (mark['end_time'].hour * 60) + mark['end_time'].minute
+
+            if mark['start_time'].date() == (query_date + timedelta(days=i)).date():
+                rect_y = start_minute -5 # 5 min
+                rect_height = (end_minute - start_minute) + 10
+
+                rect = patches.Rectangle(
+                    (-0.5, rect_y),     # 左下角座標 (x, y)
+                    1,                  # 矩形寬度
+                    rect_height,        # 矩形高度
+                    linewidth=2,
+                    edgecolor='blue',
+                    facecolor='none'    # 只顯示邊框
+                )
+                ax.add_patch(rect)
+
+    cbar = plt.colorbar(im, ax=axes.ravel().tolist(), aspect=50, pad=0.02)
+    cbar.set_label('Pixel Number of Water Splashes', fontsize=14)
+
+    img_data = io.BytesIO()
+    plt.savefig(img_data, format='png')
+    img_data.seek(0)
+    base64_img = base64.b64encode(img_data.getvalue()).decode()
+    plt.close(fig)
+
+    return base64_img
+
+def plot_trendchart(period, morning_result, query_date, selected_date, duration, min_date, max_date):
+    morning_segments = defaultdict(list)
+    for date, ripple_area in morning_result:
+        morning_segments[date].append(ripple_area)
+    
+    while min_date <= max_date:
+        if min_date not in morning_segments:
+            morning_segments[min_date] = None 
+        min_date += timedelta(days=1) 
+
+    morning_segments = [
+        (idx, date, None if ripple_areas is None else sum(ripple_areas) / len(ripple_areas))
+        for idx, (date, ripple_areas) in enumerate(sorted(morning_segments.items()))
+    ]
+    
+    # print("Morning Segments :")
+    # for idx, date, avg_ripple_area in morning_segments:
+    #     if avg_ripple_area is not None:
+    #         print(f"Idx: {idx}, Date: {date}, Average Ripple Area: {avg_ripple_area:.2f}")
+    #     else:
+    #         print(f"Idx: {idx}, Date: {date}, Average Ripple Area: None")
+        
+    filtered_segments = [(idx, date, ripple_area) for idx, date, ripple_area in morning_segments if ripple_area is not None]
+    idxs = np.array([segment[0] for segment in filtered_segments])
+    dates = [segment[1] for segment in filtered_segments]
+    ripple_areas = np.array([segment[2] for segment in filtered_segments])
+
+    # least square method, f(t) = at + b
+    n = len(idxs)
+    t = np.sum(idxs)
+    t2 = np.sum(idxs**2)
+    mt = np.sum(ripple_areas)
+    t_mt = np.sum(idxs*ripple_areas)
+
+    a = (n*t_mt-t*mt)/(n*t2-t**2)
+    b = (mt - a*t)/n
+
+    predict_trends=a*idxs+b
+
+    from matplotlib import font_manager
+    font_path = '/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc'
+    font_prop = font_manager.FontProperties(fname=font_path)
+
+    plt.rcParams['font.family'] = font_prop.get_name()
+    plt.rcParams['axes.unicode_minus'] = False  # 避免負號顯示為方框
+
+    plt.figure(figsize=(math.ceil(duration*1.5),  20 if duration >= 60 else 10), dpi=50)
+
+    original_morning_dates = [r[0] for r in morning_result]
+    original_morning_ripple_areas = [r[1] for r in morning_result]
+    plt.scatter(original_morning_dates, original_morning_ripple_areas, color='black', s=20, label='原始資料點')
+
+    plt.plot(dates, ripple_areas, 'o', label="平均水花面積值", markersize=15)
+    plt.plot(dates, predict_trends, '-', color='orange', linewidth=4, label=f"食慾成長趨勢: y={a:.2f}t+{b:.2f}")
+
+    if a > 0.05:
+        plt.text(query_date + timedelta(days=duration//2-1, hours=6), np.mean(predict_trends)+5000, '食慾增加', color='green', fontsize=16 if duration >= 60 else 12, fontweight='bold', fontproperties=font_prop)
+    elif a < -0.05:
+        plt.text(query_date + timedelta(days=duration//2-1, hours=6), np.mean(predict_trends)+5000, '食慾下降', color='red', fontsize=16 if duration >= 60 else 12, fontweight='bold', fontproperties=font_prop)
+    else:
+        plt.text(query_date + timedelta(days=duration//2-1, hours=6), np.mean(predict_trends)+5000, '食慾持平', color='blue', fontsize=16 if duration >= 60 else 12, fontweight='bold', fontproperties=font_prop)
+
+    ax = plt.gca()
+    locator = mdates.DayLocator() 
+    formatter = mdates.DateFormatter('%Y-%m-%d') 
+    ax.xaxis.set_major_locator(locator)
+    ax.xaxis.set_major_formatter(formatter)
+    plt.xlim(query_date, selected_date)
+
+    plt.xlabel('Date')
+    plt.ylabel('Water Splash Area')
+    plt.title(f'Water Splash Area Trend Chart for {period}', fontweight='bold')
+
+    plt.legend(loc='upper left')
+    plt.grid(True)
+    plt.tight_layout()
+
+    trendchart_data = io.BytesIO()
+    plt.savefig(trendchart_data, format='png')
+    trendchart_data.seek(0)
+    trendchart = base64.b64encode(trendchart_data.getvalue()).decode()
+    plt.close()
+
+    return trendchart
+
+def generate_trendchart(total_result, query_date, selected_date, duration):
+    morning_result = []
+    afternoon_result = []
+    min_date = total_result[0][0].date()
+    max_date = total_result[-1][0].date()
+    
+    for r in total_result: 
+        timestamp, ripple_area = r
+        result_date = timestamp.date()
+        if 0 < timestamp.hour < 12:
+            morning_result.append((result_date, ripple_area))
+        else:
+            afternoon_result.append((result_date, ripple_area))
+
+    morning_trendchart = plot_trendchart('Morning', morning_result, query_date, selected_date, duration, min_date, max_date)
+    afternoon_trendchart = plot_trendchart('Afternoon', afternoon_result, query_date, selected_date, duration, min_date, max_date)
+
+    return morning_trendchart, afternoon_trendchart
+
+@app.route('/water_splash_analysis', methods=["GET", "POST"])
+def water_splash_analysis():
+    if 'username' in session:
+        global connection
+        cursor = connection.cursor()
+        sql = f"USE {databaseName};"
+        try:
+            cursor.execute(sql)
+        except pymysql.err.OperationalError as e:
+            print(f"OperationalError: {e}")
+            connection = reconnect_to_mysql() 
+            cursor = connection.cursor()
+            cursor.execute(sql)
+
+        base64_img = ''
+        morning_trendchart = '' 
+        afternoon_trendchart = '' 
+        duration = 0
+
+        if request.method == "POST": 
+            opt = int(request.form.get("opt"))
+            print(opt)
+            selected_date = request.form.get("selected_date")
+            selected_date = datetime.datetime.strptime(selected_date, "%Y-%m-%d")
+            next_day = selected_date + timedelta(days=1)
+            if opt == 1:
+                query_date = selected_date - timedelta(days=6)
+                duration = 7
+            elif opt == 2:
+                query_date = selected_date - timedelta(days=29)
+                duration = 30
+            else:
+                query_date = selected_date - timedelta(days=89)
+                duration = 90
+
+            print(f'selected_date: {selected_date}, query_date: {query_date}')
+
+            sql = "select update_time, ripple_area from ripple_history where update_time between %s and %s order by update_time asc"
+            cursor.execute(sql, (query_date, next_day))
+            result = list(cursor.fetchall())
+            
+            print("generate_heatmap")
+            base64_img = generate_heatmap(result, query_date, duration)
+            print("generate_trendchart")
+            morning_trendchart, afternoon_trendchart = generate_trendchart(result, query_date, selected_date, duration)
+
+        return render_template('water_splash_analysis.html', 
+                            base64_img=base64_img, 
+                            morning_trendchart=morning_trendchart, 
+                            afternoon_trendchart=afternoon_trendchart, 
+                            species=species, species_logo_url=species_logo_url) 
+    else:
+        return redirect(url_for('login'))
+  
 
 ''' choose ripple frames (send to linebot)'''
 def storeRippleFrames():
