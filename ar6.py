@@ -18,7 +18,10 @@ import datetime
 from datetime import timezone, timedelta
 import numpy as np
 import requests
+from scipy import stats
 from sklearn.neighbors import KNeighborsRegressor
+from datetime import timedelta
+from scipy.signal import medfilt
 
 '''
 you need to change the: 
@@ -265,7 +268,7 @@ def send_data(journal_id1, journal_id2):
             use_time = int(feeding_logs[0][3])
             status = str(feeding_logs[0][9]).strip() if feeding_logs[0][9] is not None else "normal"
             left_amount = str(feeding_logs[0][8])           
-            description = str(feeding_logs[0][10]).strip() if feeding_logs[0][10] is not None else ""    
+            description = str(feeding_logs[0][10]).strip() if feeding_logs[0][10] is not None else ""  
             
             # params from ekoral
             url = 'https://api.ekoral.io' 
@@ -612,7 +615,7 @@ def update():
             opt = int(request.form.get("opt"))
             pool_ID = request.form.get("pool_ID")
             food_ID = request.form.get("food_ID")
-            spec = request.form.get("spec")
+            spec = float(request.form.get("spec"))
             record_weights = float(request.form.get("record_weights"))
             dead_counts = int(request.form.get("dead_counts"))
             update_time = request.form.get("update_time")
@@ -646,19 +649,20 @@ def update():
                 sql = "select record_weights from field_logs where pool_ID = "+str(pool_ID)+" order by update_time asc;"
                 cursor.execute(sql)
                 first_weights = cursor.fetchone()
-                first_weights = first_weights[0]
+                first_weights = first_weights[0] if first_weights else record_weights
                 sql = "select spec from field_logs where pool_ID = "+str(pool_ID)+" order by update_time asc;"
                 cursor.execute(sql)
                 first_spec = cursor.fetchone()
-                first_spec = first_spec[0]
+                first_spec = first_spec[0] if first_spec else 0
                 total_fish_number = first_spec * first_weights
                 total_fish_number = total_fish_number - dead_counts
 
                 sql = "select dead_counts from field_logs where pool_ID = "+str(pool_ID)+";"
                 cursor.execute(sql)
                 dead_counts_list = list(cursor.fetchall())
-                for i in range(len(dead_counts_list)):
-                    total_fish_number -= dead_counts_list[i][0]
+                if dead_counts_list:
+                    for i in range(len(dead_counts_list)):
+                        total_fish_number -= dead_counts_list[i][0]
                 print("total_fish_number:", total_fish_number)
                 
                 # counting spec
@@ -668,7 +672,7 @@ def update():
                 sql = "select update_time from field_logs where pool_ID = "+str(pool_ID)+" order by update_time asc;"
                 cursor.execute(sql) 
                 first_time = cursor.fetchone()
-                first_time = first_time[0]
+                first_time = first_time[0] if first_time else update_time
                 update_time = datetime.datetime.strptime(update_time, "%Y-%m-%d %H:%M:%S")
                 age = str((update_time - first_time).days)
                 print("該魚池已養殖了:" + age + "天")
@@ -696,26 +700,27 @@ def update():
                 sql = "select record_weights from field_logs where pool_ID = "+str(pool_ID)+" order by update_time asc;"
                 cursor.execute(sql)
                 first_weights = cursor.fetchone()
-                first_weights = first_weights[0]
+                first_weights = first_weights[0] if first_weights else record_weights
                 sql = "select spec from field_logs where pool_ID = "+str(pool_ID)+" order by update_time asc;"
                 cursor.execute(sql)
                 first_spec = cursor.fetchone()
-                first_spec = first_spec[0]
+                first_spec = first_spec[0] if first_spec else spec
                 total_fish_number = first_spec * first_weights
                 total_fish_number = total_fish_number - dead_counts
 
                 sql = "select dead_counts from field_logs where pool_ID = "+str(pool_ID)+";"
                 cursor.execute(sql)
                 dead_counts_list = list(cursor.fetchall())
-                for i in range(len(dead_counts_list)):
-                    total_fish_number -= dead_counts_list[i][0]
+                if dead_counts_list:
+                    for i in range(len(dead_counts_list)):
+                        total_fish_number -= dead_counts_list[i][0]
                 print("total_fish_number:", total_fish_number)
 
                 # counting estimated_weights
                 sql = "select update_time from field_logs where pool_ID = "+str(pool_ID)+" order by update_time asc;"
                 cursor.execute(sql) 
                 first_time = cursor.fetchone()
-                first_time = first_time[0]
+                first_time = first_time[0] if first_time else update_time
                 update_time = datetime.datetime.strptime(update_time, "%Y-%m-%d %H:%M:%S")
                 age = str((update_time - first_time).days)
                 print("該魚池已養殖了:" + age + "天")
@@ -803,7 +808,6 @@ def feeding_logs():
                     start_times = [row[3] for row in new_feeding_data]  
                     use_times = [row[4] for row in new_feeding_data]  
                     feeding_amounts = [row[8] for row in new_feeding_data]  
-                    descriptions = [row[12] for row in new_feeding_data]  
 
                     sql = "select * from original_feeding_logs where start_time between %s and %s"
                     cursor.execute(sql, (one_week_ago + timedelta(days=1), next_day))
@@ -825,14 +829,11 @@ def feeding_logs():
                     plt.grid(axis='y', linestyle='--', color='gray')
 
                     # 將每個 start_time 根據 y 軸(00:00 到 23:59，間隔1小時)開始往下，並根據 use_time(分鐘) 來繪製長條
-                    for start_time, use_time, feeding_amount, description in zip(start_times, use_times, feeding_amounts, descriptions):
+                    for start_time, use_time, feeding_amount in zip(start_times, use_times, feeding_amounts):
                         start_y = (start_time.hour * 60 + start_time.minute)  
                         print(f'part of {start_time} is same as {24-(1440-start_y-use_time)/60}')
                         midday = datetime.datetime(start_time.year, start_time.month, start_time.day, 22, 0) - timedelta(days=1)
-                        if description == "投餌機未正常運作":
-                            plt.bar(midday, use_time, width=0.17, bottom=(1440-start_y-use_time), color='#e33333')
-                        else:
-                            plt.bar(midday, use_time, width=0.17, bottom=(1440-start_y-use_time), color='#009999')
+                        plt.bar(midday, use_time, width=0.17, bottom=(1440-start_y-use_time), color='#009999')
                         plt.text(midday, (1440 - start_y), str(feeding_amount), ha='center', va='bottom', color='black', fontsize=8)
 
                     for start_time, use_time in zip(original_start_times, original_use_times):
@@ -889,6 +890,7 @@ def feeding_logs():
                     start_times = [row[3] for row in new_feeding_data]  
                     use_times = [row[4] for row in new_feeding_data]  
                     feeding_amounts = [row[8] for row in new_feeding_data]  
+                    descriptions = [row[12] for row in new_feeding_data]  
 
                     sql = "select * from original_feeding_logs where start_time between %s and %s"
                     cursor.execute(sql, (one_week_ago + timedelta(days=1), next_day))
@@ -910,11 +912,14 @@ def feeding_logs():
                     plt.grid(axis='y', linestyle='--', color='gray')
 
                     # 將每個 start_time 根據 y 軸(00:00 到 23:59，間隔1小時)開始往下，並根據 use_time(分鐘) 來繪製長條
-                    for start_time, use_time, feeding_amount in zip(start_times, use_times, feeding_amounts):
+                    for start_time, use_time, feeding_amount, description in zip(start_times, use_times, feeding_amounts, descriptions):
                         start_y = (start_time.hour * 60 + start_time.minute)  
                         print(f'part of {start_time} is same as {24-(1440-start_y-use_time)/60}')
                         midday = datetime.datetime(start_time.year, start_time.month, start_time.day, 22, 0) - timedelta(days=1)
-                        plt.bar(midday, use_time, width=0.17, bottom=(1440-start_y-use_time), color='#009999')
+                        if description == "投餌機未正常運作":
+                            plt.bar(midday, use_time, width=0.17, bottom=(1440-start_y-use_time), color='#e33333')
+                        else:
+                            plt.bar(midday, use_time, width=0.17, bottom=(1440-start_y-use_time), color='#009999')
                         plt.text(midday, (1440 - start_y), str(feeding_amount), ha='center', va='bottom', color='black', fontsize=8)
 
                     for start_time, use_time in zip(original_start_times, original_use_times):
@@ -948,7 +953,7 @@ def feeding_logs():
                                species=species, species_logo_url=species_logo_url) 
     else:
         return redirect(url_for('login'))   
-
+  
 
 ''' query function '''
 @app.route('/query', methods=["GET", "POST"])
@@ -1041,9 +1046,16 @@ def query_result():
 
 ''' water_splash_analysis function '''
 def generate_heatmap(result, query_date, duration):
+    if len(result) == 0:
+        print("Error: ripple_result is empty")
+        return None
+    
     df = pd.DataFrame(result, columns=['update_time', 'ripple_area'])
+    if df.empty:
+        print("Error: DataFrame is empty")
+        return None
+    
     df['update_time'] = pd.to_datetime(df['update_time'])
-
     df['date'] = df['update_time'].dt.date
     df['minute'] = df['update_time'].dt.floor('T')
     df_grouped = df.groupby(['date', 'minute']).mean().reset_index()
@@ -1073,7 +1085,7 @@ def generate_heatmap(result, query_date, duration):
     marks_df = pd.DataFrame(marks)
     # print(marks_df)
 
-    fig, axes = plt.subplots(1, duration, figsize=(math.ceil(duration*1.5),  20 if duration >= 60 else 10), sharey=True, constrained_layout=True, dpi=50)
+    fig, axes = plt.subplots(1, duration, figsize=(math.ceil(duration*1.8) if duration > 10 else 15,  20 if duration >= 60 else 10), sharey=True, constrained_layout=True, dpi=50)
     cmap = plt.get_cmap('hot')
     cmap.set_bad(color='black')  # 設置 np.nan 部分為黑色
     
@@ -1082,10 +1094,11 @@ def generate_heatmap(result, query_date, duration):
         ax = axes[i]
         im = ax.imshow(day_data, cmap=cmap, aspect='auto', vmin=0, vmax=np.nanmax(heatmap_data))
 
-        ax.set_title((query_date + timedelta(days=i)).strftime('%Y-%m-%d'))
+        ax.set_title((query_date + timedelta(days=i)).strftime('%m-%d'), fontsize=28 if duration >= 60 else 14)
         ax.set_xticks([]) 
-        ax.set_yticks(range(0, 24 * 60, 120))  
+        ax.set_yticks(range(0, 24 * 60, 120))
         ax.set_yticklabels([f"{j:02d}:00" for j in range(0, 24, 2)])
+        ax.tick_params(axis='y', labelsize=28 if duration >= 60 else 14)
         
         # 畫藍色框
         for mark in marks:
@@ -1117,10 +1130,75 @@ def generate_heatmap(result, query_date, duration):
 
     return base64_img
 
-def plot_trendchart(period, morning_result, query_date, selected_date, duration, min_date, max_date):
+def counting_first_thd_idx_4_test(feeding_result, ripple_result):
+    alpha = 0.01            # T 檢驗顯著性水平
+    windows_minutes = 25    # 滑動窗口大小
+    t3 = 5                  # 最小分析時間
+    odd_windows_size = 7     # 中值濾波窗口大小
+
+    first_thd_idx_4_test = [] # 儲存第一次水花顯著下降的索引
+
+    total = len(feeding_result)
+    for idx, (start_time, use_time) in enumerate(feeding_result):
+        t1_datetime = start_time + timedelta(minutes=5)  # 略過前 5 分鐘
+        end_time = start_time + timedelta(minutes=use_time)
+
+        # 過濾ripple_result中的資料，符合這次投餌的時間範圍
+        ripple_data_filtered = [(t, ra) for t, ra in ripple_result if t1_datetime <= t <= end_time]
+        if len(ripple_data_filtered) <= 20:
+            print(f'Skip {idx} data {start_time.strftime("%Y-%m-%d %H:%M:%S")} to {end_time.strftime("%Y-%m-%d %H:%M:%S")}')
+            first_thd_idx_4_test.append(None)
+            continue
+
+        feed_once_dt_data, feed_once_data = zip(*ripple_data_filtered)
+        feed_once_data = np.asarray(feed_once_data)
+        smoothed_data = medfilt(feed_once_data, odd_windows_size)
+
+        first_flag = False
+        for i in range(math.ceil(use_time)):
+            wend = end_time - timedelta(minutes=i)
+            wstart = wend - timedelta(minutes=windows_minutes)
+            filter = np.logical_and(np.asarray(feed_once_dt_data) >= wstart, np.asarray(feed_once_dt_data) <= wend)
+            w_data = smoothed_data[filter]
+            w_datetime = np.asarray(feed_once_dt_data)[filter]
+
+            if len(w_data) <= 2:
+                break
+
+            threshold_indexs = [len(w_data) // 2]
+            if i < 5:
+                under_bound = w_datetime > wend - timedelta(minutes=t3)
+                if np.any(under_bound):
+                    valid_indices = np.where(under_bound == True)[0]
+                    if len(valid_indices) > 0:
+                        threshold_indexs = list(range(threshold_indexs[0], valid_indices[0]))
+                        threshold_indexs.sort(reverse=True)
+                    else:
+                        continue
+                else:
+                    continue
+
+            for thd_idx in threshold_indexs:
+                threshold_value = w_data[thd_idx]
+                global_th_idx = np.where(smoothed_data == threshold_value)[0][0]
+                wdata_before = w_data[:thd_idx]
+                wdata_after = w_data[thd_idx:]
+                t_stat, p_value = stats.ttest_ind(wdata_before, wdata_after, alternative='greater')
+
+                if p_value < alpha and first_flag == False:
+                    first_thd_idx_4_test.append(w_datetime[thd_idx])
+                    first_flag = True
+
+        if not first_flag:
+            first_thd_idx_4_test.append(None)
+    
+    # print(f"first_thd_idx_4_test: {first_thd_idx_4_test}")
+    return first_thd_idx_4_test
+
+def plot_trendchart(period, ripple_result, feeding_result, query_date, selected_date, duration, min_date, max_date):
     morning_segments = defaultdict(list)
-    for date, ripple_area in morning_result:
-        morning_segments[date].append(ripple_area)
+    for t, ripple_area in ripple_result:
+        morning_segments[t.date()].append(ripple_area)
     
     while min_date <= max_date:
         if min_date not in morning_segments:
@@ -1132,13 +1210,6 @@ def plot_trendchart(period, morning_result, query_date, selected_date, duration,
         for idx, (date, ripple_areas) in enumerate(sorted(morning_segments.items()))
     ]
     
-    # print("Morning Segments :")
-    # for idx, date, avg_ripple_area in morning_segments:
-    #     if avg_ripple_area is not None:
-    #         print(f"Idx: {idx}, Date: {date}, Average Ripple Area: {avg_ripple_area:.2f}")
-    #     else:
-    #         print(f"Idx: {idx}, Date: {date}, Average Ripple Area: None")
-        
     filtered_segments = [(idx, date, ripple_area) for idx, date, ripple_area in morning_segments if ripple_area is not None]
     idxs = np.array([segment[0] for segment in filtered_segments])
     dates = [segment[1] for segment in filtered_segments]
@@ -1151,10 +1222,79 @@ def plot_trendchart(period, morning_result, query_date, selected_date, duration,
     mt = np.sum(ripple_areas)
     t_mt = np.sum(idxs*ripple_areas)
 
-    a = (n*t_mt-t*mt)/(n*t2-t**2)
-    b = (mt - a*t)/n
+    if (n*t2-t**2) != 0:
+        a = (n*t_mt-t*mt)/(n*t2-t**2)
+        b = (mt - a*t)/n
+    else:        
+        a = float('nan')
+        b = float('nan')
 
     predict_trends=a*idxs+b
+
+    # 找水花明顯下降的時間點
+    first_thd_idx_4_test = counting_first_thd_idx_4_test(feeding_result, ripple_result)
+    feed_count = []
+    decline_dates = []
+    minutes = []
+
+    for i, (feed_st_time, feed_used_min) in enumerate(feeding_result):
+        if first_thd_idx_4_test[i] is None:
+            continue
+        # remaining_time = feed_st_time + timedelta(minutes=feed_used_min) - first_thd_idx_4_test[i]
+        feeded_time = first_thd_idx_4_test[i] - feed_st_time
+        print(f'[{i}] {feed_st_time.strftime("%Y-%m-%d %H:%M:%S")}: ({feeded_time.total_seconds()/60}) minutes')
+        feed_count.append(i+1)
+        decline_dates.append(feed_st_time.date())
+        minutes.append(feeded_time.total_seconds()/60)
+    
+    if decline_dates:
+        # Generate x and y (using total seconds)
+        x_dates_num = mdates.date2num(decline_dates)
+
+        # 將日期數值平移，讓最早的日期對應 feed_count 的第1次投餵
+        x = np.array(x_dates_num - x_dates_num[0]) 
+        # x = np.array(feed_count)
+        y = np.array(minutes)
+        
+        # least square method, f(t) = at + b
+        n = len(x)
+        t = np.sum(x)
+        t2 = np.sum(x**2)
+        mt = np.sum(y)
+        t_mt = np.sum(x*y)
+
+        if (n*t2-t**2) != 0:
+            decline_a = (n*t_mt-t*mt)/(n*t2-t**2)
+            decline_b = (mt - decline_a*t)/n
+        else:        
+            decline_a = float('nan')
+            decline_b = float('nan')
+
+        decline_trends=decline_a*x+decline_b
+    else:
+        print("decline_dates is empty")
+
+    # if len(np.unique(x)) > 1:
+    #     # Assemble matrix A
+    #     A = np.vstack([x, np.ones(len(x))]).T
+
+    #     # Turn y into a column vector
+    #     y = y[:, np.newaxis]
+
+    #     # 檢查 A.T * A 是否為奇異矩陣
+    #     if np.linalg.cond(np.dot(A.T, A)) < 1 / np.finfo(A.dtype).eps:
+    #         # Direct least square regression
+    #         alpha = np.dot(np.dot(np.linalg.inv(np.dot(A.T, A)), A.T), y)
+    #         print(f"Slope: {alpha[0][0]:.5f}, Intercept: {alpha[1][0]:.5f}")
+    #     else:
+    #         print("Warning: Singular matrix encountered. Skipping regression.")
+    #         alpha = [[0], [0]] 
+    # else:
+    #     print("Warning: No variation in x. Skipping regression.")
+    #     alpha = [[0], [0]]  
+
+    # print(f"Dates: {dates}")
+    # print(f"Decline Dates: {decline_dates}")
 
     from matplotlib import font_manager
     font_path = '/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc'
@@ -1163,34 +1303,45 @@ def plot_trendchart(period, morning_result, query_date, selected_date, duration,
     plt.rcParams['font.family'] = font_prop.get_name()
     plt.rcParams['axes.unicode_minus'] = False  # 避免負號顯示為方框
 
-    plt.figure(figsize=(math.ceil(duration*1.5),  20 if duration >= 60 else 10), dpi=50)
+    fig, ax1 = plt.subplots(figsize=(math.ceil(duration * 1.8) if duration > 10 else 15, 20 if duration >= 60 else 10), dpi=50)
 
-    original_morning_dates = [r[0] for r in morning_result]
-    original_morning_ripple_areas = [r[1] for r in morning_result]
-    plt.scatter(original_morning_dates, original_morning_ripple_areas, color='black', s=20, label='原始資料點')
-
-    plt.plot(dates, ripple_areas, 'o', label="平均水花面積值", markersize=15)
-    plt.plot(dates, predict_trends, '-', color='orange', linewidth=4, label=f"食慾成長趨勢: y={a:.2f}t+{b:.2f}")
-
-    if a > 0.05:
-        plt.text(query_date + timedelta(days=duration//2-1, hours=6), np.mean(predict_trends)+5000, '食慾增加', color='green', fontsize=16 if duration >= 60 else 12, fontweight='bold', fontproperties=font_prop)
-    elif a < -0.05:
-        plt.text(query_date + timedelta(days=duration//2-1, hours=6), np.mean(predict_trends)+5000, '食慾下降', color='red', fontsize=16 if duration >= 60 else 12, fontweight='bold', fontproperties=font_prop)
-    else:
-        plt.text(query_date + timedelta(days=duration//2-1, hours=6), np.mean(predict_trends)+5000, '食慾持平', color='blue', fontsize=16 if duration >= 60 else 12, fontweight='bold', fontproperties=font_prop)
-
-    ax = plt.gca()
     locator = mdates.DayLocator() 
-    formatter = mdates.DateFormatter('%Y-%m-%d') 
-    ax.xaxis.set_major_locator(locator)
-    ax.xaxis.set_major_formatter(formatter)
+    formatter = mdates.DateFormatter('%m-%d') 
+    ax1.xaxis.set_major_locator(locator)
+    ax1.xaxis.set_major_formatter(formatter)
+
+    # 第一個 Y 軸：水花面積
+    ax1.tick_params(axis='x', labelsize=30 if duration >= 60 else 18) 
+    ax1.tick_params(axis='y', labelcolor='tab:blue', labelsize=30 if duration >= 60 else 18) 
+    ax1.plot(dates, ripple_areas, 'o', color='tab:blue', label="平均水花面積值", markersize=20 if duration >= 60 else 15)
+    ax1.plot(dates, predict_trends, '-', color='tab:blue', linewidth=6 if duration >= 60 else 4, label=f"水花面積趨勢: y={a:.0f}t+{b:.0f}")
+
+    original_morning_dates = [r[0].date() for r in ripple_result]
+    original_morning_ripple_areas = [r[1] for r in ripple_result]
+    ax1.scatter(original_morning_dates, original_morning_ripple_areas, color='black', s=20, label='原始水花面積資料點')
+
+    if a/b > 0.01:
+        plt.figtext(0.5, 0.92, f'食慾成長程度={a/b:.3f}>1%, 食慾增加', color='red', fontsize=24 if duration >= 60 else 18, fontweight='bold',  ha="center", fontproperties=font_prop)
+    elif a/b < -0.01:
+        plt.figtext(0.5, 0.92, f'食慾成長程度={a/b:.3f}<1%, 食慾下降', color='red', fontsize=24 if duration >= 60 else 18, fontweight='bold',  ha="center", fontproperties=font_prop)
+    else:
+        plt.figtext(0.5, 0.92, f'食慾成長程度={a/b:.3f}≈1%, 食慾持平', color='red', fontsize=24 if duration >= 60 else 18, fontweight='bold',  ha="center", fontproperties=font_prop)
+        
+    ax2 = ax1.twinx()
+    ax2.tick_params(axis='y', labelcolor='tab:orange', labelsize=30 if duration >= 60 else 18) 
+    ax2.plot(decline_dates, minutes, 'o', color='tab:orange', label="水花明顯下降時間(分鐘)", markersize=20 if duration >= 60 else 15)
+    ax2.plot(decline_dates, decline_trends, '-', color='tab:orange', linewidth=6 if duration >= 60 else 4, label=f"下降時間趨勢: y={decline_a:.2f}t+{decline_b:.2f}")
+
+    ax1.set_xlabel('Date', fontsize=32 if duration >= 60 else 18, fontweight='bold')
+    ax1.set_ylabel('Water Splash Area', fontsize=32 if duration >= 60 else 18, fontweight='bold', color='tab:blue')
+    ax2.set_ylabel('Water Splash Decline Time (mins)', fontsize=32 if duration >= 60 else 18, fontweight='bold', color='tab:orange')
     plt.xlim(query_date, selected_date)
+    plt.title(f'Water Splash Trend Chart for {period}', fontsize=42 if duration >= 60 else 20, fontweight='bold')
+    plt.subplots_adjust(top=0.9)
 
-    plt.xlabel('Date')
-    plt.ylabel('Water Splash Area')
-    plt.title(f'Water Splash Area Trend Chart for {period}', fontweight='bold')
+    ax1.legend(loc='upper left', fontsize=28 if duration >= 60 else 18)
+    ax2.legend(loc='upper right', fontsize=28 if duration >= 60 else 18)
 
-    plt.legend(loc='upper left')
     plt.grid(True)
     plt.tight_layout()
 
@@ -1202,22 +1353,31 @@ def plot_trendchart(period, morning_result, query_date, selected_date, duration,
 
     return trendchart
 
-def generate_trendchart(total_result, query_date, selected_date, duration):
-    morning_result = []
-    afternoon_result = []
-    min_date = total_result[0][0].date()
-    max_date = total_result[-1][0].date()
+def generate_trendchart(ripple_result, feeding_result, query_date, selected_date, duration):
+    ripple_morning_result = []
+    ripple_afternoon_result = []
+    feeding_morning_result = []
+    feeding_afternoon_result = []
+    min_date = ripple_result[0][0].date()
+    max_date = ripple_result[-1][0].date()
     
-    for r in total_result: 
+    for r in ripple_result: 
         timestamp, ripple_area = r
         result_date = timestamp.date()
         if 0 < timestamp.hour < 12:
-            morning_result.append((result_date, ripple_area))
+            ripple_morning_result.append((timestamp, ripple_area))
         else:
-            afternoon_result.append((result_date, ripple_area))
+            ripple_afternoon_result.append((timestamp, ripple_area))
 
-    morning_trendchart = plot_trendchart('Morning', morning_result, query_date, selected_date, duration, min_date, max_date)
-    afternoon_trendchart = plot_trendchart('Afternoon', afternoon_result, query_date, selected_date, duration, min_date, max_date)
+    for r in feeding_result: 
+        st, use_time = r
+        if 0 < st.hour < 12:
+            feeding_morning_result.append((st, use_time))
+        else:
+            feeding_afternoon_result.append((st, use_time))
+
+    morning_trendchart = plot_trendchart('Morning 0:00-11:59', ripple_morning_result, feeding_morning_result, query_date, selected_date, duration, min_date, max_date)
+    afternoon_trendchart = plot_trendchart('Afternoon 12:00-23:59', ripple_afternoon_result, feeding_afternoon_result, query_date, selected_date, duration, min_date, max_date)
 
     return morning_trendchart, afternoon_trendchart
 
@@ -1260,12 +1420,20 @@ def water_splash_analysis():
 
             sql = "select update_time, ripple_area from ripple_history where update_time between %s and %s order by update_time asc"
             cursor.execute(sql, (query_date, next_day))
-            result = list(cursor.fetchall())
+            ripple_result = list(cursor.fetchall())
+
+            sql = "SELECT start_time, use_time FROM original_feeding_logs WHERE use_time > %s and start_time between %s and %s order by start_time asc"
+            cursor.execute(sql, (10, query_date, next_day))
+            feeding_result = list(cursor.fetchall())
+            print("feeding_result is from original_feeding_logs")
             
+            print(f"Ripple result:  {ripple_result[:1]} ~ {ripple_result[-1:]}")
+            print(f"Feeding result: {feeding_result[:1]} ~ {feeding_result[-1:]}")
+
             print("generate_heatmap")
-            base64_img = generate_heatmap(result, query_date, duration)
+            base64_img = generate_heatmap(ripple_result, query_date, duration)
             print("generate_trendchart")
-            morning_trendchart, afternoon_trendchart = generate_trendchart(result, query_date, selected_date, duration)
+            morning_trendchart, afternoon_trendchart = generate_trendchart(ripple_result, feeding_result, query_date, selected_date, duration)
 
         return render_template('water_splash_analysis.html', 
                             base64_img=base64_img, 
@@ -1274,7 +1442,7 @@ def water_splash_analysis():
                             species=species, species_logo_url=species_logo_url) 
     else:
         return redirect(url_for('login'))
-  
+   
 
 ''' choose ripple frames (send to linebot)'''
 def storeRippleFrames():
