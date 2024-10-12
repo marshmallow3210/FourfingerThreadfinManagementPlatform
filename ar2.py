@@ -1329,8 +1329,9 @@ def plot_trendchart(period, ripple_result, feeding_result, query_date, selected_
         
     ax2 = ax1.twinx()
     ax2.tick_params(axis='y', labelcolor='tab:orange', labelsize=30 if duration >= 60 else 18) 
-    ax2.plot(decline_dates, minutes, 'o', color='tab:orange', label="水花明顯下降時間(分鐘)", markersize=20 if duration >= 60 else 15)
-    ax2.plot(decline_dates, decline_trends, '-', color='tab:orange', linewidth=6 if duration >= 60 else 4, label=f"下降時間趨勢: y={decline_a:.2f}t+{decline_b:.2f}")
+    if len(decline_dates) > 0:
+        ax2.plot(decline_dates, minutes, 'o', color='tab:orange', label="水花明顯下降時間(分鐘)", markersize=20 if duration >= 60 else 15)
+        ax2.plot(decline_dates, decline_trends, '-', color='tab:orange', linewidth=6 if duration >= 60 else 4, label=f"下降時間趨勢: y={decline_a:.2f}t+{decline_b:.2f}")
 
     ax1.set_xlabel('Date', fontsize=32 if duration >= 60 else 18, fontweight='bold')
     ax1.set_ylabel('Water Splash Area', fontsize=32 if duration >= 60 else 18, fontweight='bold', color='tab:blue')
