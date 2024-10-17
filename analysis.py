@@ -71,10 +71,8 @@ def generate_heatmap(result, query_date, duration):
         prev_time = current_time
 
     marks.append({'start_time': start_time, 'end_time': prev_time})
-    marks_df = pd.DataFrame(marks)
-    # print(marks_df)
 
-    fig, axes = plt.subplots(1, duration, figsize=(math.ceil(duration * 2) if duration >= 60 else (math.ceil(duration * 2.5) if duration >= 30 else 15), 26 if duration >= 60 else (24 if duration >= 30 else 10)), sharey=True, constrained_layout=True, dpi=50) 
+    fig, axes = plt.subplots(1, duration, figsize=(math.ceil(duration * 2) if duration >= 60 else (130 if duration >= 30 else 15), 26 if duration >= 60 else (40 if duration >= 30 else 10)), sharey=True, constrained_layout=True, dpi=50) 
     cmap = plt.get_cmap('hot')
     cmap.set_bad(color='black')  # 設置 np.nan 部分為黑色
     
@@ -83,11 +81,11 @@ def generate_heatmap(result, query_date, duration):
         ax = axes[i]
         im = ax.imshow(day_data, cmap=cmap, aspect='auto', vmin=0, vmax=np.nanmax(heatmap_data))
 
-        ax.set_title((query_date + timedelta(days=i)).strftime('%m/%d'), fontsize = 64 if duration >= 60 else (48 if duration >= 30 else 20))
+        ax.set_title((query_date + timedelta(days=i)).strftime('%-m/%-d'), fontsize = 64 if duration >= 60 else (110 if duration >= 30 else 20))
         ax.set_xticks([]) 
         ax.set_yticks(range(0, 24 * 60, 120))
         ax.set_yticklabels([f"{j:02d}:00" for j in range(0, 24, 2)])
-        ax.tick_params(axis='y', labelsize = 64 if duration >= 60 else (48 if duration >= 30 else 20))
+        ax.tick_params(axis='y', labelsize = 64 if duration >= 60 else (100 if duration >= 30 else 20))
         
         # 畫框
         for mark in marks:
@@ -110,9 +108,9 @@ def generate_heatmap(result, query_date, duration):
 
     # plt.tight_layout(rect=[0, 0, 1.05, 0.995])  
     
-    cbar = plt.colorbar(im, ax=axes.ravel().tolist(), aspect=40, pad=0.02)
-    cbar.set_label('Pixel Number of Water Splashes', fontsize = 64 if duration >= 60 else (48 if duration >= 30 else 20))
-    cbar.ax.tick_params(labelsize=56 if duration >= 60 else (40 if duration >= 30 else 16))
+    cbar = plt.colorbar(im, ax=axes.ravel().tolist(), aspect=50, pad=0.01)
+    cbar.set_label('Pixel Number of Water Splashes', fontsize = 64 if duration >= 60 else (90 if duration >= 30 else 20))
+    cbar.ax.tick_params(labelsize=56 if duration >= 60 else (100 if duration >= 30 else 16))
 
     save_path = f"heatmap_{query_date.strftime('%Y%m%d')}_{duration}.png"
     plt.savefig(save_path, format='png')
@@ -233,7 +231,7 @@ def plot_trendchart(period, ripple_result, feeding_result, query_date, selected_
             continue
         # remaining_time = feed_st_time + timedelta(minutes=feed_used_min) - first_thd_idx_4_test[i]
         feeded_time = first_thd_idx_4_test[i] - feed_st_time
-        print(f'[{i}] {feed_st_time.strftime("%Y-%m-%d %H:%M:%S")}: ({feeded_time.total_seconds()/60}) minutes')
+        # print(f'[{i}] {feed_st_time.strftime("%Y-%m-%d %H:%M:%S")}: ({feeded_time.total_seconds()/60}) minutes')
         feed_count.append(i+1)
         decline_dates.append(feed_st_time.date())
         minutes.append(feeded_time.total_seconds()/60)
@@ -265,28 +263,6 @@ def plot_trendchart(period, ripple_result, feeding_result, query_date, selected_
     else:
         print("decline_dates is empty")
 
-    # if len(np.unique(x)) > 1:
-    #     # Assemble matrix A
-    #     A = np.vstack([x, np.ones(len(x))]).T
-
-    #     # Turn y into a column vector
-    #     y = y[:, np.newaxis]
-
-    #     # 檢查 A.T * A 是否為奇異矩陣
-    #     if np.linalg.cond(np.dot(A.T, A)) < 1 / np.finfo(A.dtype).eps:
-    #         # Direct least square regression
-    #         alpha = np.dot(np.dot(np.linalg.inv(np.dot(A.T, A)), A.T), y)
-    #         print(f"Slope: {alpha[0][0]:.5f}, Intercept: {alpha[1][0]:.5f}")
-    #     else:
-    #         print("Warning: Singular matrix encountered. Skipping regression.")
-    #         alpha = [[0], [0]] 
-    # else:
-    #     print("Warning: No variation in x. Skipping regression.")
-    #     alpha = [[0], [0]]  
-
-    # print(f"Dates: {dates}")
-    # print(f"Decline Dates: {decline_dates}")
-
     from matplotlib import font_manager
     font_path = '/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc'
     font_prop = font_manager.FontProperties(fname=font_path)
@@ -294,16 +270,16 @@ def plot_trendchart(period, ripple_result, feeding_result, query_date, selected_
     plt.rcParams['font.family'] = font_prop.get_name()
     plt.rcParams['axes.unicode_minus'] = False  # 避免負號顯示為方框
 
-    fig, ax1 = plt.subplots(figsize=(math.ceil(duration * 2) if duration >= 60 else (math.ceil(duration * 2.5) if duration >= 30 else 15), 26 if duration >= 60 else (24 if duration >= 30 else 10)), dpi=50)
+    fig, ax1 = plt.subplots(figsize=(math.ceil(duration * 2) if duration >= 60 else (130 if duration >= 30 else 15), 26 if duration >= 60 else (40 if duration >= 30 else 10)), dpi=50)
 
     locator = mdates.DayLocator() 
-    formatter = mdates.DateFormatter('%m/%d') 
+    formatter = mdates.DateFormatter('%-m/%-d') 
     ax1.xaxis.set_major_locator(locator)
     ax1.xaxis.set_major_formatter(formatter)
 
     # 第一個 Y 軸：水花面積
-    ax1.tick_params(axis='x', labelsize=42 if duration >= 60 else (48 if duration >= 30 else 18)) 
-    ax1.tick_params(axis='y', labelcolor='tab:blue', labelsize=48 if duration >= 60 else (48 if duration >= 30 else 18)) 
+    ax1.tick_params(axis='x', labelsize=42 if duration >= 60 else (100 if duration >= 30 else 18)) 
+    ax1.tick_params(axis='y', labelcolor='tab:blue', labelsize=48 if duration >= 60 else (100 if duration >= 30 else 18)) 
     ax1.plot(dates, ripple_areas, 'o', color='tab:blue', label="平均水花面積值", markersize=40 if duration >= 60 else 15)
     ax1.plot(dates, predict_trends, '-', color='tab:blue', linewidth=20 if duration >= 60 else (10 if duration >= 30 else 4), label=f"水花面積趨勢: y={a:.0f}t+{b:.0f}")
 
@@ -312,27 +288,27 @@ def plot_trendchart(period, ripple_result, feeding_result, query_date, selected_
     ax1.scatter(original_morning_dates, original_morning_ripple_areas, color='black', s=30, label='原始水花面積資料點')
 
     if a/b > 0.01:
-        plt.figtext(0.5, 0.92, f'食慾成長程度={a/b:.3f}>1%, 食慾增加', color='red', fontsize=64 if duration >= 60 else (48 if duration >= 30 else 18), fontweight='bold',  ha="center", fontproperties=font_prop)
+        plt.figtext(0.5, 0.92, f'食慾成長程度={a/b:.3f}>1%, 食慾增加', color='red', fontsize=64 if duration >= 60 else (100 if duration >= 30 else 18), fontweight='bold',  ha="center", fontproperties=font_prop)
     elif a/b < -0.01:
-        plt.figtext(0.5, 0.92, f'食慾成長程度={a/b:.3f}<1%, 食慾下降', color='red', fontsize=64 if duration >= 60 else (48 if duration >= 30 else 18), fontweight='bold',  ha="center", fontproperties=font_prop)
+        plt.figtext(0.5, 0.92, f'食慾成長程度={a/b:.3f}<1%, 食慾下降', color='red', fontsize=64 if duration >= 60 else (100 if duration >= 30 else 18), fontweight='bold',  ha="center", fontproperties=font_prop)
     else:
-        plt.figtext(0.5, 0.92, f'食慾成長程度={a/b:.3f}≈1%, 食慾持平', color='red', fontsize=64 if duration >= 60 else (48 if duration >= 30 else 18), fontweight='bold',  ha="center", fontproperties=font_prop)
+        plt.figtext(0.5, 0.92, f'食慾成長程度={a/b:.3f}≈1%, 食慾持平', color='red', fontsize=64 if duration >= 60 else (100 if duration >= 30 else 18), fontweight='bold',  ha="center", fontproperties=font_prop)
         
     ax2 = ax1.twinx()
-    ax2.tick_params(axis='y', labelcolor='tab:orange', labelsize=48 if duration >= 60 else (48 if duration >= 30 else 18)) 
+    ax2.tick_params(axis='y', labelcolor='tab:orange', labelsize=48 if duration >= 60 else (90 if duration >= 30 else 18)) 
     if len(decline_dates) > 0:
         ax2.plot(decline_dates, minutes, 'o', color='tab:orange', label="水花明顯下降時間(分鐘)", markersize=40 if duration >= 60 else 15)
         ax2.plot(decline_dates, decline_trends, '-', color='tab:orange', linewidth=20 if duration >= 60 else (10 if duration >= 30 else 4), label=f"下降時間趨勢: y={decline_a:.2f}t+{decline_b:.2f}")
 
-    ax1.set_xlabel('Date', fontsize = 72 if duration >= 60 else (60 if duration >= 30 else 32), fontweight='bold')
-    ax1.set_ylabel('Water Splash Area', fontsize = 72 if duration >= 60 else (60 if duration >= 30 else 32), fontweight='bold', color='tab:blue')
-    ax2.set_ylabel('Water Splash Decline Time (mins)', fontsize = 72 if duration >= 60 else (60 if duration >= 30 else 32), fontweight='bold', color='tab:orange')
+    ax1.set_xlabel('Date', fontsize = 72 if duration >= 60 else (100 if duration >= 30 else 32), fontweight='bold')
+    ax1.set_ylabel('Water Splash Area', fontsize = 72 if duration >= 60 else (90 if duration >= 30 else 32), fontweight='bold', color='tab:blue')
+    ax2.set_ylabel('Water Splash Decline Time (mins)', fontsize = 72 if duration >= 60 else (100 if duration >= 30 else 32), fontweight='bold', color='tab:orange')
     plt.xlim(query_date, selected_date)
-    plt.title(f'Water Splash Trend Chart for {period}', fontsize = 80 if duration >= 60 else (66 if duration >= 30 else 24), fontweight='bold')
+    plt.title(f'Water Splash Trend Chart for {period}', fontsize = 90 if duration >= 60 else (120 if duration >= 30 else 24), fontweight='bold')
     plt.subplots_adjust(top=0.9)
 
-    ax1.legend(loc='upper left', fontsize = 48 if duration >= 60 else (48 if duration >= 30 else 18))
-    ax2.legend(loc='upper right', fontsize = 48 if duration >= 60 else (48 if duration >= 30 else 18))
+    ax1.legend(loc='upper left', fontsize = 48 if duration >= 60 else (100 if duration >= 30 else 18))
+    ax2.legend(loc='upper right', fontsize = 48 if duration >= 60 else (100 if duration >= 30 else 18))
 
     plt.grid(True)
     plt.tight_layout()
@@ -377,10 +353,10 @@ if __name__ == "__main__":
     cursor = connection.cursor()
 
     databaseName = input("請輸入 databaseName: ") 
-    start_date = input("請輸入開始日期 (格式: YYYY-MM-DD): ")
-    start_date = datetime.datetime.strptime(start_date, "%Y-%m-%d") 
-    end_date = input("請輸入結束日期 (格式: YYYY-MM-DD): ")
-    end_date = datetime.datetime.strptime(end_date, "%Y-%m-%d") 
+    start_date = input("請輸入開始日期 (格式: YYYYMMDD): ")
+    start_date = datetime.datetime.strptime(start_date, "%Y%m%d") 
+    end_date = input("請輸入結束日期 (格式: YYYYMMDD): ")
+    end_date = datetime.datetime.strptime(end_date, "%Y%m%d") 
     next_day = end_date + timedelta(days=1)
 
     base64_img = ''
@@ -407,4 +383,3 @@ if __name__ == "__main__":
 
     cursor.close()
     connection.close()
-    
