@@ -53,7 +53,7 @@ fieldName = "嘉義鍾XX"
 fieldManager = "鍾XX"
 contact = "0988776655"
 species = "鱸魚"
-species_logo_url = "https://github.com/marshmallow3210/FourfingerThreadfinManagementPlatform/blob/main/images/IMG_1676.png?raw=true"
+species_logo_url = "https://github.com/marshmallow3210/FourfingerThreadfinManagementPlatform/blob/main/images/IMG_0806.jpeg?raw=true"
 users = {
     'ar3DB': 'ar3DB',
     'admin3': 'admin3',

@@ -53,7 +53,7 @@ fieldName = "台南黃XX"
 fieldManager = "黃XX"
 contact = "0988776655"
 species = "鱸魚"
-species_logo_url = "https://github.com/marshmallow3210/FourfingerThreadfinManagementPlatform/blob/main/images/IMG_1676.png?raw=true"
+species_logo_url = "https://github.com/marshmallow3210/FourfingerThreadfinManagementPlatform/blob/main/images/IMG_0806.jpeg?raw=true"
 users = {
     'ar7DB': 'ar7DB',
     'admin7': 'admin7',
@@ -139,8 +139,11 @@ def preidict_weights(age, total_fish_number):
     for i in range(0, 4):
         x = np.linspace(0, days, phase)
         x_set = np.append(x_set, x)
-    y_set = np.array([16, 27, 66, 188, 368, 625, 856, 1077, 16, 27, 77, 208, 379, 606, 862, 1102, 16, 48, 108, 246, 425, 717, 904, 1180, 16, 42, 106, 276, 477, 754, 991, 1202])
-    y_set = y_set * 800 / 1336
+    y_set = np.array([16, 27, 66, 188, 368, 625, 856, 1077, 
+                      16, 27, 77, 208, 379, 606, 862, 1102, 
+                      16, 48, 108, 246, 425, 717, 904, 1180, 
+                      16, 42, 106, 276, 477, 754, 991, 1202])
+    y_set = y_set * 800 / 1336 + 35
     
     # 午仔魚
     # 9 months
@@ -159,6 +162,7 @@ def preidict_weights(age, total_fish_number):
     knn.fit(x_set.reshape(-1, 1), y_set)
     x_new = np.array([int(age)])
     y_pred = knn.predict(x_new.reshape(-1, 1))
+    print("y_pred:", y_pred)
     y_pred = y_pred[0]
     y_pred = y_pred * total_fish_number / 600
     print("輸入天數(天):", x_new)
@@ -210,7 +214,7 @@ def preidict_date(latest_weight):
     return y_target - y_pred
 
 def counting_fcr(total_feeding_amount, latest_weight, first_weights):
-    if total_feeding_amount == 0:
+    if total_feeding_amount <= 0:
         return 0
     else:
         estimated_fcr = round(total_feeding_amount * 1000 / ((latest_weight - first_weights) * 600), 2)
@@ -544,7 +548,7 @@ def field_logs():
             cursor = connection.cursor()
             cursor.execute(sql)
         
-        sql = "select * from field_logs;"
+        sql = "select * from field_logs order by update_time asc;"
         cursor.execute(sql)
         data = list(cursor.fetchall())
         data = utc8(data, 6)
@@ -556,21 +560,21 @@ def field_logs():
             print("receive pool_ID:", pool_ID)
 
             if pool_ID == 0:
-                sql = "select * from field_logs;"
+                sql = "select * from field_logs order by update_time asc;"
                 cursor.execute(sql)
                 pool_data = list(cursor.fetchall()) 
                 pool_data = utc8(pool_data, 6)
                 
-                sql = "select pool_ID from field_logs;"
+                sql = "select pool_ID from field_logs order by update_time asc;"
                 cursor.execute(sql)
                 pool_count = cursor.fetchall() 
             else:
-                sql = "select * from field_logs where pool_ID=" + str(pool_ID) +";"
+                sql = "select * from field_logs where pool_ID=" + str(pool_ID) +" order by update_time asc;"
                 cursor.execute(sql)
                 pool_data = list(cursor.fetchall()) 
                 pool_data = utc8(pool_data, 6)
                 
-                sql = "select pool_ID from field_logs where pool_ID=" + str(pool_ID) +";"
+                sql = "select pool_ID from field_logs where pool_ID=" + str(pool_ID) +" order by update_time asc;"
                 cursor.execute(sql)
                 pool_count = cursor.fetchall()
                 
@@ -581,12 +585,12 @@ def field_logs():
             }
             return data       
         else:
-            sql= "select * from field_logs"
+            sql= "select * from field_logs order by update_time asc;"
             cursor.execute(sql)
             pool_data = list(cursor.fetchall()) 
             pool_data = utc8(pool_data, 6)
             
-            sql = "select pool_ID from field_logs;"
+            sql = "select pool_ID from field_logs order by update_time asc;"
             cursor.execute(sql)
             pool_count_list = cursor.fetchall()
             pool_count = []
@@ -615,7 +619,7 @@ def update():
             opt = int(request.form.get("opt"))
             pool_ID = request.form.get("pool_ID")
             food_ID = request.form.get("food_ID")
-            spec = float(request.form.get("spec"))
+            spec = request.form.get("spec")
             record_weights = float(request.form.get("record_weights"))
             dead_counts = int(request.form.get("dead_counts"))
             update_time = request.form.get("update_time")
@@ -630,9 +634,9 @@ def update():
 
             if opt == 1:
                 # insert food_ID into feeding_logs
-                sql = "UPDATE feeding_logs SET food_ID = " + "'" + str(food_ID) + "'" + " WHERE pool_ID = "+str(pool_ID)+" order by start_time desc;"
+                # sql = "UPDATE feeding_logs SET food_ID = " + "'" + str(food_ID) + "'" + " WHERE pool_ID = "+str(pool_ID)+" order by start_time desc;"
                 # sql = 'insert into feeding_logs (pool_ID, food_ID) values({}, "{}");'.format(pool_ID, food_ID)
-                cursor.execute(sql)
+                # cursor.execute(sql)
 
                 # insert all data into field_logs
                 estimated_weights = record_weights
@@ -641,9 +645,9 @@ def update():
                 cursor.execute(sql)
             elif opt == 2:
                 # insert food_ID into feeding_logs
-                sql = "UPDATE feeding_logs SET food_ID = " + "'" + str(food_ID) + "'" + " WHERE pool_ID = "+str(pool_ID)+" order by start_time desc LIMIT 1;"
+                # sql = "UPDATE feeding_logs SET food_ID = " + "'" + str(food_ID) + "'" + " WHERE pool_ID = "+str(pool_ID)+" order by start_time desc LIMIT 1;"
                 # sql = 'insert into feeding_logs (pool_ID, food_ID) values({}, "{}");'.format(pool_ID, food_ID)
-                cursor.execute(sql)
+                # cursor.execute(sql)
 
                 # counting total_fish_number
                 sql = "select record_weights from field_logs where pool_ID = "+str(pool_ID)+" order by update_time asc;"
@@ -680,7 +684,7 @@ def update():
                 print('預估魚池總重(斤):', estimated_weights)
                 
                 # counting fcr
-                sql = "select feeding_amount from feeding_logs where pool_ID = "+str(pool_ID)+";"
+                sql = f"select feeding_amount from new_feeding_logs where start_time < '{str(update_time)}';" # where pool_ID = "+str(pool_ID)+";"
                 cursor.execute(sql)
                 feeding_amount = list(cursor.fetchall())
                 total_feeding_amount = 0
@@ -688,6 +692,7 @@ def update():
                     total_feeding_amount += feeding_amount[i][0]
                 print("total_feeding_amount:", total_feeding_amount, "kg")
                 fcr = counting_fcr(total_feeding_amount, estimated_weights, first_weights)
+                print(f"fcr: {fcr}")
                 
                 # insert all data into field_logs
                 spec = None
@@ -728,7 +733,7 @@ def update():
                 print('estimated_weights:', estimated_weights)
                 
                 # counting fcr
-                sql = "select feeding_amount from feeding_logs where pool_ID = "+str(pool_ID)+";"
+                sql = f"select feeding_amount from new_feeding_logs where start_time < '{str(update_time)}';" # where pool_ID = "+str(pool_ID)+";"
                 cursor.execute(sql)
                 feeding_amount = list(cursor.fetchall())
                 total_feeding_amount = 0
@@ -984,7 +989,7 @@ def query_result():
             cursor.execute(sql)
             field_result = cursor.fetchall()
 
-            sql = f"select pool_id from new_feeding_logs where pool_id={str(pool_id)};"
+            sql = f"select pool_id from new_feeding_logs;"
             cursor.execute(sql)
             feeding_result = cursor.fetchall()
             
@@ -1023,7 +1028,7 @@ def query_result():
                 age = str((query_time-first_time).days)
                 
                 # counting fcr
-                sql = f"select feeding_amount from new_feeding_logs where pool_id={str(pool_id)} order by start_time desc;"
+                sql = f"select feeding_amount from new_feeding_logs order by start_time desc;"
                 cursor.execute(sql)
                 feeding_amount = list(cursor.fetchall())
                 total_feeding_amount = 0
@@ -1423,10 +1428,10 @@ def water_splash_analysis():
             cursor.execute(sql, (query_date, next_day))
             ripple_result = list(cursor.fetchall())
 
-            sql = "SELECT start_time, use_time FROM original_feeding_logs WHERE use_time > %s and start_time between %s and %s order by start_time asc"
+            sql = "SELECT start_time, use_time FROM new_feeding_logs WHERE use_time > %s and start_time between %s and %s order by start_time asc"
             cursor.execute(sql, (10, query_date, next_day))
             feeding_result = list(cursor.fetchall())
-            print("feeding_result is from original_feeding_logs")
+            print("feeding_result is from new_feeding_logs")
             
             print(f"Ripple result:  {ripple_result[:1]} ~ {ripple_result[-1:]}")
             print(f"Feeding result: {feeding_result[:1]} ~ {feeding_result[-1:]}")
