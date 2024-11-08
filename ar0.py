@@ -1334,11 +1334,11 @@ def plot_trendchart(period, ripple_result, feeding_result, query_date, selected_
         ax2.plot(decline_dates, minutes, 'o', color='tab:orange', label="水花明顯下降時間(分鐘)", markersize=20 if duration >= 60 else 15)
         ax2.plot(decline_dates, decline_trends, '-', color='tab:orange', linewidth=6 if duration >= 60 else 4, label=f"下降時間趨勢: y={decline_a:.2f}t+{decline_b:.2f}")
 
-    ax1.set_xlabel('Date', fontsize=32 if duration >= 60 else 18, fontweight='bold')
-    ax1.set_ylabel('Water Splash Area', fontsize=32 if duration >= 60 else 18, fontweight='bold', color='tab:blue')
-    ax2.set_ylabel('Water Splash Decline Time (mins)', fontsize=32 if duration >= 60 else 18, fontweight='bold', color='tab:orange')
+    ax1.set_xlabel('日期', fontsize=32 if duration >= 60 else 18, fontweight='bold')
+    ax1.set_ylabel('水花面積', fontsize=32 if duration >= 60 else 18, fontweight='bold', color='tab:blue')
+    ax2.set_ylabel('明顯餵食水花時間長度(分鐘)', fontsize=32 if duration >= 60 else 18, fontweight='bold', color='tab:orange')
     plt.xlim(query_date, selected_date)
-    plt.title(f'Water Splash Trend Chart for {period}', fontsize=42 if duration >= 60 else 20, fontweight='bold')
+    plt.title(f'{period} 水花面積趨勢圖', fontsize=42 if duration >= 60 else 20, fontweight='bold')
     plt.subplots_adjust(top=0.9)
 
     ax1.legend(loc='upper left', fontsize=28 if duration >= 60 else 18)
@@ -1378,8 +1378,8 @@ def generate_trendchart(ripple_result, feeding_result, query_date, selected_date
         else:
             feeding_afternoon_result.append((st, use_time))
 
-    morning_trendchart = plot_trendchart('Morning 0:00-11:59', ripple_morning_result, feeding_morning_result, query_date, selected_date, duration, min_date, max_date)
-    afternoon_trendchart = plot_trendchart('Afternoon 12:00-23:59', ripple_afternoon_result, feeding_afternoon_result, query_date, selected_date, duration, min_date, max_date)
+    morning_trendchart = plot_trendchart('上午 0:00-11:59', ripple_morning_result, feeding_morning_result, query_date, selected_date, duration, min_date, max_date)
+    afternoon_trendchart = plot_trendchart('下午 12:00-23:59', ripple_afternoon_result, feeding_afternoon_result, query_date, selected_date, duration, min_date, max_date)
 
     return morning_trendchart, afternoon_trendchart
 
