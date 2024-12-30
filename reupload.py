@@ -210,8 +210,8 @@ if __name__ == "__main__":
                 cursor.execute(sql)
 
                 # api integration, 午仔魚的場域不用
-                send_data(str(start_time))
-                print("send_data finished!\n")
+                # send_data(str(start_time))
+                # print("send_data finished!\n")
 
                 # reset new_feeding_logs
                 new_feeding_logs=[]

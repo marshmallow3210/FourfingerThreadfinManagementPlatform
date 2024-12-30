@@ -145,6 +145,10 @@ SET description =
     CASE 
         WHEN description IS NULL OR description = '' 
         THEN '調機階段' 
-        ELSE CONCAT(description, ', 調機階段') 
+        WHEN description NOT LIKE '%調機階段%' 
+        THEN CONCAT(description, ', 調機階段') 
+        ELSE description 
     END
 WHERE feeding_amount < 30;
+
+UPDATE new_feeding_logs SET description = '' WHERE start_time > '2024-10-28';

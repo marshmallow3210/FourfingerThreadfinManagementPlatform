@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>NTOU_測試版</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            padding: 0;
+            background-color: #f0f0f0;
+        }
+
+        h1 {
+            background-color: #3498db;
+            color: #fff;
+            padding: 10px;
+            text-align: center;
+        }
+
+        form {
+            max-width: 400px;
+            margin: 0 auto;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        label {
+            font-weight: bold;
+        }
+
+        select, input[type="text"] {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            border-radius: 3px;
+        }
+
+        input[type="submit"] {
+            background-color: #3498db;
+            color: #fff;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+
+        input[type="submit"]:hover {
+            background-color: #2980b9;
+        }
+    </style>
+</head>
+<body>
+    <h1>更改投餌指令(fishDB)</h1>
+    
+    <form method="POST" action="update.php">
+        <label for="mode">投餌模式:</label>
+        <select name="mode" id="mode">
+            <option value="0">停止投餌</option>
+            <option value="1">定量投餵</option>
+            <option value="2">定時投餵</option>
+            <option value="3">智能投餵</option>
+        </select><br>
+
+        <label for="angle">投餌角度:</label>
+        <select name="angle" id="angle">
+            <option value="30">30</option>
+            <option value="60">60</option>
+            <option value="90">90</option>
+            <option value="120">120</option>
+            <option value="150">150</option>
+            <option value="180">180</option>
+        </select><br>
+
+        <label for="period">投餌時長:(分鐘)</label>
+        <select name="period" id="period">
+            <option value="20">20</option>
+            <option value="60">60</option>
+            <option value="120">120</option>
+            <option value="240">240</option>
+        </select><br>
+
+        <label for="amount">投料量:(公斤)</label>
+        <input type="text" name="amount" id="amount"><br>
+
+        <label for="fetch_interval">投餌機指令更新頻率:(秒)</label>
+        <select name="fetch_interval" id="fetch_interval">
+            <option value="2">2秒</option>
+            <option value="5">5秒</option>
+            <option value="10">10秒</option>
+        </select><br>
+
+        <input type="submit" value="提交">
+    </form>
+    <form method="POST" action="view_command.php">
+        <input type="submit" name="viewCommand" value="查看當前指令">
+    </form>    
+</body>
+</html>
+
+<!--
+Eat_Apple_Again @ NTOU CSE LAB403
+
+2023-09-11 03:00
+This is a trial for LAB project.
+-->

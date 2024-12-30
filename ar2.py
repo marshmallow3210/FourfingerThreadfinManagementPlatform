@@ -865,6 +865,7 @@ def feeding_logs():
                     feeding_logs_date_temp = '' 
                 else: # 查看所有紀錄
                     sql = "SELECT * FROM new_feeding_logs"
+                    # sql = "select * from new_feeding_logs where start_time in ('2024-05-15 16:43:15');"
                     cursor.execute(sql)
                     new_feeding_data = list(cursor.fetchall())
                     sql = "SELECT * FROM original_feeding_logs"
@@ -876,6 +877,7 @@ def feeding_logs():
                 all_records = request.form.get("all_records")
                 if all_records == 'true' or all_records == '1': # 查看所有紀錄
                     sql = "SELECT * FROM new_feeding_logs"
+                    # sql = "select * from new_feeding_logs where start_time in ('2024-05-15 16:43:15');"
                     cursor.execute(sql)
                     new_feeding_data = list(cursor.fetchall())
                     sql = "SELECT * FROM original_feeding_logs"

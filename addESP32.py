@@ -58,7 +58,7 @@ def main():
     while True:
         data = generate_data()
         upload_to_ESP32(data)
-        time.sleep(300)
+        time.sleep(20)
 
 if __name__ == '__main__':
     main()

@@ -1,0 +1,13 @@
+[0;1;31m●[0m getMode.service - check mode from decision in background and get data from ESP32 to feeding_logs
+   Loaded: loaded (/etc/systemd/system/getMode.service; enabled; vendor preset: enabled)
+   Active: [0;1;31mfailed[0m (Result: exit-code) since Sat 2023-10-28 00:40:31 CST; 39s ago
+  Process: 31826 ExecStart=/usr/bin/python3 /var/www/html/getMode.py [0;1;31m(code=exited, status=1/FAILURE)[0m
+ Main PID: 31826 (code=exited, status=1/FAILURE)
+
+Oct 28 00:40:31 fishvm systemd[1]: Started check mode from decision in background and get data from ESP32 to feeding_logs.
+Oct 28 00:40:31 fishvm python3[31826]: Traceback (most recent call last):
+Oct 28 00:40:31 fishvm python3[31826]:   File "/var/www/html/getMode.py", line 5, in <module>
+Oct 28 00:40:31 fishvm python3[31826]:     import pymysql
+Oct 28 00:40:31 fishvm python3[31826]: ModuleNotFoundError: No module named 'pymysql'
+Oct 28 00:40:31 fishvm systemd[1]: [0;1;39m[0;1;31m[0;1;39mgetMode.service: Main process exited, code=exited, status=1/FAILURE[0m
+Oct 28 00:40:31 fishvm systemd[1]: [0;1;39m[0;1;31m[0;1;39mgetMode.service: Failed with result 'exit-code'.[0m

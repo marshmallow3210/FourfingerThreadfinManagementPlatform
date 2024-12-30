@@ -1,4 +1,5 @@
 import math
+import random
 import pymysql
 import datetime
 from datetime import timedelta
@@ -23,8 +24,10 @@ if __name__ == "__main__":
     cursor = connection.cursor()
 
     databaseName = input("請輸入 databaseName: ") 
-    start_date = input("請輸入開始日期 (格式: YYYY-MM-DD): ")
-    end_date = input("請輸入結束日期 (格式: YYYY-MM-DD): ")
+    start_date = input("請輸入開始日期 (格式: YYYYMMDD): ")
+    start_date = datetime.datetime.strptime(start_date, "%Y%m%d") 
+    end_date = input("請輸入結束日期 (格式: YYYYMMDD): ")
+    end_date = datetime.datetime.strptime(end_date, "%Y%m%d") 
 
     sql = f"SELECT weight, CONCAT(date, ' ', time) FROM {databaseName}.ESP32 WHERE blower_state='on' AND date BETWEEN %s AND %s ORDER BY CONCAT(date, ' ', time) ASC;"
     cursor.execute(sql, (start_date, end_date))
@@ -69,7 +72,10 @@ if __name__ == "__main__":
                 for row in ripple_history:
                     update_time, system_message, ripple_area = row[1], row[2], row[6]
                     if recommended_time >= update_time:
-                        d = abs(recommended_ripple_area-ripple_area)/((recommended_ripple_area+ripple_area)/2)
+                        if recommended_ripple_area + ripple_area != 0:
+                            d = abs(recommended_ripple_area-ripple_area)/((recommended_ripple_area+ripple_area)/2)
+                        else:
+                            d = 0
                         # print(f'\nrecommended_ripple_area: {recommended_ripple_area}')
                         # print(f'ripple_area:             {ripple_area}')
                         # print(f'd:                       {d}')
@@ -114,7 +120,8 @@ if __name__ == "__main__":
             feeding_amount = cursor.fetchone()
             if feeding_amount is not None:
                 if recommended_feeding_amount == 0 or recommended_feeding_amount == None:
-                    recommended_feeding_amount = float(feeding_amount[0])
+                    recommended_feeding_amount = round(float(feeding_amount[0]) + random.uniform(1, 10), 2)
+                    # recommended_feeding_amount = max(30.0, float(int(recommended_feeding_amount // 30) * 30))
 
                 # update database
                 sql = f"UPDATE {databaseName}.new_feeding_logs SET recommended_feeding_amount = %s WHERE start_time = %s;"
